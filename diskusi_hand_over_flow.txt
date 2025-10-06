@@ -1,0 +1,118 @@
+# DISKUSI HAND OVER FLOW - 24 September 2025
+
+## SUMMARY DISKUSI HARI INI
+
+### 1. CLEANUP RESTART ANALYSIS FLOW
+- Menghapus seluruh komponen restart analysis dari sistem
+- Files yang dibersihkan:
+  * SampleSubmission.php - method restartAnalysis(), startRestartAnalysis()
+  * sample-rawmat-submission.blade.php - buttons, UI sections, status history logic
+  * ResultsReviewPage.php - restart methods, properties, status events
+  * results-review-page.blade.php - restart buttons, analysis information sections
+  * StatusSeeder.php - removed restart_analysis, in_progress_restart statuses
+
+### 2. PERBAIKAN APPROVE BUTTON VISIBILITY
+- Button "Approve" sekarang HANYA muncul ketika status = 'reviewed'
+- Button "Approve" TIDAK muncul lagi di status 'analysis_completed'
+- Expected workflow: Analysis Completed → Review → Reviewed → Approve → Approved
+
+### 3. PERBAIKAN REJECT FUNCTIONALITY
+- Fixed existing reject logic yang tidak properly update status ke 'rejected'
+- Added proper status_id update untuk rejected status
+- Added rejected_at dan rejected_by columns ke database
+- Added direct "Reject Sample" button untuk quick reject
+- Improved "Reject with Notes" functionality
+- Database changes:
+  * Migration: add rejected_at, rejected_by columns
+  * StatusSeeder: confirmed rejected status exists
+
+### 4. ANALYSIS RESULTS DISPLAY
+- Added 'reviewed' status ke condition untuk menampilkan Analysis Results
+- Analysis Results sekarang muncul di: analysis_completed, reviewed, approved, rejected
+
+### 5. HAND OVER FLOW DESIGN (PLANNING)
+
+#### Final Hand Over Flow:
+```
+Pending → In Progress → Submitted to Hand Over → [Hand Over] → In Progress → Analysis Completed
+```
+
+#### Implementation Plan:
+1. **Trigger ke submitted_to_handover:**
+   - Current analyst di status 'in_progress'
+   - Klik "Submit to Hand Over"
+   - Select next analyst + optional notes
+   - Status: in_progress → submitted_to_handover
+
+2. **State submitted_to_handover:**
+   - Status Display: "Submitted to Hand Over"
+   - UI: Kolom kuning dengan text "Hand Over" (center)
+   - Shows: Current analyst → Next analyst info
+   - Button: "Hand Over" (available for next analyst only)
+
+3. **Action "Hand Over":**
+   - Next analyst klik "Hand Over"
+   - Status: submitted_to_handover → in_progress
+   - Analyst berubah: Transfer ke next analyst
+   - Continue analysis from where left off
+
+#### Database Requirements:
+```sql
+statuses table:
+├── submitted_to_handover (name)
+├── "Submitted to Hand Over" (display_name)
+├── "#F59E0B" (yellow color)
+
+raw_material_samples table:
+├── current_analyst_id
+├── handover_to_analyst_id (nullable)
+├── handover_notes (nullable)
+├── handover_requested_at (nullable)
+```
+
+#### Button Logic:
+- Status 'in_progress': Show "Submit to Hand Over"
+- Status 'submitted_to_handover': Show "Hand Over" (next analyst only)
+
+## CURRENT CLEAN WORKFLOW
+```
+Pending → In Progress → Analysis Completed → [Review] → Reviewed → [Approve/Reject] → Approved/Rejected
+```
+
+With optional Hand Over:
+```
+Pending → In Progress → [Submit to Hand Over] → Submitted to Hand Over → [Hand Over] → In Progress → Analysis Completed
+```
+
+## NEXT STEPS (BELUM IMPLEMENTED)
+1. Create StatusSeeder entry for 'submitted_to_handover'
+2. Create migration for handover columns
+3. Add "Submit to Hand Over" button dan logic
+4. Add "Hand Over" button dan logic
+5. Update UI untuk yellow column display
+6. Test complete hand over flow
+
+## FILES MODIFIED TODAY
+- app/Livewire/SampleSubmission.php
+- app/Livewire/ResultsReviewPage.php
+- resources/views/livewire/sample-rawmat-submission.blade.php
+- resources/views/livewire/results-review-page.blade.php
+- database/seeders/StatusSeeder.php
+- database/migrations/2025_09_24_155035_add_rejected_columns_to_raw_material_samples_table.php
+
+## STATUS SYSTEM SEKARANG
+Active Statuses:
+- pending
+- submitted
+- in_progress
+- analysis_completed
+- reviewed
+- approved
+- rejected
+
+Removed Statuses:
+- restart_analysis
+- in_progress_restart
+
+Planning to Add:
+- submitted_to_handover

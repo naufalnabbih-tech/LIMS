@@ -1,0 +1,90 @@
+DISKUSI HAND OVER FLOW UPDATE
+===============================
+Tanggal: 25 September 2025
+
+PERUBAHAN REQUIREMENT:
+======================
+
+FLOW LAMA (sudah diimplementasi):
+1. Status: In Progress
+2. Klik "Submit to Hand Over" → Modal muncul untuk pilih analyst + notes
+3. Status berubah ke "Submitted to Hand Over"
+4. Analyst lain klik "Accept Hand Over" → Status kembali ke "In Progress"
+
+FLOW BARU (requirement update):
+1. Status: In Progress
+2. Klik "Submit to Hand Over" → Modal hanya untuk input NOTES
+3. Status langsung berubah ke "Submitted to Hand Over" (tanpa assign ke analyst spesifik)
+4. Di shift berikutnya, analyst manapun bisa "Take Over" sample tersebut
+5. Take Over ada pilihan analysis method (Individual/Joint) seperti start analysis
+6. Status berubah kembali ke "In Progress" dengan analyst baru
+
+CLARIFICATION YANG DIDISKUSIKAN:
+===============================
+
+1. Pemilihan analyst spesifik saat submit to hand over? → TIDAK, siapa saja bisa take over
+2. Notes/catatan hand over? → YA, masih perlu
+3. Button Take Over → Gunakan OPSI A: muncul di Actions dropdown
+4. Tracking history? → YA, perlu track siapa submit & siapa take over
+5. Analysis method selection saat take over? → YA, seperti start analysis (Individual/Joint)
+
+DATA STRUCTURE REQUIREMENTS:
+============================
+
+FIELD UNTUK MENJAGA HISTORY (tidak di-overwrite):
+- original_primary_analyst_id → Analyst yang pertama handle
+- original_secondary_analyst_id → Secondary analyst awal (jika ada)
+- original_analysis_method → Method analysis awal
+
+FIELD UNTUK ANALYST CURRENT (bisa berubah setelah take over):
+- primary_analyst_id → Analyst yang sedang handle sekarang
+- secondary_analyst_id → Secondary analyst sekarang (jika ada)
+- analysis_method → Method analysis sekarang
+
+FIELD UNTUK TRACKING HAND OVER:
+- handover_submitted_by → Siapa yang submit to hand over
+- handover_submitted_at → Kapan di-submit
+- handover_notes → Catatan saat submit (sudah ada)
+- handover_taken_by → Siapa yang take over
+- handover_taken_at → Kapan di-take over
+
+EXAMPLE FLOW:
+=============
+
+1. AWAL: Analyst A start analysis individual
+   - original_primary_analyst_id = A
+   - primary_analyst_id = A
+   - original_analysis_method = individual
+   - analysis_method = individual
+
+2. SUBMIT TO HAND OVER: Analyst A submit dengan notes
+   - handover_submitted_by = A
+   - handover_submitted_at = timestamp
+   - handover_notes = "Perlu expertise kimia organik"
+   - Field original tetap sama
+   - Status = "Submitted to Hand Over"
+
+3. TAKE OVER: Analyst B take over dengan joint method + analyst C
+   - primary_analyst_id = B (update)
+   - secondary_analyst_id = C (update)
+   - analysis_method = joint (update)
+   - handover_taken_by = B
+   - handover_taken_at = timestamp
+   - Field original tetap A & individual
+   - Status = "In Progress"
+
+YANG PERLU DIIMPLEMENTASI:
+=========================
+
+1. Remove modal hand over yang sudah ada (yang ada pemilihan analyst)
+2. Buat modal baru untuk Submit to Hand Over (hanya notes)
+3. Buat modal Take Over dengan analysis method selection
+4. Tambah migration untuk field baru (original_*, handover_taken_*)
+5. Update model dan logic di backend
+6. Update UI untuk button Take Over di Actions dropdown
+
+STATUS CURRENT:
+===============
+- Sudah ada implementasi hand over dengan modal pemilihan analyst
+- Perlu update sesuai requirement baru
+- Database sudah ada beberapa field hand over, perlu tambahan field tracking

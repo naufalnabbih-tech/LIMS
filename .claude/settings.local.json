@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php artisan:*)",
+      "Bash(composer:*)",
+      "Bash(del check_users.php fix_user_roles.php)",
+      "Bash(del:*)",
+      "Bash(rm:*)",
+      "Bash(find:*)",
+      "Read(/c:\\laragon\\www\\LIMS\\resources\\views\\livewire/**)",
+      "Read(/c:\\laragon\\www\\LIMS\\resources\\views\\livewire/**)",
+      "Read(/c:\\laragon\\www\\LIMS\\resources\\views\\livewire/**)",
+      "Read(/c:\\laragon\\www\\LIMS\\resources\\views\\livewire/**)",
+      "Read(/c:\\laragon\\www\\LIMS\\resources\\views\\livewire/**)",
+      "Read(/c:\\laragon\\www\\LIMS\\resources\\views\\livewire/**)",
+      "Bash(php:*)",
+      "Bash(claude doctor)",
+      "Bash(mysql:*)"
+    ],
+    "deny": [],
+    "defaultMode": "acceptEdits",
+    "additionalDirectories": [
+      "C:\\c\\laragon\\www"
+    ]
+  }
+}
