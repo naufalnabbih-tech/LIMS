@@ -15,7 +15,9 @@
       "Read(/c:\\laragon\\www\\LIMS\\resources\\views\\livewire/**)",
       "Bash(php:*)",
       "Bash(claude doctor)",
-      "Bash(mysql:*)"
+      "Bash(mysql:*)",
+      "Bash(ren:*)",
+      "Bash(mv:*)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits",

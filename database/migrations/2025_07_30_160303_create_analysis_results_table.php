@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('analysis_results', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('sample_rawmat_id')->constrained('sample_rawmats')->onDelete('cascade');
+            $table->foreignId('sample_rawmat_id')->constrained('raw_material_samples')->onDelete('cascade');
             $table->foreignId('specification_id')->constrained('specifications')->onDelete('cascade');
             $table->string('result_value')->nullable();
             $table->enum('status', ['pending', 'completed', 'passed', 'failed'])->default('pending');
