@@ -275,7 +275,6 @@
                                                                     placeholder="0.00"
                                                                     class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                                                 >
-                                                                <span class="text-xs text-gray-600 min-w-0">{{ $data['unit'] }}</span>
                                                             </div>
                                                         </div>
                                                     @endforeach
@@ -305,7 +304,6 @@
                                                                 <span class="text-sm text-gray-900">
                                                                     {{ $data['readings'][$readingType]['value'] }}
                                                                 </span>
-                                                                <span class="text-xs text-gray-600">{{ $data['unit'] }}</span>
                                                             </div>
                                                         </div>
                                                     @endif
@@ -319,11 +317,11 @@
                                                 <div class="grid grid-cols-2 gap-4 text-xs">
                                                     <div>
                                                         <span class="font-medium text-gray-700">Average:</span>
-                                                        <span class="text-gray-900 ml-1">{{ $data['average_value'] }} {{ $data['unit'] }}</span>
+                                                        <span class="text-gray-900 ml-1">{{ $data['average_value'] }}</span>
                                                     </div>
                                                     <div>
                                                         <span class="font-medium text-gray-700">Final:</span>
-                                                        <span class="text-gray-900 ml-1">{{ $data['final_value'] }} {{ $data['unit'] }}</span>
+                                                        <span class="text-gray-900 ml-1">{{ $data['final_value'] }}</span>
                                                     </div>
                                                 </div>
                                             </div>

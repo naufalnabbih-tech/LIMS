@@ -63,10 +63,7 @@ class AnalysisPage extends Component
                         $specText .= ' - ' . $spec->pivot->max_value;
                     }
                 }
-                
-                // Set empty unit
-                $unit = '';
-                
+
                 $this->analysisResults[$specKey] = [
                     'readings' => [
                         'initial' => ['value' => '', 'timestamp' => null],
@@ -76,7 +73,6 @@ class AnalysisPage extends Component
                     'reading_config' => ['initial', 'middle', 'final'],
                     'average_value' => null,
                     'final_value' => null,
-                    'unit' => $unit,
                     'spec' => $specText ?: 'As per reference',
                     'spec_name' => $spec->name,
                     'spec_id' => $spec->id,
@@ -300,7 +296,6 @@ class AnalysisPage extends Component
                             'specification_id' => $result['spec_id'],
                             'parameter_name' => $result['spec_name'],
                             'test_value' => floatval($reading['value']),
-                            'unit' => $result['unit'],
                             'reading_number' => $readingNumber,
                             'tested_at' => $reading['timestamp'] ?? Carbon::now('Asia/Jakarta'),
                             'tested_by' => auth()->id(),

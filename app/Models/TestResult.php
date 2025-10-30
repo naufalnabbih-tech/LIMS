@@ -12,7 +12,6 @@ class TestResult extends Model
         'specification_id',
         'parameter_name',
         'test_value',
-        'unit',
         'reading_number',
         'tested_at',
         'tested_by',

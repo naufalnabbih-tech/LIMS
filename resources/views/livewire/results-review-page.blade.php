@@ -307,7 +307,6 @@
                                                             </div>
                                                             <div class="flex items-baseline space-x-2 mb-2">
                                                                 <span class="text-2xl font-bold text-gray-900">{{ rtrim(rtrim(number_format($result['value'], 4, '.', ''), '0'), '.') }}</span>
-                                                                <span class="text-sm text-gray-600">{{ $result['unit'] }}</span>
                                                             </div>
                                                             <div class="text-xs text-gray-500 space-y-1">
                                                                 <div>Tested: {{ $result['tested_at']->format('M d, Y H:i') }}</div>

@@ -1484,7 +1484,6 @@
                                             </h4>
                                             @php
                                                 $averageValue = $results->avg('test_value');
-                                                $unit = $results->first()->unit ?? '';
                                                 $status = $results->first()->status ?? 'unknown';
                                                 $statusColor =
                                                     $status === 'pass'
@@ -1503,7 +1502,6 @@
                                             <div class="flex items-center justify-between mb-2">
                                                 <span class="text-lg font-bold text-gray-900">
                                                     {{ rtrim(rtrim(number_format($averageValue, 4, '.', ''), '0'), '.') }}
-                                                    {{ $unit }}
                                                 </span>
                                                 <span
                                                     class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $statusBg }} {{ $statusColor }}">

@@ -100,16 +100,13 @@ class ResultsReviewPage extends Component
                         $specText .= ' - ' . $spec->pivot->max_value;
                     }
                 }
-                
-                // Determine unit based on specification name
-                $unit = $this->determineUnit($spec->name);
-                
+
                 // Get actual test results for this specification
                 $testResults = $this->sample->testResults()
                     ->where('specification_id', $spec->id)
                     ->orderBy('reading_number')
                     ->get();
-                
+
                 // Initialize the results array for this specification
                 $this->analysisResults[$specKey] = [
                     'spec' => $specText ?: 'As per reference',
@@ -118,7 +115,6 @@ class ResultsReviewPage extends Component
                     'target_value' => $spec->pivot->value,
                     'operator' => $spec->pivot->operator,
                     'max_value' => $spec->pivot->max_value,
-                    'unit' => $unit,
                     'test_results' => [],
                     'status' => 'not_tested'
                 ];
@@ -135,7 +131,6 @@ class ResultsReviewPage extends Component
                         $this->analysisResults[$specKey]['test_results'][] = [
                             'id' => $testResult->id,
                             'value' => $testResult->test_value,
-                            'unit' => $testResult->unit,
                             'reading_number' => $testResult->reading_number,
                             'tested_at' => $testResult->tested_at,
                             'tested_by' => $testResult->testedBy->name ?? 'Unknown',
@@ -155,36 +150,6 @@ class ResultsReviewPage extends Component
                 }
             }
         }
-    }
-
-    private function determineUnit($specificationName)
-    {
-        $unitMap = [
-            'moisture' => '%',
-            'ash' => '%', 
-            'protein' => '%',
-            'fat' => '%',
-            'ph' => 'pH',
-            'density' => 'g/ml',
-            'sn' => '%',
-            'cu' => '%',
-            'pb' => '%',
-            'temperature' => '°C',
-            'humidity' => '%',
-            'weight' => 'g',
-            'length' => 'mm',
-            'thickness' => 'mm'
-        ];
-        
-        $lowerName = strtolower($specificationName);
-        
-        foreach ($unitMap as $key => $unit) {
-            if (strpos($lowerName, $key) !== false) {
-                return $unit;
-            }
-        }
-        
-        return 'unit';
     }
 
     private function evaluateSpecification($testValue, $targetValue, $operator)
