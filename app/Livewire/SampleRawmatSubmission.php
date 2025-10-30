@@ -15,7 +15,7 @@ use Livewire\WithFileUploads;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 
-class SampleSubmission extends Component
+class SampleRawmatSubmission extends Component
 {
     use WithPagination, WithFileUploads;
 

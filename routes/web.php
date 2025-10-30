@@ -9,7 +9,7 @@ use App\Livewire\Specification;
 use App\Livewire\Auth\Login;
 use App\Livewire\UserManagement;
 use App\Livewire\RoleManagement;
-use App\Livewire\SampleSubmission;
+use App\Livewire\SampleRawmatSubmission;
 use App\Livewire\AnalysisPage;
 use App\Livewire\ResultsReviewPage;
 use App\Livewire\InstrumentConditionManagement;
@@ -57,11 +57,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/solder-specifications', SolderSpecification::class)->name('solder-specifications');
 
     // Sample Submission Routes
-    Route::get('/sample-submissions', SampleSubmission::class)->name('sample-submissions');
-    
+    Route::get('/sample-rawmat-submissions', SampleRawmatSubmission::class)->name('sample-submissions');
+
     // Analysis Page Route
     Route::get('/analysis/{sampleId}', AnalysisPage::class)->name('analysis-page');
-    
+
     // Results Review Page Route
     Route::get('/results-review/{sampleId}', ResultsReviewPage::class)->name('results-review');
 
@@ -85,7 +85,7 @@ Route::middleware(['auth'])->group(function () {
     })->name('settings');
 
     Route::get('/users', UserManagement::class)->name('users');
-    
+
     Route::get('/roles', RoleManagement::class)->name('roles');
 
     // Instrument Condition Routes
