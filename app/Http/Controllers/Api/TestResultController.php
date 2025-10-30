@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\TestResultBySampleGroupedResource;
+use App\Http\Resources\TestResultGroupedResource;
 use App\Models\RawMaterialSample;
 use Illuminate\Http\Request;
 use App\Models\TestResult;
@@ -14,7 +16,7 @@ class TestResultController extends Controller
     // Get all test_results with filters
     public function index(Request $request): JsonResponse
     {
-        $query = TestResult::with(['sample', 'specification', 'testedBy']);
+        $query = TestResult::query();
 
         if ($request->has('sample_id')) {
             $query->where('sample_id', $request->sample_id);
@@ -47,14 +49,20 @@ class TestResultController extends Controller
             'success' => true,
             'message' => 'Test results retrieved successfully',
             'data' => [
-                'test_results' => $results->items(),
+                'test_results' => new TestResultBySampleGroupedResource($results->getCollection()),
+            ],
+            'pagination' => [
+                'current_page' => $results->currentPage(),
+                'total' => $results->total(),
+                'per_page' => $results->perPage(),
+                'last_page' => $results->lastPage(),
             ]
         ]);
     }
 
     public function show(int $id): JsonResponse
     {
-        $result = TestResult::with(['sample', 'specification', 'testedBy'])->find($id);
+        $result = TestResult::find($id);
 
         if (!$result) {
             return response()->json([
@@ -72,13 +80,29 @@ class TestResultController extends Controller
 
     public function bySample(int $sampleId): JsonResponse
     {
-        $sample = RawMaterialSample::with(['testResults.specification', 'testResults.testedBy'])->find($sampleId);
+        $sample = RawMaterialSample::find($sampleId);
 
         if (!$sample) {
             return response()->json([
                 'success' => false,
                 'message' => 'Sample not found',
             ], 404);
+        }
+
+        $testResults = TestResult::where('sample_id', $sampleId)
+            ->orderBy('parameter_name')
+            ->orderBy('reading_number')
+            ->get();
+
+        if ($testResults->isEmpty()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'No test results found for this sample',
+                'data' => [
+                    'sample_id' => $sampleId,
+                    'test_results' => [],
+                ]
+            ]);
         }
 
         return response()->json([
@@ -90,9 +114,9 @@ class TestResultController extends Controller
                     'batch_lot' => $sample->batch_lot,
                     'supplier' => $sample->supplier,
                     'status' => $sample->status,
-                    'submission_time' => $sample->submission_time,
+
                 ],
-                'test_results' => $sample->testResults,
+                'test_results' => new TestResultGroupedResource($testResults),
             ],
         ]);
     }

@@ -29,10 +29,9 @@ function validateApiKey(Request $request)
     }
 }
 
-// Protected API endpoints - v1
-Route::prefix('v1')->group(function () {
+Route::prefix('lims')->group(function () {
 
-    // Test Results endpoints
+
     Route::get('/test-results', function (Request $request) {
         validateApiKey($request);
         return app(TestResultController::class)->index($request);
