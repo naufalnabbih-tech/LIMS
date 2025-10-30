@@ -15,17 +15,19 @@ Route::get('/ping', function () {
 });
 
 // Helper function untuk validasi API key
-function validateApiKey(Request $request)
-{
-    $apiKey = $request->header('X-API-Key');
-    $validKey = config('app.api_key');
+if (!function_exists('validateApiKey')) {
+    function validateApiKey(Request $request)
+    {
+        $apiKey = $request->header('X-API-Key');
+        $validKey = config('app.api_key');
 
-    if (!$apiKey || $apiKey !== $validKey) {
-        abort(response()->json([
-            'success' => false,
-            'message' => 'Unauthorized - Invalid or missing API Key',
-            'hint' => 'Include X-API-Key header with valid API key',
-        ], 401));
+        if (!$apiKey || $apiKey !== $validKey) {
+            abort(response()->json([
+                'success' => false,
+                'message' => 'Unauthorized - Invalid or missing API Key',
+                'hint' => 'Include X-API-Key header with valid API key',
+            ], 401));
+        }
     }
 }
 
