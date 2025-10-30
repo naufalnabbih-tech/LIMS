@@ -37,12 +37,12 @@ Route::prefix('lims')->group(function () {
         return app(TestResultController::class)->index($request);
     });
 
-    Route::get('/test-results/{id}', function (Request $request, $id) {
-        validateApiKey($request);
-        return app(TestResultController::class)->show($id);
-    });
+    // Route::get('/test-results/{id}', function (Request $request, $id) {
+    //     validateApiKey($request);
+    //     return app(TestResultController::class)->show($id);
+    // });
 
-    Route::get('/samples/{id}/test-results', function (Request $request, $id) {
+    Route::get('/test-results/{id}', function (Request $request, $id) {
         validateApiKey($request);
         return app(TestResultController::class)->bySample($id);
     });
