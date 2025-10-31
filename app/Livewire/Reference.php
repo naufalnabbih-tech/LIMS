@@ -32,6 +32,7 @@ class Reference extends Component
     public $specificationValues = []; // Array to store values for each specification
     public $specificationMaxValues = []; // Array to store max values for range operator
     public $specificationRanges = []; // Array to store multiple range pairs for each specification
+    public $specificationTextValues = []; // Array to store text values for should_be operator
     public $specificationOperators = []; // Array to store operators for each specification
     public $editingId = null;
 
@@ -81,12 +82,10 @@ class Reference extends Component
                 $rules["specificationRanges.{$specId}"] = 'required|array|min:1';
                 $rules["specificationRanges.{$specId}.*.min"] = 'required|numeric';
                 $rules["specificationRanges.{$specId}.*.max"] = 'required|numeric';
+            } elseif ($operator === 'should_be') {
+                $rules["specificationTextValues.{$specId}"] = 'required|string';
             } else {
-                if (in_array($operator, ['>=', '<=', '=='])) {
-                    $rules["specificationValues.{$specId}"] = 'required|numeric';
-                } else {
-                    $rules["specificationValues.{$specId}"] = 'required|string';
-                }
+                $rules["specificationValues.{$specId}"] = 'required|numeric';
             }
         }
 
@@ -189,9 +188,12 @@ class Reference extends Component
             $this->specificationOperators[$spec->id] = $spec->pivot->operator ?? '==';
 
             if ($spec->pivot->operator === '-') {
-                // Parse stored range data (JSON format)
-                $rangeData = json_decode($spec->pivot->value, true);
+                // Parse stored range data from value_json column
+                $rangeData = json_decode($spec->pivot->value_json, true);
                 $this->specificationRanges[$spec->id] = $rangeData ?: [['min' => '', 'max' => '']];
+            } elseif ($spec->pivot->operator === 'should_be') {
+                // Load text value for should_be operator from spec_value column
+                $this->specificationTextValues[$spec->id] = $spec->pivot->spec_value ?? '';
             } else {
                 $this->specificationValues[$spec->id] = $spec->pivot->value ?? '';
             }
@@ -216,6 +218,7 @@ class Reference extends Component
         $this->specificationValues = [];
         $this->specificationMaxValues = [];
         $this->specificationRanges = [];
+        $this->specificationTextValues = [];
         $this->specificationOperators = [];
         $this->editingId = null;
         $this->isSubmitting = false;
@@ -280,13 +283,25 @@ class Reference extends Component
                         }
 
                         $syncData[$specId] = [
-                            'value' => json_encode($cleanRanges),
+                            'value' => null,
+                            'value_json' => json_encode($cleanRanges),
+                            'spec_value' => null,
+                            'max_value' => null,
+                            'operator' => $operator
+                        ];
+                    } elseif ($operator === 'should_be') {
+                        $syncData[$specId] = [
+                            'value' => null,
+                            'value_json' => null,
+                            'spec_value' => $this->specificationTextValues[$specId] ?? '',
                             'max_value' => null,
                             'operator' => $operator
                         ];
                     } else {
                         $syncData[$specId] = [
                             'value' => $this->specificationValues[$specId] ?? '',
+                            'value_json' => null,
+                            'spec_value' => null,
                             'max_value' => null,
                             'operator' => $operator
                         ];
@@ -364,13 +379,25 @@ class Reference extends Component
                     }
 
                     $syncData[$specId] = [
-                        'value' => json_encode($cleanRanges),
+                        'value' => null,
+                        'value_json' => json_encode($cleanRanges),
+                        'spec_value' => null,
+                        'max_value' => null,
+                        'operator' => $operator
+                    ];
+                } elseif ($operator === 'should_be') {
+                    $syncData[$specId] = [
+                        'value' => null,
+                        'value_json' => null,
+                        'spec_value' => $this->specificationTextValues[$specId] ?? '',
                         'max_value' => null,
                         'operator' => $operator
                     ];
                 } else {
                     $syncData[$specId] = [
                         'value' => $this->specificationValues[$specId] ?? '',
+                        'value_json' => null,
+                        'spec_value' => null,
                         'max_value' => null,
                         'operator' => $operator
                     ];
@@ -416,6 +443,7 @@ class Reference extends Component
             $this->selectedSpecifications[] = $specificationId;
             $this->specificationValues[$specificationId] = '';
             $this->specificationMaxValues[$specificationId] = '';
+            $this->specificationTextValues[$specificationId] = '';
             $this->specificationRanges[$specificationId] = [['min' => '', 'max' => '']];
             $this->specificationOperators[$specificationId] = '==';
         }
@@ -431,9 +459,18 @@ class Reference extends Component
             }
             // Clear regular value when switching to range
             unset($this->specificationValues[$key]);
-        } else {
-            // When switching away from range operator, clear range data
+            unset($this->specificationTextValues[$key]);
+        } elseif ($value === 'should_be') {
+            // When switching to should_be operator, initialize text value
             unset($this->specificationRanges[$key]);
+            unset($this->specificationValues[$key]);
+            if (!isset($this->specificationTextValues[$key])) {
+                $this->specificationTextValues[$key] = '';
+            }
+        } else {
+            // When switching to numeric operators, clear range and text data
+            unset($this->specificationRanges[$key]);
+            unset($this->specificationTextValues[$key]);
             // Initialize regular value
             if (!isset($this->specificationValues[$key])) {
                 $this->specificationValues[$key] = '';
