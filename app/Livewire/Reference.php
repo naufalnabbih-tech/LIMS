@@ -4,7 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Reference as ReferenceModel;
 use App\Models\Specification;
-use App\Models\Rawmat;
+use App\Models\RawMat;
 use App\Enums\OperatorType;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
