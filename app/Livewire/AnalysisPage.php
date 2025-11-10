@@ -25,21 +25,21 @@ class AnalysisPage extends Component
     {
         $this->sampleId = $sampleId;
         $this->sample = RawMaterialSample::with([
-            'category', 
-            'rawMaterial', 
-            'reference.specificationsManytoMany', 
-            'submittedBy', 
-            'primaryAnalyst', 
+            'category',
+            'rawMaterial',
+            'reference.specificationsManytoMany',
+            'submittedBy',
+            'primaryAnalyst',
             'secondaryAnalyst',
             'testResults'
         ])->findOrFail($sampleId);
-        
+
         $this->reference = $this->sample->reference;
         $this->isCompleted = $this->sample->status === 'analysis_completed';
-        
+
         // Initialize analysis results based on reference parameters
         $this->initializeAnalysisResults();
-        
+
         // Load existing analysis results if completed
         if ($this->isCompleted) {
             $this->loadExistingResults();
@@ -51,16 +51,19 @@ class AnalysisPage extends Component
         if ($this->reference) {
             // Get actual reference specifications
             $specifications = $this->reference->specificationsManytoMany;
-            
+
             foreach ($specifications as $spec) {
                 $specKey = strtolower(str_replace([' ', '-', '(', ')'], '_', $spec->name));
-                
+
                 // Build specification display text
                 $specText = '';
                 if ($spec->pivot->operator && $spec->pivot->value !== null) {
-                    $specText = $spec->pivot->operator . ' ' . $spec->pivot->value;
-                    if ($spec->pivot->max_value) {
-                        $specText .= ' - ' . $spec->pivot->max_value;
+                    if ($spec->pivot->operator === '-') {
+                        // Range operator: display as "min - max"
+                        $specText = $spec->pivot->value . ' - ' . $spec->pivot->max_value;
+                    } else {
+                        // Other operators: display as "operator value"
+                        $specText = $spec->pivot->operator . ' ' . $spec->pivot->value;
                     }
                 }
 
@@ -78,74 +81,75 @@ class AnalysisPage extends Component
                     'spec_id' => $spec->id,
                     'target_value' => $spec->pivot->value,
                     'operator' => $spec->pivot->operator,
-                    'max_value' => $spec->pivot->max_value
+                    'max_value' => $spec->pivot->max_value,
+                    'unit' => $spec->unit ?? ''
                 ];
-                
+
                 // Initialize with only initial reading active
                 $this->activeReadings[$specKey] = ['initial'];
             }
         }
     }
-    
+
     private function loadExistingResults()
     {
         // Load from test_results table instead of JSON
         $testResults = $this->sample->testResults;
-        
+
         foreach ($testResults as $testResult) {
             $specKey = strtolower(str_replace([' ', '-', '(', ')'], '_', $testResult->parameter_name));
-            
+
             if (isset($this->analysisResults[$specKey])) {
                 // Map reading number to reading type
                 $readingTypes = ['initial', 'middle', 'final'];
                 $readingType = $readingTypes[$testResult->reading_number - 1] ?? 'initial';
-                
+
                 $this->analysisResults[$specKey]['readings'][$readingType]['value'] = $testResult->test_value;
                 $this->analysisResults[$specKey]['readings'][$readingType]['timestamp'] = $testResult->tested_at;
-                
+
                 // Add to active readings if not already there
                 if (!in_array($readingType, $this->activeReadings[$specKey])) {
                     $this->activeReadings[$specKey][] = $readingType;
                 }
             }
         }
-        
+
         // Recalculate all parameter values based on loaded data
         foreach ($this->analysisResults as $parameter => $result) {
             $this->calculateParameterValues($parameter);
         }
-        
+
         // Load notes
         $this->notes = $this->sample->notes ?? '';
     }
-    
+
 
     public function updateAnalysisReading($parameter, $readingType, $value)
     {
         if (isset($this->analysisResults[$parameter]) && isset($this->analysisResults[$parameter]['readings'][$readingType])) {
             $this->analysisResults[$parameter]['readings'][$readingType]['value'] = $value;
             $this->analysisResults[$parameter]['readings'][$readingType]['timestamp'] = now();
-            
+
             // Calculate average and final values
             $this->calculateParameterValues($parameter);
         }
     }
-    
+
     public function calculateParameterValues($parameter)
     {
         $readings = $this->analysisResults[$parameter]['readings'];
         $values = [];
-        
+
         foreach ($readings as $reading) {
             if (!empty($reading['value']) && is_numeric($reading['value'])) {
                 $values[] = floatval($reading['value']);
             }
         }
-        
+
         if (!empty($values)) {
             $this->analysisResults[$parameter]['average_value'] = array_sum($values) / count($values);
             $this->analysisResults[$parameter]['final_value'] = end($values);
-            
+
             // Add reading variance validation
             if (count($values) > 1) {
                 $variance = $this->calculateVariance($values);
@@ -159,28 +163,28 @@ class AnalysisPage extends Component
             $this->analysisResults[$parameter]['high_variance'] = false;
         }
     }
-    
+
     private function calculateVariance($values)
     {
         $mean = array_sum($values) / count($values);
         $variance = 0;
-        
+
         foreach ($values as $value) {
             $variance += pow($value - $mean, 2);
         }
-        
+
         return sqrt($variance / count($values)); // Standard deviation
     }
-    
+
     public function addReading($parameter)
     {
         if (!isset($this->activeReadings[$parameter])) {
             return;
         }
-        
+
         $currentActive = $this->activeReadings[$parameter];
         $readingOrder = ['initial', 'middle', 'final'];
-        
+
         // Find next reading to add
         foreach ($readingOrder as $reading) {
             if (!in_array($reading, $currentActive)) {
@@ -189,35 +193,35 @@ class AnalysisPage extends Component
             }
         }
     }
-    
+
     public function removeReading($parameter, $readingType)
     {
         if (!isset($this->activeReadings[$parameter]) || $readingType === 'initial') {
             return; // Can't remove initial reading
         }
-        
+
         // Remove from active readings
         $this->activeReadings[$parameter] = array_values(array_filter(
-            $this->activeReadings[$parameter], 
+            $this->activeReadings[$parameter],
             fn($reading) => $reading !== $readingType
         ));
-        
+
         // Clear the reading value
         if (isset($this->analysisResults[$parameter]['readings'][$readingType])) {
             $this->analysisResults[$parameter]['readings'][$readingType]['value'] = '';
             $this->analysisResults[$parameter]['readings'][$readingType]['timestamp'] = null;
         }
-        
+
         // Recalculate values
         $this->calculateParameterValues($parameter);
     }
-    
+
     public function canAddReading($parameter)
     {
         if (!isset($this->activeReadings[$parameter])) {
             return false;
         }
-        
+
         return count($this->activeReadings[$parameter]) < 3;
     }
 
@@ -228,7 +232,7 @@ class AnalysisPage extends Component
         $passedSpecs = 0;
         $failedSpecs = 0;
         $totalTestResults = 0;
-        
+
         foreach ($this->analysisResults as $parameter => $result) {
             // Check if any reading has been entered
             $hasReadings = false;
@@ -238,22 +242,23 @@ class AnalysisPage extends Component
                     break;
                 }
             }
-            
+
             if ($hasReadings) {
                 $hasResults = true;
-                
+
                 // Recalculate values to ensure they're up to date
                 $this->calculateParameterValues($parameter);
-                
+
                 // Use average value for specification evaluation
                 $testValue = $result['average_value'];
-                
+
                 // Check if result meets specification
                 if (isset($result['spec_id']) && $result['target_value'] !== null && $result['operator'] && $testValue !== null) {
                     $targetValue = floatval($result['target_value']);
                     $operator = $result['operator'];
-                    
-                    $passes = $this->evaluateSpecification($testValue, $targetValue, $operator);
+                    $maxValue = isset($result['max_value']) ? floatval($result['max_value']) : null;
+
+                    $passes = $this->evaluateSpecification($testValue, $targetValue, $operator, $maxValue);
                     if ($passes) {
                         $passedSpecs++;
                     } else {
@@ -280,17 +285,19 @@ class AnalysisPage extends Component
                         // Map reading type to reading number
                         $readingNumbers = ['initial' => 1, 'middle' => 2, 'final' => 3];
                         $readingNumber = $readingNumbers[$readingType] ?? 1;
-                        
+
                         // Evaluate if this specific reading passes
                         $passes = false;
                         if (isset($result['spec_id']) && $result['target_value'] !== null && $result['operator']) {
+                            $maxValue = isset($result['max_value']) ? floatval($result['max_value']) : null;
                             $passes = $this->evaluateSpecification(
-                                floatval($reading['value']), 
-                                floatval($result['target_value']), 
-                                $result['operator']
+                                floatval($reading['value']),
+                                floatval($result['target_value']),
+                                $result['operator'],
+                                $maxValue
                             );
                         }
-                        
+
                         TestResult::create([
                             'sample_id' => $this->sample->id,
                             'specification_id' => $result['spec_id'],
@@ -300,9 +307,14 @@ class AnalysisPage extends Component
                             'tested_at' => $reading['timestamp'] ?? Carbon::now('Asia/Jakarta'),
                             'tested_by' => auth()->id(),
                             'notes' => $this->notes,
-                            'status' => $passes ? 'pass' : 'fail'
+                            'status' => $passes ? 'pass' : 'fail',
+                            // Snapshot specification values at time of testing
+                            'spec_operator' => $result['operator'] ?? null,
+                            'spec_min_value' => $result['target_value'] ?? null,
+                            'spec_max_value' => $result['max_value'] ?? null,
+                            'spec_unit' => $result['unit'] ?? null
                         ]);
-                        
+
                         $totalTestResults++;
                     }
                 }
@@ -312,7 +324,7 @@ class AnalysisPage extends Component
         // Save analysis completion status
         $status = 'analysis_completed';
         $message = "Analysis results saved successfully! $totalTestResults test readings recorded.";
-        
+
         if ($failedSpecs > 0) {
             $message .= " Note: $failedSpecs parameter(s) failed, $passedSpecs passed.";
         } elseif ($passedSpecs > 0) {
@@ -333,8 +345,8 @@ class AnalysisPage extends Component
         $this->dispatch('save-success', $message);
         session()->flash('message', $message);
     }
-    
-    private function evaluateSpecification($testValue, $targetValue, $operator)
+
+    private function evaluateSpecification($testValue, $targetValue, $operator, $maxValue = null)
     {
         switch ($operator) {
             case '>=':
@@ -348,6 +360,12 @@ class AnalysisPage extends Component
             case '=':
             case '==':
                 return abs($testValue - $targetValue) < 0.001; // Small tolerance for float comparison
+            case '-':
+                // Range operator: check if test value is within min-max range
+                if ($maxValue !== null) {
+                    return $testValue >= $targetValue && $testValue <= $maxValue;
+                }
+                return true; // If no max value, assume pass
             default:
                 return true; // Unknown operator, assume pass
         }
@@ -365,12 +383,12 @@ class AnalysisPage extends Component
         ]);
 
         session()->flash('message', 'Analysis marked as completed!');
-        return redirect()->route('sample-submissions');
+        return redirect()->route('sample-rawmat-submissions');
     }
 
     public function backToSamples()
     {
-        return redirect()->route('sample-submissions');
+        return redirect()->route('sample-rawmat-submissions');
     }
 
     public function render()

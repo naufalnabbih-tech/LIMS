@@ -139,7 +139,11 @@ class Reference extends Component
 
         // Group references by raw material name - use the items() method to get the collection
         $groupedReferences = collect();
-        foreach ($references->items() as $reference) {
+
+        // Ensure $references->items() returns array/collection
+        $items = is_array($references->items()) ? $references->items() : [];
+
+        foreach ($items as $reference) {
             $rawmatName = $reference->rawmat->name;
             if (!$groupedReferences->has($rawmatName)) {
                 $groupedReferences->put($rawmatName, collect());
@@ -189,9 +193,11 @@ class Reference extends Component
             $this->specificationOperators[$spec->id] = $spec->pivot->operator ?? '==';
 
             if ($spec->pivot->operator === '-') {
-                // Parse stored range data (JSON format)
-                $rangeData = json_decode($spec->pivot->value, true);
-                $this->specificationRanges[$spec->id] = $rangeData ?: [['min' => '', 'max' => '']];
+                // Load single range from value and max_value columns
+                $this->specificationRanges[$spec->id] = [[
+                    'min' => $spec->pivot->value ?? '',
+                    'max' => $spec->pivot->max_value ?? ''
+                ]];
             } else {
                 $this->specificationValues[$spec->id] = $spec->pivot->value ?? '';
             }
@@ -264,24 +270,13 @@ class Reference extends Component
                     $operator = $this->specificationOperators[$specId] ?? '==';
 
                     if ($operator === '-') {
+                        // Get only the first range pair (single range support)
                         $ranges = $this->specificationRanges[$specId] ?? [];
-                        $cleanRanges = [];
-
-                        foreach ($ranges as $range) {
-                            if (
-                                isset($range['min']) && isset($range['max']) &&
-                                $range['min'] !== '' && $range['max'] !== ''
-                            ) {
-                                $cleanRanges[] = [
-                                    'min' => (string) $range['min'],
-                                    'max' => (string) $range['max']
-                                ];
-                            }
-                        }
+                        $range = $ranges[0] ?? ['min' => '', 'max' => ''];
 
                         $syncData[$specId] = [
-                            'value' => json_encode($cleanRanges),
-                            'max_value' => null,
+                            'value' => $range['min'] !== '' ? (float) $range['min'] : null,
+                            'max_value' => $range['max'] !== '' ? (float) $range['max'] : null,
                             'operator' => $operator
                         ];
                     } else {
@@ -348,24 +343,13 @@ class Reference extends Component
                 $operator = $this->specificationOperators[$specId] ?? '==';
 
                 if ($operator === '-') {
+                    // Get only the first range pair (single range support)
                     $ranges = $this->specificationRanges[$specId] ?? [];
-                    $cleanRanges = [];
-
-                    foreach ($ranges as $range) {
-                        if (
-                            isset($range['min']) && isset($range['max']) &&
-                            $range['min'] !== '' && $range['max'] !== ''
-                        ) {
-                            $cleanRanges[] = [
-                                'min' => (string) $range['min'],
-                                'max' => (string) $range['max']
-                            ];
-                        }
-                    }
+                    $range = $ranges[0] ?? ['min' => '', 'max' => ''];
 
                     $syncData[$specId] = [
-                        'value' => json_encode($cleanRanges),
-                        'max_value' => null,
+                        'value' => $range['min'] !== '' ? (float) $range['min'] : null,
+                        'max_value' => $range['max'] !== '' ? (float) $range['max'] : null,
                         'operator' => $operator
                     ];
                 } else {

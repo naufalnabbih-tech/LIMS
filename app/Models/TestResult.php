@@ -16,13 +16,20 @@ class TestResult extends Model
         'tested_at',
         'tested_by',
         'notes',
-        'status'
+        'status',
+        // Snapshot specification values at time of testing
+        'spec_operator',
+        'spec_min_value',
+        'spec_max_value',
+        'spec_unit'
     ];
 
     protected $casts = [
         'test_value' => 'decimal:4',
         'tested_at' => 'datetime',
-        'reading_number' => 'integer'
+        'reading_number' => 'integer',
+        'spec_min_value' => 'float',
+        'spec_max_value' => 'float'
     ];
 
     public function sample(): BelongsTo
@@ -57,6 +64,7 @@ class TestResult extends Model
             case '=':
             case '==':
                 return abs($testValue - $target) < 0.001;
+            case '-':
             case 'range':
                 if ($maxValue !== null) {
                     return $testValue >= $target && $testValue <= floatval($maxValue);

@@ -147,20 +147,9 @@
                                                             <td
                                                                 class="whitespace-nowrap px-6 py-4 text-sm font-medium">
                                                                 @if ($spec->pivot->operator === '-')
-                                                                    @php
-                                                                        $ranges =
-                                                                            json_decode($spec->pivot->value, true) ?:
-                                                                            [];
-                                                                    @endphp
-                                                                    <div class="flex flex-wrap gap-1">
-                                                                        @foreach ($ranges as $range)
-                                                                            <span
-                                                                                class="inline-flex items-center rounded-md bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
-                                                                                {{ $range['min'] ?? 'N/A' }} -
-                                                                                {{ $range['max'] ?? 'N/A' }}
-                                                                            </span>
-                                                                        @endforeach
-                                                                    </div>
+                                                                    <span class="inline-flex items-center rounded-md bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
+                                                                        {{ $spec->pivot->value ?? 'N/A' }} - {{ $spec->pivot->max_value ?? 'N/A' }}
+                                                                    </span>
                                                                 @else
                                                                     <span>{{ $spec->pivot->value ?? 'N/A' }}</span>
                                                                 @endif
@@ -355,46 +344,22 @@
                                                 </div>
 
                                                 @if (isset($specificationOperators[$specId]) && $specificationOperators[$specId] === '-')
-                                                    <div class="space-y-2 flex-1">
-                                                        @if (isset($specificationRanges[$specId]))
-                                                            @foreach ($specificationRanges[$specId] as $index => $range)
-                                                                <div class="flex items-center space-x-2">
-                                                                    <input type="number" step="any"
-                                                                        wire:model="specificationRanges.{{ $specId }}.{{ $index }}.min"
-                                                                        placeholder="Min"
-                                                                        class="@error('specificationRanges.' . $specId . '.' . $index . '.min') border-red-500 @else border-gray-300 @enderror w-24 rounded-lg border px-2 py-2 text-sm shadow-sm">
-                                                                    <span class="text-gray-500">-</span>
-                                                                    <input type="number" step="any"
-                                                                        wire:model="specificationRanges.{{ $specId }}.{{ $index }}.max"
-                                                                        placeholder="Max"
-                                                                        class="@error('specificationRanges.' . $specId . '.' . $index . '.max') border-red-500 @else border-gray-300 @enderror w-24 rounded-lg border px-2 py-2 text-sm shadow-sm">
-                                                                    @if ($index > 0)
-                                                                        <button type="button"
-                                                                            wire:click="removeRangeRow({{ $specId }}, {{ $index }})"
-                                                                            class="text-red-500 hover:text-red-700">
-                                                                            <svg class="h-4 w-4" fill="none"
-                                                                                stroke="currentColor"
-                                                                                viewBox="0 0 24 24">
-                                                                                <path stroke-linecap="round"
-                                                                                    stroke-linejoin="round"
-                                                                                    stroke-width="2"
-                                                                                    d="M6 18L18 6M6 6l12 12"></path>
-                                                                            </svg>
-                                                                        </button>
-                                                                    @endif
-                                                                </div>
-                                                                @error('specificationRanges.' . $specId . '.' . $index .
-                                                                    '.min')
-                                                                    <p class="mt-1 text-xs text-red-500">
-                                                                        {{ $message }}</p>
-                                                                @enderror
-                                                                @error('specificationRanges.' . $specId . '.' . $index .
-                                                                    '.max')
-                                                                    <p class="mt-1 text-xs text-red-500">
-                                                                        {{ $message }}</p>
-                                                                @enderror
-                                                            @endforeach
-                                                        @endif
+                                                    <div class="flex items-center space-x-2 flex-1">
+                                                        <input type="number" step="any"
+                                                            wire:model="specificationRanges.{{ $specId }}.0.min"
+                                                            placeholder="Min"
+                                                            class="@error('specificationRanges.' . $specId . '.0.min') border-red-500 @else border-gray-300 @enderror w-24 rounded-lg border px-2 py-2 text-sm shadow-sm">
+                                                        <span class="text-gray-500">-</span>
+                                                        <input type="number" step="any"
+                                                            wire:model="specificationRanges.{{ $specId }}.0.max"
+                                                            placeholder="Max"
+                                                            class="@error('specificationRanges.' . $specId . '.0.max') border-red-500 @else border-gray-300 @enderror w-24 rounded-lg border px-2 py-2 text-sm shadow-sm">
+                                                        @error('specificationRanges.' . $specId . '.0.min')
+                                                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                                                        @enderror
+                                                        @error('specificationRanges.' . $specId . '.0.max')
+                                                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                                                        @enderror
                                                     </div>
                                                 @else
                                                     <div class="flex-1">
@@ -582,36 +547,22 @@
                                                 </div>
 
                                                 @if (isset($specificationOperators[$specId]) && $specificationOperators[$specId] === '-')
-                                                    <div class="space-y-2 flex-1">
-                                                        @if (isset($specificationRanges[$specId]))
-                                                            @foreach ($specificationRanges[$specId] as $index => $range)
-                                                                <div class="flex items-center space-x-2">
-                                                                    <input type="text"
-                                                                        wire:model="specificationRanges.{{ $specId }}.{{ $index }}.min"
-                                                                        placeholder="Min"
-                                                                        class="@error('specificationRanges.' . $specId . '.' . $index . '.min') border-red-500 @else border-gray-300 @enderror w-24 rounded-lg border px-3 py-2 text-sm shadow-sm">
-                                                                    <span class="text-gray-500">-</span>
-                                                                    <input type="text"
-                                                                        wire:model="specificationRanges.{{ $specId }}.{{ $index }}.max"
-                                                                        placeholder="Max"
-                                                                        class="@error('specificationRanges.' . $specId . '.' . $index . '.max') border-red-500 @else border-gray-300 @enderror w-24 rounded-lg border px-3 py-2 text-sm shadow-sm">
-                                                                    @if ($index > 0)
-                                                                        <button type="button"
-                                                                            wire:click="removeRangeRow({{ $specId }}, {{ $index }})"
-                                                                            class="text-red-500 hover:text-red-700">
-                                                                            <svg class="h-4 w-4" fill="none"
-                                                                                stroke="currentColor"
-                                                                                viewBox="0 0 24 24">
-                                                                                <path stroke-linecap="round"
-                                                                                    stroke-linejoin="round"
-                                                                                    stroke-width="2"
-                                                                                    d="M6 18L18 6M6 6l12 12"></path>
-                                                                            </svg>
-                                                                        </button>
-                                                                    @endif
-                                                                </div>
-                                                            @endforeach
-                                                        @endif
+                                                    <div class="flex items-center space-x-2 flex-1">
+                                                        <input type="number" step="any"
+                                                            wire:model="specificationRanges.{{ $specId }}.0.min"
+                                                            placeholder="Min"
+                                                            class="@error('specificationRanges.' . $specId . '.0.min') border-red-500 @else border-gray-300 @enderror w-24 rounded-lg border px-3 py-2 text-sm shadow-sm">
+                                                        <span class="text-gray-500">-</span>
+                                                        <input type="number" step="any"
+                                                            wire:model="specificationRanges.{{ $specId }}.0.max"
+                                                            placeholder="Max"
+                                                            class="@error('specificationRanges.' . $specId . '.0.max') border-red-500 @else border-gray-300 @enderror w-24 rounded-lg border px-3 py-2 text-sm shadow-sm">
+                                                        @error('specificationRanges.' . $specId . '.0.min')
+                                                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                                                        @enderror
+                                                        @error('specificationRanges.' . $specId . '.0.max')
+                                                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                                                        @enderror
                                                     </div>
                                                 @else
                                                     <div class="flex-1">

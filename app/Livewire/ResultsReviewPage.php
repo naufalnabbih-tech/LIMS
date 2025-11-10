@@ -11,14 +11,14 @@ use Carbon\Carbon;
 class ResultsReviewPage extends Component
 {
     protected $listeners = [];
-    
+
     protected function rules()
     {
         return [
             'reviewNotes' => 'required|string|max:1000'
         ];
     }
-    
+
     // Prevent Livewire from trying to serialize complex model relationships
     public function dehydrate()
     {
@@ -28,7 +28,7 @@ class ResultsReviewPage extends Component
         unset($this->analysisResults);
         unset($this->statusHistory);
     }
-    
+
     public function hydrate()
     {
         // Reload sample data after hydration only if needed
@@ -39,7 +39,7 @@ class ResultsReviewPage extends Component
             $this->checkPermissions();
         }
     }
-    
+
     private function loadSampleData()
     {
         $this->sample = RawMaterialSample::with([
@@ -55,7 +55,7 @@ class ResultsReviewPage extends Component
             'testResults.testedBy',
             'statusRelation'
         ])->findOrFail($this->sampleId);
-        
+
         $this->reference = $this->sample->reference;
     }
     public $sampleId;
@@ -73,13 +73,13 @@ class ResultsReviewPage extends Component
     {
         $this->sampleId = $sampleId;
         $this->loadSampleData();
-        
+
         // Load analysis results if they exist
         $this->loadAnalysisResults();
-        
+
         // Build status history
         $this->buildStatusHistory();
-        
+
         // Check permissions
         $this->checkPermissions();
     }
@@ -88,18 +88,9 @@ class ResultsReviewPage extends Component
     {
         if ($this->reference) {
             $specifications = $this->reference->specificationsManytoMany;
-            
+
             foreach ($specifications as $spec) {
                 $specKey = strtolower(str_replace([' ', '-', '(', ')'], '_', $spec->name));
-                
-                // Build specification display text
-                $specText = '';
-                if ($spec->pivot->operator && $spec->pivot->value !== null) {
-                    $specText = $spec->pivot->operator . ' ' . $spec->pivot->value;
-                    if ($spec->pivot->max_value) {
-                        $specText .= ' - ' . $spec->pivot->max_value;
-                    }
-                }
 
                 // Get actual test results for this specification
                 $testResults = $this->sample->testResults()
@@ -107,27 +98,44 @@ class ResultsReviewPage extends Component
                     ->orderBy('reading_number')
                     ->get();
 
+                // Use snapshot values from first test result if available, otherwise use current reference values
+                $firstResult = $testResults->first();
+                $operator = $firstResult->spec_operator ?? $spec->pivot->operator;
+                $minValue = $firstResult->spec_min_value ?? $spec->pivot->value;
+                $maxValue = $firstResult->spec_max_value ?? $spec->pivot->max_value;
+
+                // Build specification display text from snapshot
+                $specText = '';
+                if ($operator && $minValue !== null) {
+                    if ($operator === '-') {
+                        $specText = $minValue . ' - ' . $maxValue;
+                    } else {
+                        $specText = $operator . ' ' . $minValue;
+                    }
+                }
+
                 // Initialize the results array for this specification
                 $this->analysisResults[$specKey] = [
                     'spec' => $specText ?: 'As per reference',
                     'spec_name' => $spec->name,
                     'spec_id' => $spec->id,
-                    'target_value' => $spec->pivot->value,
-                    'operator' => $spec->pivot->operator,
-                    'max_value' => $spec->pivot->max_value,
+                    'target_value' => $minValue,
+                    'operator' => $operator,
+                    'max_value' => $maxValue,
                     'test_results' => [],
                     'status' => 'not_tested'
                 ];
-                
+
                 // Process each test result for this specification
                 if ($testResults->count() > 0) {
                     foreach ($testResults as $testResult) {
+                        // Use snapshot values from test result for evaluation
                         $passes = $testResult->evaluateAgainstSpecification(
-                            $spec->pivot->value,
-                            $spec->pivot->operator,
-                            $spec->pivot->max_value
+                            $testResult->spec_min_value ?? $minValue,
+                            $testResult->spec_operator ?? $operator,
+                            $testResult->spec_max_value ?? $maxValue
                         );
-                        
+
                         $this->analysisResults[$specKey]['test_results'][] = [
                             'id' => $testResult->id,
                             'value' => $testResult->test_value,
@@ -139,7 +147,7 @@ class ResultsReviewPage extends Component
                             'status' => $testResult->status
                         ];
                     }
-                    
+
                     // Determine overall status for this parameter
                     $allPassed = collect($this->analysisResults[$specKey]['test_results'])
                         ->every(fn($result) => $result['passes']);
@@ -175,7 +183,7 @@ class ResultsReviewPage extends Component
     {
         $statusHistory = [];
         $counter = 1;
-        
+
         // 1. Sample Submitted/Created
         $statusHistory[] = [
             'id' => $counter++,
@@ -184,7 +192,7 @@ class ResultsReviewPage extends Component
             'analyst' => $this->sample->submittedBy->name ?? 'System',
             'previous_time' => null,
         ];
-        
+
         // 2. Analysis Started (if applicable)
         if ($this->sample->analysis_started_at) {
             $statusHistory[] = [
@@ -195,7 +203,7 @@ class ResultsReviewPage extends Component
                 'previous_time' => end($statusHistory)['time_in'],
             ];
         }
-        
+
         // 3. Analysis Completed (if applicable)
         if ($this->sample->analysis_completed_at) {
             $statusHistory[] = [
@@ -206,7 +214,7 @@ class ResultsReviewPage extends Component
                 'previous_time' => end($statusHistory)['time_in'],
             ];
         }
-        
+
         // Collect actual status events based on real timestamps and data
         $events = [];
 
@@ -232,12 +240,12 @@ class ResultsReviewPage extends Component
             ];
         }
 
-        
+
         // Sort events chronologically
-        usort($events, function($a, $b) {
+        usort($events, function ($a, $b) {
             return $a['time']->timestamp <=> $b['time']->timestamp;
         });
-        
+
         // Add sorted events to status history
         foreach ($events as $event) {
             $lastEntry = !empty($statusHistory) ? end($statusHistory) : null;
@@ -249,7 +257,7 @@ class ResultsReviewPage extends Component
                 'previous_time' => $lastEntry ? $lastEntry['time_in'] : null,
             ];
         }
-        
+
         // Handle rejected status (if applicable)
         if ($this->sample->status === 'rejected') {
             $lastEntry = end($statusHistory);
@@ -263,7 +271,7 @@ class ResultsReviewPage extends Component
                 ];
             }
         }
-        
+
         $this->statusHistory = $statusHistory;
     }
 
@@ -272,12 +280,11 @@ class ResultsReviewPage extends Component
         // Check if current user can review or approve
         // This is a basic implementation - you should adapt it to your role system
         $user = auth()->user();
-        
-        $this->canReview = in_array($this->sample->status, ['analysis_completed', 'reviewed']) && 
-                          $user && $user->id !== $this->sample->primary_analyst_id;
-        
+
+        $this->canReview = in_array($this->sample->status, ['analysis_completed', 'reviewed']) &&
+            $user && $user->id !== $this->sample->primary_analyst_id;
+
         $this->canApprove = in_array($this->sample->status, ['review', 'reviewed', 'analysis_completed']) && $user;
-        
     }
 
     public function openApprovalForm($action)
@@ -309,8 +316,7 @@ class ResultsReviewPage extends Component
 
         $updateData = [
             'status_id' => $status === 'approved' ?
-                ($approvedStatus ? $approvedStatus->id : null) :
-                ($rejectedStatus ? $rejectedStatus->id : null),
+                ($approvedStatus ? $approvedStatus->id : null) : ($rejectedStatus ? $rejectedStatus->id : null),
             'status' => $status,
             'notes' => $this->sample->notes . "\n\nReview Notes: " . $this->reviewNotes
         ];
@@ -334,16 +340,16 @@ class ResultsReviewPage extends Component
                 $updateData['reviewed_by'] = auth()->id();
             }
         }
-        
+
         $this->sample->update($updateData);
 
-        $message = $this->approvalAction === 'approve' ? 
-            'Sample has been approved successfully!' : 
+        $message = $this->approvalAction === 'approve' ?
+            'Sample has been approved successfully!' :
             'Sample has been rejected.';
-            
+
         session()->flash('message', $message);
         $this->closeApprovalForm();
-        
+
         // Refresh the component
         $this->mount($this->sampleId);
     }
@@ -376,13 +382,13 @@ class ResultsReviewPage extends Component
             'approved_by' => auth()->id(),
             'notes' => $this->sample->notes . "\n\nApproved on " . Carbon::now('Asia/Jakarta')->format('M d, Y \a\t H:i')
         ];
-        
+
         // If sample was never reviewed, automatically set reviewed timestamp to maintain history
         if (!$this->sample->reviewed_at) {
             $updateData['reviewed_at'] = Carbon::now('Asia/Jakarta');
             $updateData['reviewed_by'] = auth()->id();
         }
-        
+
         $this->sample->update($updateData);
 
         session()->flash('message', 'Sample has been approved successfully!');
@@ -422,7 +428,7 @@ class ResultsReviewPage extends Component
 
     public function backToSamples()
     {
-        return redirect()->route('sample-submissions');
+        return redirect()->route('sample-rawmat-submissions');
     }
 
     public function render()

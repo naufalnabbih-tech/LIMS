@@ -57,7 +57,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/solder-specifications', SolderSpecification::class)->name('solder-specifications');
 
     // Sample Submission Routes
-    Route::get('/sample-rawmat-submissions', SampleRawmatSubmission::class)->name('sample-submissions');
+    Route::get('/sample-rawmat-submissions', SampleRawmatSubmission::class)->name('sample-rawmat-submissions');
 
     // Analysis Page Route
     Route::get('/analysis/{sampleId}', AnalysisPage::class)->name('analysis-page');
