@@ -21,15 +21,21 @@ class Reference extends Model
     public function specificationsManytoMany()
     {
         return $this->belongsToMany(Specification::class, 'reference_specification', 'reference_id', 'specification_id')
-                    ->withPivot('value', 'operator', 'max_value')
-                    ->withTimestamps();
+            ->withPivot(
+                'value',
+                'value_json',
+                'operator',
+                'max_value',
+                'spec_value'
+            )
+            ->withTimestamps();
     }
 
     public function evaluateSpecification(int $specificationId, float $testValue): bool
     {
         $pivotData = $this->specificationsManytoMany()
-                          ->where('specification_id', $specificationId)
-                          ->first()?->pivot;
+            ->where('specification_id', $specificationId)
+            ->first()?->pivot;
 
         if (!$pivotData) {
             return false;

@@ -137,15 +137,13 @@
                                                                     </span>
                                                                 </div>
                                                             </td>
-                                                            <td
-                                                                class="whitespace-nowrap px-6 py-4 text-sm font-medium">
+                                                            <td class="whitespace-nowrap px-6 py-4 text-sm font-medium">
                                                                 <span
                                                                     class="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
                                                                     {{ $spec->pivot->operator ?? '==' }}
                                                                 </span>
                                                             </td>
-                                                            <td
-                                                                class="whitespace-nowrap px-6 py-4 text-sm font-medium">
+                                                            <td class="whitespace-nowrap px-6 py-4 text-sm font-medium">
                                                                 @if ($spec->pivot->operator === '-')
                                                                     <span class="inline-flex items-center rounded-md bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
                                                                         {{ $spec->pivot->value ?? 'N/A' }} - {{ $spec->pivot->max_value ?? 'N/A' }}
@@ -285,7 +283,7 @@
                                 @endif
                             </div>
                             @error('rawmat_id')
-                                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                                <p class="mt-1 text-sm text-red-500">{{ $messageF }}</p>
                             @enderror
                         </div>
 
@@ -363,23 +361,28 @@
                                                     </div>
                                                 @else
                                                     <div class="flex-1">
-                                                        @if (isset($specificationOperators[$specId]) && in_array($specificationOperators[$specId], ['should_be']))
+                                                        @if (isset($specificationOperators[$specId]) && $specificationOperators[$specId] === 'should_be')
                                                             <input type="text"
-                                                                wire:model="specificationValues.{{ $specId }}"
-                                                                placeholder="Enter {{ $specificationOperators[$specId] === 'should_be' ? 'expected values (comma-separated)' : 'text to contain' }} for {{ $spec->name }}"
-                                                                class="@error('specificationValues.' . $specId) border-red-500 @else border-gray-300 @enderror w-full rounded-lg border px-3 py-2 text-sm shadow-sm">
+                                                                wire:model="specificationTextValues.{{ $specId }}"
+                                                                placeholder="Enter text value for {{ $spec->name }}"
+                                                                class="@error('specificationTextValues.' . $specId) border-red-500 @else border-gray-300 @enderror w-full rounded-lg border px-3 py-2 text-sm shadow-sm">
+                                                            @error('specificationTextValues.' . $specId)
+                                                                <p class="mt-1 text-xs text-red-500">{{ $message }}
+                                                                </p>
+                                                            @enderror
                                                         @else
                                                             <input type="number" step="any"
                                                                 wire:model="specificationValues.{{ $specId }}"
                                                                 placeholder="Enter numeric value for {{ $spec->name }}"
                                                                 class="@error('specificationValues.' . $specId) border-red-500 @else border-gray-300 @enderror w-full rounded-lg border px-3 py-2 text-sm shadow-sm">
+                                                            @error('specificationValues.' . $specId)
+                                                                <p class="mt-1 text-xs text-red-500">{{ $message }}
+                                                                </p>
+                                                            @enderror
                                                         @endif
                                                     </div>
                                                 @endif
 
-                                                @error('specificationValues.' . $specId)
-                                                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                                                @enderror
                                                 @error('specificationRanges.' . $specId)
                                                     <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                                                 @enderror
@@ -566,23 +569,28 @@
                                                     </div>
                                                 @else
                                                     <div class="flex-1">
-                                                        @if (isset($specificationOperators[$specId]) && in_array($specificationOperators[$specId], ['should_be']))
+                                                        @if (isset($specificationOperators[$specId]) && $specificationOperators[$specId] === 'should_be')
                                                             <input type="text"
-                                                                wire:model="specificationValues.{{ $specId }}"
-                                                                placeholder="Enter {{ $specificationOperators[$specId] === 'should_be' ? 'expected values (comma-separated)' : 'text to contain' }} for {{ $spec->name }}"
-                                                                class="@error('specificationValues.' . $specId) border-red-500 @else border-gray-300 @enderror w-full rounded-lg border px-3 py-2 text-sm shadow-sm">
+                                                                wire:model="specificationTextValues.{{ $specId }}"
+                                                                placeholder="Enter text value for {{ $spec->name }}"
+                                                                class="@error('specificationTextValues.' . $specId) border-red-500 @else border-gray-300 @enderror w-full rounded-lg border px-3 py-2 text-sm shadow-sm">
+                                                            @error('specificationTextValues.' . $specId)
+                                                                <p class="mt-1 text-xs text-red-500">{{ $message }}
+                                                                </p>
+                                                            @enderror
                                                         @else
                                                             <input type="number" step="any"
                                                                 wire:model="specificationValues.{{ $specId }}"
                                                                 placeholder="Enter numeric value for {{ $spec->name }}"
                                                                 class="@error('specificationValues.' . $specId) border-red-500 @else border-gray-300 @enderror w-full rounded-lg border px-3 py-2 text-sm shadow-sm">
+                                                            @error('specificationValues.' . $specId)
+                                                                <p class="mt-1 text-xs text-red-500">{{ $message }}
+                                                                </p>
+                                                            @enderror
                                                         @endif
                                                     </div>
                                                 @endif
 
-                                                @error('specificationValues.' . $specId)
-                                                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                                                @enderror
                                                 @error('specificationRanges.' . $specId)
                                                     <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                                                 @enderror
