@@ -62,7 +62,7 @@
                         <h3 class="text-lg font-medium text-gray-900 mb-2">No references found</h3>
                         <p class="text-sm text-gray-500 mb-4">Get started by adding your first reference</p>
                         <button wire:click="openAddModal()"
-                            class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200
+                            class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 cursor-pointer
                                        {{ $rawmats->isEmpty() ? 'opacity-50 cursor-not-allowed' : '' }}"
                             {{ $rawmats->isEmpty() ? 'disabled' : '' }}>
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -147,6 +147,10 @@
                                                                 @if ($spec->pivot->operator === '-')
                                                                     <span class="inline-flex items-center rounded-md bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
                                                                         {{ $spec->pivot->value ?? 'N/A' }} - {{ $spec->pivot->max_value ?? 'N/A' }}
+                                                                    </span>
+                                                                @elseif ($spec->pivot->operator === 'should_be')
+                                                                    <span class="inline-flex items-center rounded-md bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
+                                                                        {{ $spec->pivot->text_value ?? 'N/A' }}
                                                                     </span>
                                                                 @else
                                                                     <span>{{ $spec->pivot->value ?? 'N/A' }}</span>

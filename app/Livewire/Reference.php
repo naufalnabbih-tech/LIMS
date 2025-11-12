@@ -193,10 +193,12 @@ class Reference extends Component
 
             if ($spec->pivot->operator === '-') {
                 // Load single range from value and max_value columns
-                $this->specificationRanges[$spec->id] = [[
-                    'min' => $spec->pivot->value ?? '',
-                    'max' => $spec->pivot->max_value ?? ''
-                ]];
+                $this->specificationRanges[$spec->id] = [
+                    [
+                        'min' => $spec->pivot->value ?? '',
+                        'max' => $spec->pivot->max_value ?? ''
+                    ]
+                ];
             } else {
                 $this->specificationValues[$spec->id] = $spec->pivot->value ?? '';
             }
@@ -275,15 +277,21 @@ class Reference extends Component
                         $range = $ranges[0] ?? ['min' => '', 'max' => ''];
 
                         $syncData[$specId] = [
-                            'value' => json_encode($cleanRanges),
-                            'max_value' => null,
+                            'value' => $range['min'] !== '' ? (float) $range['min'] : null,
+                            'max_value' => $range['max'] !== '' ? (float) $range['max'] : null,
                             'operator' => $operator
                         ];
+                    } elseif ($operator === 'should_be') {
+                        $syncData[$specId] = [
+                            'value' => null,
+                            'max_value' => null,
+                            'text_value' => $this->specificationTextValues[$specId] ?? null,
+                            'operator' => $operator
+                        ];
+
                     } else {
                         $syncData[$specId] = [
-                            'value' => $this->specificationValues[$specId] ?? '',
-                            'value_json' => null,
-                            'spec_value' => null,
+                            'value' => $this->specificationValues[$specId] ?? null,
                             'max_value' => null,
                             'operator' => $operator
                         ];
@@ -343,22 +351,26 @@ class Reference extends Component
             $syncData = [];
             foreach ($this->selectedSpecifications as $specId) {
                 $operator = $this->specificationOperators[$specId] ?? '==';
-
                 if ($operator === '-') {
                     // Get only the first range pair (single range support)
                     $ranges = $this->specificationRanges[$specId] ?? [];
                     $range = $ranges[0] ?? ['min' => '', 'max' => ''];
 
                     $syncData[$specId] = [
-                        'value' => json_encode($cleanRanges),
+                        'value' => $range['min'] !== '' ? (float) $range['min'] : null,
+                        'max_value' => $range['max'] !== '' ? (float) $range['max'] : null,
+                        'operator' => $operator
+                    ];
+                } elseif ($operator === 'should_be') {
+                    $syncData[$specId] = [
+                        'value' => null,
                         'max_value' => null,
+                        'text_value' => $this->specificationTextValues[$specId] ?? null,
                         'operator' => $operator
                     ];
                 } else {
                     $syncData[$specId] = [
-                        'value' => $this->specificationValues[$specId] ?? '',
-                        'value_json' => null,
-                        'spec_value' => null,
+                        'value' => $this->specificationValues[$specId] ?? null,
                         'max_value' => null,
                         'operator' => $operator
                     ];

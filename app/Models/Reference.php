@@ -23,10 +23,9 @@ class Reference extends Model
         return $this->belongsToMany(Specification::class, 'reference_specification', 'reference_id', 'specification_id')
             ->withPivot(
                 'value',
-                'value_json',
                 'operator',
                 'max_value',
-                'spec_value'
+                'text_value'
             )
             ->withTimestamps();
     }

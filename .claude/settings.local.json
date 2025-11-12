@@ -19,7 +19,8 @@
       "Bash(ren:*)",
       "Bash(mv:*)",
       "Bash(curl:*)",
-      "Bash(python -m json.tool:*)"
+      "Bash(python -m json.tool:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nMerge branch ''main'' of https://github.com/naufalnabbih-tech/LIMS into main\n\nResolved conflict in resources/views/livewire/reference.blade.php by keeping the simpler direct column access approach (value/max_value) instead of the JSON-based approach (value_json).\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "defaultMode": "acceptEdits",
