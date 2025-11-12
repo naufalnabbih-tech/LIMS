@@ -279,6 +279,7 @@ class Reference extends Component
                         $syncData[$specId] = [
                             'value' => $range['min'] !== '' ? (float) $range['min'] : null,
                             'max_value' => $range['max'] !== '' ? (float) $range['max'] : null,
+                            'text_value' => null,
                             'operator' => $operator
                         ];
                     } elseif ($operator === 'should_be') {
@@ -293,6 +294,7 @@ class Reference extends Component
                         $syncData[$specId] = [
                             'value' => $this->specificationValues[$specId] ?? null,
                             'max_value' => null,
+                            'text_value' => null,
                             'operator' => $operator
                         ];
                     }

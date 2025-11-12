@@ -48,33 +48,14 @@ class SampleRawmatSubmission extends Component
     public $operators = [];
     public $statuses = [];
 
-    // Hand over properties
-    public $showHandOverForm = false;
-    public $selectedHandOverSample = null;
-    public $handOverAnalystId = '';
-    public $handOverNotes = '';
+    // All form properties now handled by child components
 
-    // Take over properties
-    public $showTakeOverForm = false;
-    public $selectedTakeOverSample = null;
-    public $takeOverAnalysisMethod = '';
-    public $takeOverSecondaryAnalystId = '';
-
-    // Edit form properties
-    public $showEditForm = false;
-    public $edit_category_id = '';
-    public $edit_raw_mat_id = '';
-    public $edit_reference_id = '';
-    public $edit_supplier = '';
-    public $edit_batch_lot = '';
-    public $edit_vehicle_container_number = '';
-    public $edit_has_coa = false;
-    public $edit_coa_file = null;
-    public $edit_submission_date = '';
-    public $edit_submission_time = '';
-    public $edit_notes = '';
-    public $editRawMaterials = [];
-    public $editReferences = [];
+    protected $listeners = [
+        'sampleUpdated' => '$refresh',
+        'printSampleLabel' => 'handlePrintLabel',
+        'handOverSubmitted' => '$refresh',
+        'takeOverSubmitted' => '$refresh'
+    ];
 
     protected $rules = [
         'category_id' => 'required|exists:raw_mat_categories,id',
@@ -88,19 +69,6 @@ class SampleRawmatSubmission extends Component
         'submission_date' => 'required|date',
         'submission_time' => 'required',
         'notes' => 'nullable|string|max:1000',
-
-        // Edit form rules
-        'edit_category_id' => 'required|exists:raw_mat_categories,id',
-        'edit_raw_mat_id' => 'required|exists:raw_mats,id',
-        'edit_reference_id' => 'required|exists:references,id',
-        'edit_supplier' => 'required|string|max:255',
-        'edit_batch_lot' => 'required|string|max:255',
-        'edit_vehicle_container_number' => 'required|string|max:255',
-        'edit_has_coa' => 'boolean',
-        'edit_coa_file' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240',
-        'edit_submission_date' => 'required|date',
-        'edit_submission_time' => 'required',
-        'edit_notes' => 'nullable|string|max:1000',
     ];
 
     public function mount()
@@ -146,27 +114,6 @@ class SampleRawmatSubmission extends Component
         }
     }
 
-    public function updatedEditCategoryId($value)
-    {
-        $this->edit_raw_mat_id = '';
-        $this->edit_reference_id = '';
-        if ($value) {
-            $this->editRawMaterials = RawMat::where('category_id', $value)->get();
-        } else {
-            $this->editRawMaterials = collect();
-        }
-        $this->editReferences = collect();
-    }
-
-    public function updatedEditRawMatId($value)
-    {
-        $this->edit_reference_id = '';
-        if ($value) {
-            $this->editReferences = Reference::where('rawmat_id', $value)->get();
-        } else {
-            $this->editReferences = collect();
-        }
-    }
 
     public function showCreateForm()
     {
@@ -248,131 +195,48 @@ class SampleRawmatSubmission extends Component
         }
     }
 
-    // Action Methods
+    // Action Methods - now dispatch events to child components
     public function viewDetails($sampleId)
     {
-        $this->selectedSample = RawMaterialSample::with([
-            'category',
-            'rawMaterial',
-            'reference',
-            'submittedBy',
-            'primaryAnalyst',
-            'secondaryAnalyst',
-            'reviewedBy',
-            'approvedBy',
-            'statusRelation',
-            'handoverSubmittedBy',
-            'handoverTakenBy'
-        ])->findOrFail($sampleId);
-        $this->showDetails = true;
-    }
-
-    public function hideDetails()
-    {
-        $this->showDetails = false;
-        $this->selectedSample = null;
+        $this->dispatch('openSampleDetails', sampleId: $sampleId);
     }
 
     public function editSample($sampleId)
     {
-        $this->selectedSample = RawMaterialSample::with(['category', 'rawMaterial', 'reference', 'submittedBy', 'statusRelation'])->findOrFail($sampleId);
-
-        // Populate edit form with sample data
-        $this->edit_category_id = $this->selectedSample->category_id;
-        $this->edit_raw_mat_id = $this->selectedSample->raw_mat_id;
-        $this->edit_reference_id = $this->selectedSample->reference_id;
-        $this->edit_supplier = $this->selectedSample->supplier;
-        $this->edit_batch_lot = $this->selectedSample->batch_lot;
-        $this->edit_vehicle_container_number = $this->selectedSample->vehicle_container_number;
-        $this->edit_has_coa = $this->selectedSample->has_coa;
-        $this->edit_submission_date = $this->selectedSample->submission_time->format('Y-m-d');
-        $this->edit_submission_time = $this->selectedSample->submission_time->format('H:i');
-        $this->edit_notes = $this->selectedSample->notes;
-
-        // Load raw materials and references for the selected category and raw material
-        $this->editRawMaterials = RawMat::where('category_id', $this->edit_category_id)->get();
-        $this->editReferences = Reference::where('rawmat_id', $this->edit_raw_mat_id)->get();
-
-        // Hide details modal and show edit modal
-        $this->showDetails = false;
-        $this->showEditForm = true;
+        $this->dispatch('editSample', sampleId: $sampleId);
     }
 
-    public function hideEditForm()
+    public function handlePrintLabel($sampleId)
     {
-        $this->showEditForm = false;
-        $this->resetEditForm();
-    }
+        $sample = RawMaterialSample::with([
+            'category',
+            'rawMaterial',
+            'reference',
+            'submittedBy',
+            'statusRelation'
+        ])->findOrFail($sampleId);
 
-    public function resetEditForm()
-    {
-        $this->edit_category_id = '';
-        $this->edit_raw_mat_id = '';
-        $this->edit_reference_id = '';
-        $this->edit_supplier = '';
-        $this->edit_batch_lot = '';
-        $this->edit_vehicle_container_number = '';
-        $this->edit_has_coa = false;
-        $this->edit_coa_file = null;
-        $this->edit_submission_date = '';
-        $this->edit_submission_time = '';
-        $this->edit_notes = '';
-        $this->editRawMaterials = collect();
-        $this->editReferences = collect();
-        $this->selectedSample = null;
-        $this->resetErrorBag();
-    }
+        try {
+            // Prepare label data
+            $labelData = [
+                'sample_id' => $sample->id,
+                'material_name' => $sample->rawMaterial->name ?? 'N/A',
+                'category_name' => $sample->category->name ?? 'N/A',
+                'supplier' => $sample->supplier,
+                'batch_lot' => $sample->batch_lot,
+                'submission_date' => $sample->submission_time->format('Y-m-d H:i'),
+                'reference' => $sample->reference->name ?? 'N/A',
+                'vehicle_container' => $sample->vehicle_container_number,
+                'status' => $sample->statusRelation ? $sample->statusRelation->display_name : ucfirst($sample->status ?? ''),
+                'submitted_by' => $sample->submittedBy->name ?? 'N/A',
+            ];
 
-    public function updateSample()
-    {
-        $this->validate([
-            'edit_category_id' => 'required|exists:raw_mat_categories,id',
-            'edit_raw_mat_id' => 'required|exists:raw_mats,id',
-            'edit_reference_id' => 'required|exists:references,id',
-            'edit_supplier' => 'required|string|max:255',
-            'edit_batch_lot' => 'required|string|max:255',
-            'edit_vehicle_container_number' => 'required|string|max:255',
-            'edit_has_coa' => 'boolean',
-            'edit_coa_file' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240',
-            'edit_submission_date' => 'required|date',
-            'edit_submission_time' => 'required',
-            'edit_notes' => 'nullable|string|max:1000',
-        ]);
+            // Call JavaScript function directly
+            $this->js('printSampleLabel(' . json_encode($labelData) . ')');
 
-        $sample = $this->selectedSample;
-
-        // Handle CoA file upload
-        $coaFilePath = $sample->coa_file_path;
-        if ($this->edit_has_coa && $this->edit_coa_file) {
-            // Delete old file if exists
-            if ($sample->coa_file_path) {
-                Storage::disk('public')->delete($sample->coa_file_path);
-            }
-            // Store new file
-            $coaFilePath = $this->edit_coa_file->store('coa-files', 'public');
-        } elseif (!$this->edit_has_coa) {
-            // If CoA is unchecked, delete existing file
-            if ($sample->coa_file_path) {
-                Storage::disk('public')->delete($sample->coa_file_path);
-            }
-            $coaFilePath = null;
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error preparing sample label: ' . $e->getMessage());
         }
-
-        $sample->update([
-            'category_id' => $this->edit_category_id,
-            'raw_mat_id' => $this->edit_raw_mat_id,
-            'reference_id' => $this->edit_reference_id,
-            'supplier' => $this->edit_supplier,
-            'batch_lot' => $this->edit_batch_lot,
-            'vehicle_container_number' => $this->edit_vehicle_container_number,
-            'has_coa' => $this->edit_has_coa,
-            'coa_file_path' => $coaFilePath,
-            'submission_time' => $this->edit_submission_date . ' ' . $this->edit_submission_time . ':00',
-            'notes' => $this->edit_notes,
-        ]);
-
-        session()->flash('message', "Sample updated successfully!");
-        $this->hideEditForm();
     }
 
     // Analysis form methods
@@ -561,89 +425,9 @@ class SampleRawmatSubmission extends Component
     // Hand Over Methods
     public function openHandOverForm($sampleId)
     {
-        try {
-            \Log::info('Opening hand over form for sample ID: ' . $sampleId);
-
-            // Reset form first
-            $this->resetHandOverForm();
-
-            // Try to find the sample
-            $sample = RawMaterialSample::find($sampleId);
-            if (!$sample) {
-                throw new \Exception('Sample not found with ID: ' . $sampleId);
-            }
-
-            // Load relationships
-            $sample->load(['category', 'rawMaterial', 'reference', 'statusRelation', 'primaryAnalyst']);
-
-            // Set properties
-            $this->selectedHandOverSample = $sample;
-            $this->showHandOverForm = true;
-
-            \Log::info('Hand over form opened successfully', [
-                'showHandOverForm' => $this->showHandOverForm,
-                'selectedHandOverSample_id' => $this->selectedHandOverSample->id ?? 'null',
-                'sample_status' => $sample->status ?? 'null'
-            ]);
-
-            session()->flash('message', 'Hand over form opened - Sample ID: ' . $sampleId);
-
-        } catch (\Exception $e) {
-            $this->showHandOverForm = false;
-            $this->selectedHandOverSample = null;
-            session()->flash('error', 'Error opening hand over form: ' . $e->getMessage());
-            \Log::error('Hand over form error: ' . $e->getMessage(), [
-                'sample_id' => $sampleId,
-                'trace' => $e->getTraceAsString()
-            ]);
-        }
+        $this->dispatch('openHandOverForm', sampleId: $sampleId);
     }
 
-    public function hideHandOverForm()
-    {
-        $this->showHandOverForm = false;
-        $this->selectedHandOverSample = null;
-        $this->resetHandOverForm();
-    }
-
-    public function resetHandOverForm()
-    {
-        $this->handOverAnalystId = '';
-        $this->handOverNotes = '';
-        $this->resetErrorBag();
-    }
-
-    public function submitToHandOver()
-    {
-        $this->validate([
-            'handOverNotes' => 'nullable|string|max:1000',
-        ]);
-
-        $sample = $this->selectedHandOverSample;
-        $submittedToHandOverStatus = Status::where('name', 'submitted_to_handover')->first();
-
-        // Store original data if not already stored
-        $updateData = [
-            'status_id' => $submittedToHandOverStatus ? $submittedToHandOverStatus->id : null,
-            'status' => 'submitted_to_handover',
-            'handover_notes' => $this->handOverNotes,
-            'handover_submitted_by' => auth()->id(),
-            'handover_submitted_at' => Carbon::now('Asia/Jakarta'),
-            'handover_to_analyst_id' => null, // Clear specific analyst assignment
-        ];
-
-        // Store original data if first time starting analysis
-        if (!$sample->original_primary_analyst_id) {
-            $updateData['original_primary_analyst_id'] = $sample->primary_analyst_id;
-            $updateData['original_secondary_analyst_id'] = $sample->secondary_analyst_id;
-            $updateData['original_analysis_method'] = $sample->analysis_method;
-        }
-
-        $sample->update($updateData);
-
-        session()->flash('message', "Sample submitted for hand over. Any analyst can now take over this sample.");
-        $this->hideHandOverForm();
-    }
 
     public function acceptHandOver($sampleId)
     {
@@ -671,126 +455,9 @@ class SampleRawmatSubmission extends Component
     // Take Over Methods
     public function openTakeOverForm($sampleId)
     {
-        try {
-            $this->resetTakeOverForm();
-
-            $sample = RawMaterialSample::find($sampleId);
-            if (!$sample) {
-                throw new \Exception('Sample not found with ID: ' . $sampleId);
-            }
-
-            $sample->load(['category', 'rawMaterial', 'reference', 'statusRelation', 'primaryAnalyst']);
-
-            $this->selectedTakeOverSample = $sample;
-            $this->showTakeOverForm = true;
-
-            session()->flash('message', 'Take over form opened - Sample ID: ' . $sampleId);
-
-        } catch (\Exception $e) {
-            $this->showTakeOverForm = false;
-            $this->selectedTakeOverSample = null;
-            session()->flash('error', 'Error opening take over form: ' . $e->getMessage());
-        }
+        $this->dispatch('openTakeOverForm', sampleId: $sampleId);
     }
 
-    public function hideTakeOverForm()
-    {
-        $this->showTakeOverForm = false;
-        $this->selectedTakeOverSample = null;
-        $this->resetTakeOverForm();
-    }
-
-    public function resetTakeOverForm()
-    {
-        $this->takeOverAnalysisMethod = '';
-        $this->takeOverSecondaryAnalystId = '';
-        $this->resetErrorBag();
-    }
-
-    public function submitTakeOver()
-    {
-        $rules = [
-            'takeOverAnalysisMethod' => 'required|in:individual,joint',
-        ];
-
-        if ($this->takeOverAnalysisMethod === 'joint') {
-            $rules['takeOverSecondaryAnalystId'] = 'required|exists:users,id';
-        }
-
-        $this->validate($rules);
-
-        $sample = $this->selectedTakeOverSample;
-        $inProgressStatus = Status::where('name', 'in_progress')->first();
-
-        $updateData = [
-            'status_id' => $inProgressStatus ? $inProgressStatus->id : null,
-            'status' => 'in_progress',
-            'primary_analyst_id' => auth()->id(),
-            'analysis_method' => $this->takeOverAnalysisMethod,
-            'handover_taken_by' => auth()->id(),
-            'handover_taken_at' => Carbon::now('Asia/Jakarta'),
-            'handover_to_analyst_id' => null, // Clear hand over assignment
-        ];
-
-        // Store original data if first time starting analysis
-        if (!$sample->original_primary_analyst_id) {
-            $updateData['original_primary_analyst_id'] = $sample->primary_analyst_id;
-            $updateData['original_secondary_analyst_id'] = $sample->secondary_analyst_id;
-            $updateData['original_analysis_method'] = $sample->analysis_method;
-        }
-
-        if ($this->takeOverAnalysisMethod === 'joint') {
-            $updateData['secondary_analyst_id'] = $this->takeOverSecondaryAnalystId;
-        } else {
-            $updateData['secondary_analyst_id'] = null;
-        }
-
-        $sample->update($updateData);
-
-        $message = "Sample taken over successfully! Analysis method: " . ucfirst($this->takeOverAnalysisMethod);
-        if ($this->takeOverAnalysisMethod === 'joint') {
-            $secondaryAnalyst = User::find($this->takeOverSecondaryAnalystId);
-            $message .= " with " . $secondaryAnalyst->name;
-        }
-
-        session()->flash('message', $message);
-        $this->hideTakeOverForm();
-
-        // Redirect to analysis page
-        $this->redirect(route('analysis-page', ['sampleId' => $sample->id]));
-    }
-
-    public function printSampleLabel()
-    {
-        if (!$this->selectedSample) {
-            session()->flash('error', 'No sample selected for printing');
-            return;
-        }
-        
-        try {
-            $sample = $this->selectedSample;
-
-            // Prepare label data
-            $labelData = [
-                'sample_id' => $sample->id,
-                'material_name' => $sample->rawMaterial->name ?? 'N/A',
-                'category_name' => $sample->category->name ?? 'N/A',
-                'supplier' => $sample->supplier,
-                'batch_lot' => $sample->batch_lot,
-                'submission_date' => $sample->submission_time->format('Y-m-d H:i'),
-                'reference' => $sample->reference->name ?? 'N/A',
-                'vehicle_container' => $sample->vehicle_container_number,
-                'status' => $sample->statusRelation ? $sample->statusRelation->display_name : ucfirst($sample->status ?? ''),
-                'submitted_by' => $sample->submittedBy->name ?? 'N/A',
-            ];
-
-            // Call JavaScript function directly
-            $this->js('printSampleLabel(' . json_encode($labelData) . ')');
-            
-        } catch (\Exception $e) {
-            session()->flash('error', 'Error preparing sample label: ' . $e->getMessage());
-        }
-    }
 
     public function render()
     {
