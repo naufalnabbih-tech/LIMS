@@ -10,41 +10,50 @@ class Reference extends Model
 {
     protected $fillable = [
         'name',
-        'rawmat_id'
+        'material_id'
     ];
 
-    public function rawmat()
+    public function material()
     {
-        return $this->belongsTo(RawMat::class, 'rawmat_id');
+        return $this->belongsTo(Material::class);
     }
 
-    public function specificationsManytoMany()
+
+
+    public function specifications()
     {
-        return $this->belongsToMany(Specification::class, 'reference_specification', 'reference_id', 'specification_id')
-            ->withPivot(
-                'value',
-                'operator',
-                'max_value',
-                'text_value'
-            )
-            ->withTimestamps();
+        return $this->belongsToMany(
+            Specification::class,
+            'reference_specification',
+            'reference_id',
+            'specification_id'
+        )->withPivot([
+                    'operator',
+                    'value',
+                    'max_value',
+                    'text_value'
+                ])->withTimestamps();
     }
 
-    public function evaluateSpecification(int $specificationId, float $testValue): bool
+    public function samples()
     {
-        $pivotData = $this->specificationsManytoMany()
-            ->where('specification_id', $specificationId)
-            ->first()?->pivot;
+        return $this->hasMany(Sample::class);
+    }
 
-        if (!$pivotData) {
-            return false;
+    // Helper get specification value
+    public function getSpecValue($specificationId)
+    {
+        $spec = $this->specifications()->where('specification_id', $specificationId)->first();
+
+        if (!$spec) {
+            return null;
         }
 
-        $operator = OperatorType::from($pivotData->operator);
-
-        return $operator->evaluate(
-            $testValue,
-            $pivotData->value
-        );
+        return [
+            'operator' => $spec->pivot->operator,
+            'value' => $spec->pivot->value,
+            'max_value' => $spec->pivot->max_value,
+            'text_value' => $spec->pivot->text_value,
+        ];
     }
 }
