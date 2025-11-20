@@ -71,10 +71,10 @@ class StatusSeeder extends Seeder
                 'is_active' => true,
             ],
             [
-                'name' => 'submitted_to_handover',
-                'display_name' => 'Submitted to Hand Over',
-                'description' => 'Sample has been submitted for hand over to another analyst',
-                'color' => '#F59E0B',
+                'name' => 'hand_over',
+                'display_name' => 'Hand Over',
+                'description' => 'Sample is in handover process, waiting to be taken by another analyst',
+                'color' => '#F97316',  // Orange
                 'sort_order' => 7,
                 'is_active' => true,
             ],

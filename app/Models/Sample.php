@@ -131,17 +131,17 @@ class Sample extends Model
 
     public function isPending()
     {
-        return $this->status()->name === 'pending';
+        return $this->status->name === 'Pending';
     }
 
     public function isInAnalysis()
     {
-        return $this->status()->name === 'in_analysis';
+        return $this->status->name === 'In Progress';
     }
 
     public function isCompleted()
     {
-        return $this->status()->name === 'completed';
+        return $this->status->name === 'Completed';
     }
 
     public function hasActiveHandover()

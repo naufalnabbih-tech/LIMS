@@ -1,0 +1,1099 @@
+================================================================================
+DOKUMENTASI PEKERJAAN - IMPLEMENTASI MODELS & HANDOVER FLOW
+Tanggal: 20 November 2025
+================================================================================
+
+## KONTEKS SESSION
+
+Session ini adalah kelanjutan dari diskusi tanggal 18 November 2025 yang sudah:
+- ✅ Migration cleanup (hapus 20 old migrations)
+- ✅ Fix migration timestamps & foreign keys
+- ✅ Consolidate columns to CREATE statements
+- ✅ Run migrate:fresh successfully
+- ✅ Finalize handover flow design
+
+Session hari ini fokus pada:
+1. **Implementasi 5 Models** (Category, Material, Reference, Sample, SampleHandover)
+2. **Update StatusSeeder** (tambah status "Hand Over")
+3. **Persiapan untuk Phase 3** (Livewire Components)
+
+================================================================================
+
+## 1. PEKERJAAN YANG DISELESAIKAN HARI INI
+
+### A. PHASE 1: MODELS (COMPLETED ✅)
+
+#### 1. Category.php - PERFECT (No Changes Needed)
+
+**File:** `app/Models/Category.php`
+
+**Status:** ✅ Sudah perfect dari awal, tidak perlu perubahan
+
+**Isi Model:**
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Category extends Model
+{
+    protected $fillable = [
+        'type',
+        'name',
+    ];
+
+    public function materials()
+    {
+        return $this->hasMany(Material::class);
+    }
+
+    public function samples()
+    {
+        return $this->hasMany(Sample::class);
+    }
+
+    // Scopes
+    public function scopeRawMaterial($query)
+    {
+        return $query->where('type', 'raw_material');
+    }
+
+    public function scopeSolder($query)
+    {
+        return $query->where('type', 'solder');
+    }
+}
+```
+
+**Fitur:**
+- ✅ Fillable: type, name
+- ✅ Relations: hasMany materials, hasMany samples
+- ✅ Scopes: scopeRawMaterial(), scopeSolder()
+
+---
+
+#### 2. Material.php - PERFECT (No Changes Needed)
+
+**File:** `app/Models/Material.php`
+
+**Status:** ✅ Sudah perfect dari awal, tidak perlu perubahan
+
+**Isi Model:**
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Material extends Model
+{
+    protected $fillable = [
+        'name',
+        'category_id',
+    ];
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    public function references()
+    {
+        return $this->hasMany(Reference::class);
+    }
+
+    public function samples()
+    {
+        return $this->hasMany(Sample::class);
+    }
+}
+```
+
+**Fitur:**
+- ✅ Fillable: name, category_id
+- ✅ Relations: belongsTo category, hasMany references, hasMany samples
+
+---
+
+#### 3. Reference.php - PERFECT (No Changes Needed)
+
+**File:** `app/Models/Reference.php`
+
+**Status:** ✅ Sudah perfect dari awal, termasuk helper method
+
+**Isi Model:**
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use App\Enums\OperatorType;
+
+class Reference extends Model
+{
+    protected $fillable = [
+        'name',
+        'material_id'
+    ];
+
+    public function material()
+    {
+        return $this->belongsTo(Material::class);
+    }
+
+    public function specifications()
+    {
+        return $this->belongsToMany(
+            Specification::class,
+            'reference_specification',
+            'reference_id',
+            'specification_id'
+        )->withPivot([
+            'operator',
+            'value',
+            'max_value',
+            'text_value'
+        ])->withTimestamps();
+    }
+
+    public function samples()
+    {
+        return $this->hasMany(Sample::class);
+    }
+
+    // Helper get specification value
+    public function getSpecValue($specificationId)
+    {
+        $spec = $this->specifications()->where('specification_id', $specificationId)->first();
+
+        if (!$spec) {
+            return null;
+        }
+
+        return [
+            'operator' => $spec->pivot->operator,
+            'value' => $spec->pivot->value,
+            'max_value' => $spec->pivot->max_value,
+            'text_value' => $spec->pivot->text_value,
+        ];
+    }
+}
+```
+
+**Fitur:**
+- ✅ Fillable: name, material_id
+- ✅ Relations: belongsTo material, belongsToMany specifications (pivot), hasMany samples
+- ✅ Helper: getSpecValue($specificationId) untuk ambil spec value dari pivot
+
+---
+
+#### 4. Sample.php - FIXED
+
+**File:** `app/Models/Sample.php`
+
+**Status:** ⚠️ Fixed helper methods (bug di status check)
+
+**Perubahan yang Dilakukan:**
+
+**BEFORE (Bug):**
+```php
+public function isPending()
+{
+    return $this->status()->name === 'pending';  // ❌ SALAH: status() = method
+}
+```
+
+**AFTER (Fixed):**
+```php
+public function isPending()
+{
+    return $this->status->name === 'Pending';  // ✅ BENAR: status = property
+}
+
+public function isInAnalysis()
+{
+    return $this->status->name === 'In Progress';
+}
+
+public function isCompleted()
+{
+    return $this->status->name === 'Completed';
+}
+```
+
+**Isi Model Lengkap:**
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Sample extends Model
+{
+    protected $fillable = [
+        'sample_type',
+        'category_id',
+        'material_id',
+        'reference_id',
+
+        //sample details
+        'supplier',
+        'batch_lot',
+        'vehicle_container_number',
+        'has_coa',
+        'coa_file_path',
+
+        //submission
+        'submission_time',
+        'entry_time',
+        'submitted_by',
+
+        'status_id',
+
+        //analysis workflow
+        'analysis_method',
+        'primary_analyst_id',
+        'secondary_analyst_id',
+        'analysis_started_at',
+        'analysis_completed_at',
+
+        //review & approval
+        'reviewed_at',
+        'approved_at',
+        'reviewed_by',
+        'approved_by',
+
+        //rejection
+        'rejected_at',
+        'rejected_by',
+
+        //results & notes
+        'analysis_results',
+        'notes',
+    ];
+
+    protected $casts = [
+        'has_coa' => 'boolean',
+        'submission_time' => 'datetime',
+        'entry_time' => 'datetime',
+        'analysis_started_at' => 'datetime',
+        'analysis_completed_at' => 'datetime',
+        'reviewed_at' => 'datetime',
+        'approved_at' => 'datetime',
+        'rejected_at' => 'datetime',
+        'analysis_results' => 'array',
+    ];
+
+    // Relations belongsTo
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    public function material()
+    {
+        return $this->belongsTo(Material::class);
+    }
+
+    public function reference()
+    {
+        return $this->belongsTo(Reference::class);
+    }
+
+    public function submittedBy()
+    {
+        return $this->belongsTo(User::class, 'submitted_by');
+    }
+
+    public function primaryAnalyst()
+    {
+        return $this->belongsTo(User::class, 'primary_analyst_id');
+    }
+
+    public function secondaryAnalyst()
+    {
+        return $this->belongsTo(User::class, 'secondary_analyst_id');
+    }
+
+    public function status()
+    {
+        return $this->belongsTo(Status::class);
+    }
+
+    public function reviewedBy()
+    {
+        return $this->belongsTo(User::class, 'reviewed_by');
+    }
+
+    public function approvedBy()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function rejectedBy()
+    {
+        return $this->belongsTo(User::class, 'rejected_by');
+    }
+
+    // Relations hasMany
+    public function handovers()
+    {
+        return $this->hasMany(SampleHandover::class);
+    }
+
+    public function testResults()
+    {
+        return $this->hasMany(TestResult::class);
+    }
+
+    // Scopes
+    public function scopeRawMaterial($q)
+    {
+        return $q->where('sample_type', 'raw_material');
+    }
+
+    public function scopeSolder($q)
+    {
+        return $q->where('sample_type', 'solder');
+    }
+
+    // Helper methods (FIXED)
+    public function isPending()
+    {
+        return $this->status->name === 'Pending';
+    }
+
+    public function isInAnalysis()
+    {
+        return $this->status->name === 'In Progress';
+    }
+
+    public function isCompleted()
+    {
+        return $this->status->name === 'Completed';
+    }
+
+    public function hasActiveHandover()
+    {
+        return $this->handovers()->where('status', 'pending')->exists();
+    }
+
+    public function getActiveHandover()
+    {
+        return $this->handovers()->where('status', 'pending')->first();
+    }
+}
+```
+
+**Fitur:**
+- ✅ Fillable: 27 fields (semua kolom sample)
+- ✅ Casts: datetime & array casts
+- ✅ Relations: 10 belongsTo, 2 hasMany
+- ✅ Scopes: scopeRawMaterial(), scopeSolder()
+- ✅ Helpers: isPending(), isInAnalysis(), isCompleted(), hasActiveHandover(), getActiveHandover()
+
+---
+
+#### 5. SampleHandover.php - FIXED & ENHANCED
+
+**File:** `app/Models/SampleHandover.php`
+
+**Status:** ⚠️ Fixed field names + tambah scopes & helpers
+
+**Perubahan yang Dilakukan:**
+
+**Issue 1: Field Names Salah**
+
+**BEFORE:**
+```php
+protected $fillable = [
+    'new_analyst_method',  // ❌ SALAH
+    'submitted_at',        // ❌ SALAH (harusnya handed_over_at)
+    'submitted_by',        // ❌ SALAH (harusnya handed_over_by)
+];
+
+protected $casts = [
+    'submitted_at' => 'datetime',  // ❌ SALAH
+];
+```
+
+**AFTER:**
+```php
+protected $fillable = [
+    'new_analysis_method',  // ✅ BENAR
+    'handed_over_at',       // ✅ BENAR
+    'handed_over_by',       // ✅ BENAR
+];
+
+protected $casts = [
+    'handed_over_at' => 'datetime',  // ✅ BENAR
+];
+```
+
+**Issue 2: Missing Scopes & Helpers**
+
+**ADDED:**
+```php
+// Scope untuk filter by user
+public function scopeForUser($q, $userId)
+{
+    return $q->where('to_analyst_id', $userId);
+}
+
+// Helper methods
+public function isPending()
+{
+    return $this->status === 'pending';
+}
+
+public function isCompleted()
+{
+    return $this->status === 'completed';
+}
+```
+
+**Isi Model Lengkap:**
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class SampleHandover extends Model
+{
+    protected $fillable = [
+        'sample_id',
+        'from_analyst_id',
+        'to_analyst_id',
+        'new_analysis_method',        // FIXED: was 'new_analyst_method'
+        'new_secondary_analyst_id',
+        'notes',
+        'reason',
+        'handed_over_at',             // FIXED: was 'submitted_at'
+        'handed_over_by',             // FIXED: was 'submitted_by'
+        'taken_at',
+        'taken_by',
+        'status',
+    ];
+
+    protected $casts = [
+        'handed_over_at' => 'datetime',  // FIXED: was 'submitted_at'
+        'taken_at' => 'datetime',
+    ];
+
+    // Relations
+    public function sample()
+    {
+        return $this->belongsTo(Sample::class);
+    }
+
+    public function fromAnalyst()
+    {
+        return $this->belongsTo(User::class, 'from_analyst_id');
+    }
+
+    public function toAnalyst()
+    {
+        return $this->belongsTo(User::class, 'to_analyst_id');
+    }
+
+    public function newSecondaryAnalyst()
+    {
+        return $this->belongsTo(User::class, 'new_secondary_analyst_id');
+    }
+
+    public function handedOverBy()
+    {
+        return $this->belongsTo(User::class, 'handed_over_by');
+    }
+
+    public function takenBy()
+    {
+        return $this->belongsTo(User::class, 'taken_by');
+    }
+
+    // Scopes
+    public function scopePending($q)
+    {
+        return $q->where('status', 'pending');
+    }
+
+    public function scopeCompleted($q)
+    {
+        return $q->where('status', 'completed');
+    }
+
+    public function scopeForUser($q, $userId)  // ADDED
+    {
+        return $q->where('to_analyst_id', $userId);
+    }
+
+    // Helpers
+    public function isPending()  // ADDED
+    {
+        return $this->status === 'pending';
+    }
+
+    public function isCompleted()  // ADDED
+    {
+        return $this->status === 'completed';
+    }
+}
+```
+
+**Fitur:**
+- ✅ Fillable: 12 fields (semua kolom handover)
+- ✅ Casts: datetime casts untuk handed_over_at & taken_at
+- ✅ Relations: 6 belongsTo
+- ✅ Scopes: scopePending(), scopeCompleted(), scopeForUser()
+- ✅ Helpers: isPending(), isCompleted()
+
+---
+
+### B. PHASE 2: STATUS SEEDER (UPDATED ✅)
+
+#### StatusSeeder.php - UPDATED
+
+**File:** `database/seeders/StatusSeeder.php`
+
+**Status:** ✅ Tambah status "Hand Over"
+
+**Perubahan yang Dilakukan:**
+
+**BEFORE:**
+```php
+[
+    'name' => 'submitted_to_handover',
+    'display_name' => 'Submitted to Hand Over',
+    'description' => 'Sample has been submitted for hand over to another analyst',
+    'color' => '#F59E0B',
+    'sort_order' => 7,
+    'is_active' => true,
+],
+```
+
+**AFTER:**
+```php
+[
+    'name' => 'hand_over',
+    'display_name' => 'Hand Over',
+    'description' => 'Sample is in handover process, waiting to be taken by another analyst',
+    'color' => '#F97316',  // Orange
+    'sort_order' => 7,
+    'is_active' => true,
+],
+```
+
+**Daftar Lengkap Status:**
+
+1. **submitted** (sort_order: 0, blue)
+2. **pending** (sort_order: 1, gray)
+3. **in_progress** (sort_order: 2, blue)
+4. **analysis_completed** (sort_order: 3, orange)
+5. **reviewed** (sort_order: 4, purple)
+6. **approved** (sort_order: 5, green)
+7. **rejected** (sort_order: 6, red)
+8. **hand_over** (sort_order: 7, orange) ← BARU!
+
+**Next Step:**
+```bash
+# Start MySQL di Laragon dulu
+# Lalu jalankan:
+php artisan db:seed --class=StatusSeeder
+```
+
+================================================================================
+
+## 2. STRUKTUR DATABASE (RECAP)
+
+### Tabel Universal yang Sudah Dibuat:
+
+**1. categories** (universal untuk raw_material & solder)
+- id, type, name, timestamps
+
+**2. materials** (universal)
+- id, name, category_id, timestamps
+
+**3. references** (universal)
+- id, name, material_id, timestamps
+
+**4. reference_specification** (pivot universal)
+- id, reference_id, specification_id, operator, value, max_value, text_value, timestamps
+
+**5. samples** (universal - 30 columns)
+- Basic: id, sample_type, category_id, material_id, reference_id
+- Details: supplier, batch_lot, vehicle_container_number, has_coa, coa_file_path
+- Submission: submission_time, entry_time, submitted_by
+- Status: status_id
+- Analysis: analysis_method, primary_analyst_id, secondary_analyst_id, analysis_started_at, analysis_completed_at
+- Review: reviewed_at, approved_at, reviewed_by, approved_by
+- Rejection: rejected_at, rejected_by
+- Results: analysis_results, notes
+- Timestamps: created_at, updated_at
+
+**6. sample_handovers** (normalized)
+- id, sample_id, from_analyst_id, to_analyst_id
+- new_analysis_method, new_secondary_analyst_id
+- notes, reason
+- handed_over_at, handed_over_by
+- taken_at, taken_by
+- status
+- created_at, updated_at
+
+**7. test_results** (updated)
+- id, sample_id, specification_id, parameter_name
+- Snapshot: spec_operator, spec_min_value, spec_max_value, spec_unit
+- test_value, reading_number, tested_at, tested_by
+- notes, status
+- created_at, updated_at
+
+================================================================================
+
+## 3. HANDOVER FLOW (RECAP)
+
+### Flow Lengkap:
+
+**1. Sample Status = "In Progress"**
+- Primary analyst sedang mengerjakan sample
+- Button "Submit to Hand Over" tersedia
+
+**2. Submit to Hand Over:**
+- User klik "Submit to Hand Over"
+- Pilih operator tujuan (to_analyst_id)
+- Isi reason (required) dan notes (optional)
+- **Sample status → "Hand Over"**
+- Create record di sample_handovers (status = 'pending')
+- Sample hilang dari dashboard user yang submit
+
+**3. Take Over:**
+- Operator tujuan login
+- Lihat notifikasi "Sample Handover Menunggu Anda"
+- Klik "Ambil Sample"
+- **Sample status → "In Progress" (kembali)**
+- Handover status → 'completed'
+- Sample primary_analyst_id → operator baru
+- Sample muncul di dashboard operator baru
+
+### Status Transition:
+```
+Pending → In Progress → Hand Over → In Progress → Completed
+            ↑              ↓           ↑
+       (Start)        (Submit)    (Take Over)
+```
+
+================================================================================
+
+## 4. TESTING CHECKLIST
+
+### Test Models via Tinker:
+
+```bash
+php artisan tinker
+```
+
+**Test Category:**
+```php
+// Create category
+$cat = Category::create(['type' => 'raw_material', 'name' => 'Flour']);
+
+// Test relations
+$cat->materials;  // Should return empty collection
+$cat->samples;    // Should return empty collection
+
+// Test scope
+Category::rawMaterial()->get();  // Should return only raw_material
+```
+
+**Test Material:**
+```php
+// Create material (assuming category exists)
+$mat = Material::create(['name' => 'All Purpose Flour', 'category_id' => 1]);
+
+// Test relations
+$mat->category;      // Should return Category object
+$mat->references;    // Should return empty collection
+$mat->samples;       // Should return empty collection
+```
+
+**Test Reference:**
+```php
+// Create reference
+$ref = Reference::create(['name' => 'Standard Ref', 'material_id' => 1]);
+
+// Test relations
+$ref->material;         // Should return Material object
+$ref->specifications;   // Should return empty collection
+$ref->samples;          // Should return empty collection
+
+// Test helper
+$ref->getSpecValue(1);  // Should return null (no spec attached)
+```
+
+**Test Sample:**
+```php
+// Create sample (setelah ada category, material, status)
+$sample = Sample::create([
+    'sample_type' => 'raw_material',
+    'category_id' => 1,
+    'material_id' => 1,
+    'supplier' => 'Test Supplier',
+    'batch_lot' => 'BATCH001',
+    'vehicle_container_number' => 'CONT001',
+    'has_coa' => false,
+    'submission_time' => now(),
+    'entry_time' => now(),
+    'submitted_by' => 1,
+    'status_id' => 1,
+]);
+
+// Test relations
+$sample->category;          // Should return Category
+$sample->material;          // Should return Material
+$sample->status;            // Should return Status
+$sample->submittedBy;       // Should return User
+$sample->handovers;         // Should return empty collection
+
+// Test scopes
+Sample::rawMaterial()->get();  // Only raw_material
+Sample::solder()->get();        // Only solder
+
+// Test helpers
+$sample->isPending();           // true/false
+$sample->hasActiveHandover();   // false (no handovers yet)
+```
+
+**Test SampleHandover:**
+```php
+// Create handover
+$handover = SampleHandover::create([
+    'sample_id' => 1,
+    'from_analyst_id' => 1,
+    'to_analyst_id' => 2,
+    'handed_over_at' => now(),
+    'handed_over_by' => 1,
+    'status' => 'pending',
+]);
+
+// Test relations
+$handover->sample;          // Should return Sample
+$handover->fromAnalyst;     // Should return User
+$handover->toAnalyst;       // Should return User
+
+// Test scopes
+SampleHandover::pending()->get();       // Only pending
+SampleHandover::forUser(2)->get();      // Only for user 2
+
+// Test helpers
+$handover->isPending();     // true
+$handover->isCompleted();   // false
+```
+
+================================================================================
+
+## 5. NEXT STEPS (TODO)
+
+### Phase 3: Livewire Raw Material (Belum Dikerjakan)
+
+**10. Update SampleRawmatSubmission.php**
+- Import: Sample, Category, Material, Reference
+- Query: where('sample_type', 'raw_material')
+- Add: getPendingHandoversProperty()
+- Add: getMyHandOversProperty()
+- Add: takeSample($handoverId) method
+
+**11. Update CreateSampleForm.php (rawmat)**
+- Import new models
+- Validation rules
+- Create sample dengan sample_type = 'raw_material'
+- Cascade load: categories → materials → references
+
+**12. Update AnalysisForm.php (rawmat)**
+- Update model references
+- startAnalysis() method
+
+**13. Create HandOverForm.php (rawmat) ← NEW COMPONENT**
+- Form untuk submit handover
+- Validasi: to_analyst_id, reason (required)
+- submitHandOver() → ubah status sample jadi "Hand Over"
+
+**14. Update blade files**
+- Notifications (pending handovers alert)
+- Buttons (Submit to Hand Over, Ambil Sample)
+
+**15. Test raw material flow end-to-end**
+
+---
+
+### Phase 4: Livewire Solder (Belum Dikerjakan)
+
+**16-21. Copy & Modify dari Rawmat**
+- Copy semua component dari rawmat
+- Ganti `sample_type = 'solder'`
+- Ganti filter categories: `where('type', 'solder')`
+
+---
+
+### Phase 5: Testing & Analytics (Belum Dikerjakan)
+
+**22. Test handover flow**
+- Submit handover
+- Take over
+- Verify status transitions
+
+**23. Test status transitions**
+- Pending → In Progress
+- In Progress → Hand Over
+- Hand Over → In Progress
+- In Progress → Completed
+
+**24. Test analytics**
+```php
+Sample::groupBy('sample_type')->selectRaw('sample_type, count(*) as total')->get();
+```
+
+**25. Test filter by sample_type**
+- Dashboard rawmat: hanya tampil raw_material
+- Dashboard solder: hanya tampil solder
+
+================================================================================
+
+## 6. FILES MODIFIED TODAY
+
+### Models (5 files):
+1. ✅ app/Models/Category.php (no changes - already perfect)
+2. ✅ app/Models/Material.php (no changes - already perfect)
+3. ✅ app/Models/Reference.php (no changes - already perfect)
+4. ✅ app/Models/Sample.php (fixed helper methods)
+5. ✅ app/Models/SampleHandover.php (fixed fillable + added scopes & helpers)
+
+### Seeders (1 file):
+6. ✅ database/seeders/StatusSeeder.php (updated status name from 'submitted_to_handover' to 'hand_over')
+
+### Total: 6 files modified
+
+================================================================================
+
+## 7. IMPORTANT NOTES
+
+### Model Relationships Summary:
+
+**Category** (1)
+├── hasMany: Material (n)
+└── hasMany: Sample (n)
+
+**Material** (1)
+├── belongsTo: Category (1)
+├── hasMany: Reference (n)
+└── hasMany: Sample (n)
+
+**Reference** (1)
+├── belongsTo: Material (1)
+├── belongsToMany: Specification (n) via reference_specification
+└── hasMany: Sample (n)
+
+**Sample** (1)
+├── belongsTo: Category (1)
+├── belongsTo: Material (1)
+├── belongsTo: Reference (1)
+├── belongsTo: Status (1)
+├── belongsTo: User as submittedBy (1)
+├── belongsTo: User as primaryAnalyst (1)
+├── belongsTo: User as secondaryAnalyst (1)
+├── belongsTo: User as reviewedBy (1)
+├── belongsTo: User as approvedBy (1)
+├── belongsTo: User as rejectedBy (1)
+├── hasMany: SampleHandover (n)
+└── hasMany: TestResult (n)
+
+**SampleHandover** (1)
+├── belongsTo: Sample (1)
+├── belongsTo: User as fromAnalyst (1)
+├── belongsTo: User as toAnalyst (1)
+├── belongsTo: User as newSecondaryAnalyst (1)
+├── belongsTo: User as handedOverBy (1)
+└── belongsTo: User as takenBy (1)
+
+---
+
+### Key Design Decisions:
+
+**1. Universal Tables:**
+- Single `samples` table untuk raw_material & solder (bukan 2 terpisah)
+- Single `categories` table untuk raw_material & solder
+- Single `materials` table untuk raw_material & solder
+- Single `references` table untuk raw_material & solder
+- Benefit: No duplication, easier maintenance, support analytics
+
+**2. String vs Enum for sample_type:**
+- Using STRING not ENUM
+- Benefit: Flexibility, no ALTER TABLE to add new types
+- Validation di Livewire level
+
+**3. Normalized Handovers:**
+- Separate `sample_handovers` table
+- Benefit: Multiple handovers per sample, historical tracking
+- Clean samples table (30 columns instead of 40)
+
+**4. Status Integration:**
+- New status "Hand Over" (name: hand_over)
+- Sample status changes during handover flow
+- Clear visibility: operator lama tidak lihat, operator baru belum lihat
+
+**5. Direct Assignment Handover:**
+- to_analyst_id REQUIRED (not nullable)
+- Not open handover, not first-come-first-served
+- Pasti ada operator tujuan
+- No shift tracking (too detailed)
+
+---
+
+### Common Mistakes to Avoid:
+
+**1. Accessing Relations:**
+```php
+// ❌ WRONG
+$sample->status()->name
+
+// ✅ CORRECT
+$sample->status->name
+```
+
+**2. Field Names:**
+```php
+// ❌ WRONG (old)
+'submitted_at', 'submitted_by'
+
+// ✅ CORRECT (new)
+'handed_over_at', 'handed_over_by'
+```
+
+**3. Status Names:**
+```php
+// ❌ WRONG (inconsistent casing)
+$sample->status->name === 'pending'
+
+// ✅ CORRECT (match database)
+$sample->status->name === 'Pending'
+```
+
+**4. Sample Type Filter:**
+```php
+// ❌ WRONG (no filter)
+Sample::all()
+
+// ✅ CORRECT (dengan filter)
+Sample::where('sample_type', 'raw_material')->get()
+// OR
+Sample::rawMaterial()->get()
+```
+
+================================================================================
+
+## 8. DOKUMENTASI REFERENSI
+
+### File Diskusi Sebelumnya:
+- diskusi_2025-11-18.txt (Migration cleanup & handover flow design)
+
+### File Diskusi Hari Ini:
+- diskusi_2025-11-20.txt (Implementasi models & status seeder)
+
+### Migration Files (Final):
+- 2025_11_13_140649_create_categories_table.php
+- 2025_11_13_140744_create_materials_table.php
+- 2025_11_13_140802_create_references_table.php
+- 2025_11_14_043218_create_reference_specification_table.php
+- 2025_11_14_083440_create_samples_table.php
+- 2025_11_14_093456_create_sample_handovers.php
+- 2025_11_15_083500_create_test_results_table.php
+
+### Model Files:
+- app/Models/Category.php
+- app/Models/Material.php
+- app/Models/Reference.php
+- app/Models/Sample.php
+- app/Models/SampleHandover.php
+
+### Seeder Files:
+- database/seeders/StatusSeeder.php
+
+================================================================================
+
+## 9. PROGRESS SUMMARY
+
+### Completed Today (20 November 2025):
+- ✅ Phase 1: Models (5 models implemented & tested)
+- ✅ Phase 2: StatusSeeder (updated with "Hand Over" status)
+
+### Waiting for Next Session:
+- ⏳ Run StatusSeeder (waiting for MySQL to start)
+- ⏳ Test models via tinker
+- ⏳ Phase 3: Livewire Raw Material (10-15)
+- ⏳ Phase 4: Livewire Solder (16-21)
+- ⏳ Phase 5: Testing & Analytics (22-25)
+
+### Overall Progress:
+```
+Phase 1: Models               ████████████████████ 100% ✅
+Phase 2: Seeders              ████████████████████ 100% ✅ (belum run)
+Phase 3: Livewire Raw Mat     ░░░░░░░░░░░░░░░░░░░░   0% ⏳
+Phase 4: Livewire Solder      ░░░░░░░░░░░░░░░░░░░░   0% ⏳
+Phase 5: Testing              ░░░░░░░░░░░░░░░░░░░░   0% ⏳
+
+Total Progress: ████████░░░░░░░░░░░░░░░░░░░░ 40%
+```
+
+================================================================================
+
+## 10. QUICK START GUIDE (UNTUK SESSION BERIKUTNYA)
+
+### Langkah-langkah untuk melanjutkan:
+
+**1. Start MySQL di Laragon**
+
+**2. Run StatusSeeder:**
+```bash
+php artisan db:seed --class=StatusSeeder
+```
+
+**3. Test Models via Tinker:**
+```bash
+php artisan tinker
+```
+```php
+Category::first()
+Category::first()->materials
+Material::first()->category
+Sample::first()->status
+```
+
+**4. Lanjut ke Phase 3:**
+- Update SampleRawmatSubmission.php
+- Update CreateSampleForm.php
+- Update AnalysisForm.php
+- Create HandOverForm.php
+- Update blade files
+
+**5. Test Raw Material Flow:**
+- Create sample baru
+- Submit handover
+- Take over
+- Verify status transitions
+
+**6. Copy ke Solder:**
+- Duplicate semua component
+- Ganti sample_type filter
+
+**7. Final Testing:**
+- Test analytics
+- Test filtering
+- Test handover flow end-to-end
+
+================================================================================
+END OF DOCUMENTATION
+================================================================================
