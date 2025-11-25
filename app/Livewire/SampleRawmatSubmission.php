@@ -2,7 +2,11 @@
 
 namespace App\Livewire;
 
-use App\Models\RawMaterialSample;
+use App\Models\Sample;
+use App\Models\Category;
+use App\Models\Material;
+use App\Models\Reference;
+use App\Models\SampleHandover;
 use App\Models\Status;
 use App\Models\User;
 use Livewire\Component;
@@ -35,26 +39,26 @@ class SampleRawmatSubmission extends Component
 
     public function handlePrintLabel($sampleId)
     {
-        $sample = RawMaterialSample::with([
+        $sample = Sample::with([
             'category',
-            'rawMaterial',
+            'material',
             'reference',
             'submittedBy',
-            'statusRelation'
+            'status'
         ])->findOrFail($sampleId);
 
         try {
             // Prepare label data
             $labelData = [
                 'sample_id' => $sample->id,
-                'material_name' => $sample->rawMaterial->name ?? 'N/A',
+                'material_name' => $sample->material->name ?? 'N/A',
                 'category_name' => $sample->category->name ?? 'N/A',
                 'supplier' => $sample->supplier,
                 'batch_lot' => $sample->batch_lot,
                 'submission_date' => $sample->submission_time->format('Y-m-d H:i'),
                 'reference' => $sample->reference->name ?? 'N/A',
                 'vehicle_container' => $sample->vehicle_container_number,
-                'status' => $sample->statusRelation ? $sample->statusRelation->display_name : ucfirst($sample->status ?? ''),
+                'status' => $sample->status ? $sample->status->display_name : ucfirst($sample->status ?? ''),
                 'submitted_by' => $sample->submittedBy->name ?? 'N/A',
             ];
 
@@ -74,7 +78,7 @@ class SampleRawmatSubmission extends Component
 
     public function startAnalysis($sampleId)
     {
-        $sample = RawMaterialSample::with('statusRelation')->findOrFail($sampleId);
+        $sample = Sample::with('status')->findOrFail($sampleId);
         $inProgressStatus = Status::where('name', 'in_progress')->first();
 
         $sample->update([
@@ -82,21 +86,21 @@ class SampleRawmatSubmission extends Component
             'analysis_started_at' => Carbon::now('Asia/Jakarta'),
             'primary_analyst_id' => auth()->id()
         ]);
+
         session()->flash('message', "Analysis started for sample");
 
-        // Redirect to the analysis page
         return redirect()->route('analysis-page', ['sampleId' => $sampleId]);
     }
 
     public function continueAnalysis($sampleId)
     {
-        // Redirect to the analysis page for ongoing analysis
+
         return redirect()->route('analysis-page', ['sampleId' => $sampleId]);
     }
 
     public function completeAnalysis($sampleId)
     {
-        $sample = RawMaterialSample::with('statusRelation')->findOrFail($sampleId);
+        $sample = Sample::with('status')->findOrFail($sampleId);
         $analysisCompletedStatus = Status::where('name', 'analysis_completed')->first();
 
         $sample->update([
@@ -108,19 +112,17 @@ class SampleRawmatSubmission extends Component
 
     public function reviewResults($sampleId)
     {
-        $sample = RawMaterialSample::with('statusRelation')->findOrFail($sampleId);
+        $sample = Sample::with('status')->findOrFail($sampleId);
 
-        // Get current status name
-        $currentStatusName = $sample->statusRelation ? $sample->statusRelation->name : ($sample->status ?? '');
 
-        // For approved samples, don't make any changes to preserve history
+        $currentStatusName = $sample->status ? $sample->status->name : ($sample->status ?? '');
+
         if ($currentStatusName === 'approved') {
-            return; // Just redirect to review page without updating database
+            return;
         }
 
         $reviewStatus = Status::where('name', 'reviewed')->first();
 
-        // Update status to 'reviewed'
         $updateData = [
             'reviewed_at' => Carbon::now('Asia/Jakarta'),
             'reviewed_by' => auth()->id(),
@@ -133,7 +135,7 @@ class SampleRawmatSubmission extends Component
 
     public function approveSample($sampleId)
     {
-        $sample = RawMaterialSample::with('statusRelation')->findOrFail($sampleId);
+        $sample = Sample::with('status')->findOrFail($sampleId);
         $approvedStatus = Status::where('name', 'approved')->first();
 
         $updateData = [
@@ -154,7 +156,7 @@ class SampleRawmatSubmission extends Component
 
     public function deleteSample($sampleId)
     {
-        $sample = RawMaterialSample::with('statusRelation')->findOrFail($sampleId);
+        $sample = Sample::with('status')->findOrFail($sampleId);
 
         // Delete associated CoA file if exists
         if ($sample->coa_file_path) {
@@ -172,44 +174,66 @@ class SampleRawmatSubmission extends Component
     }
 
 
-    public function acceptHandOver($sampleId)
+    // Take Over Methods
+    public function takeSample($handoverId)
     {
-        $sample = RawMaterialSample::with('statusRelation')->findOrFail($sampleId);
+        $handover = SampleHandover::with(['sample', 'toAnalyst'])->findOrFail($handoverId);
 
-        // Check if current user is the designated next analyst
-        if ($sample->handover_to_analyst_id != auth()->id()) {
-            session()->flash('error', 'You are not authorized to accept this hand over.');
+        if($handover->to_analyst_id != auth()->id()){
+            session()->flash('error', 'You are not authorized to take this sample.');
+            return;
+        }
+
+        if(!$handover->isPending()){
+            session()->flash('error', 'This sample has already been taken over.');
             return;
         }
 
         $inProgressStatus = Status::where('name', 'in_progress')->first();
 
-        $sample->update([
+        // For Update Sample
+        $handover->sample->update([
             'status_id' => $inProgressStatus ? $inProgressStatus->id : null,
-            'status' => 'in_progress',
-            'primary_analyst_id' => auth()->id(), // Transfer analyst
-            'handover_to_analyst_id' => null, // Clear hand over
-            'handover_notes' => null, // Clear notes
+            'primary_analyst_id' => auth()->id()
         ]);
 
-        session()->flash('message', "Hand over accepted. You are now the assigned analyst.");
-    }
+        // For Update Handover
+        $handover->update([
+            'status' => 'completed',
+            'taken_at' => Carbon::now('Asia/Jakarta'),
+            'taken_by' => auth()->id(),
+        ]);
 
-    // Take Over Methods
-    public function openTakeOverForm($sampleId)
-    {
-        $this->dispatch('openTakeOverForm', sampleId: $sampleId);
+        session()->flash('message', 'Sample taken successfully. You are now the assigned analyst.');
+        $this->dispatch('takeOverSubmitted');
     }
 
 
     public function render()
     {
-        $samples = RawMaterialSample::with(['category', 'rawMaterial', 'reference', 'submittedBy', 'statusRelation'])
+        $samples = Sample::with(['category', 'material', 'reference', 'submittedBy', 'status'])
+            ->where('sample_type', 'raw_material')
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
+        $pendingHandovers = SampleHandover::with(['sample.material', 'fromAnalyst'])
+            ->where('to_analyst_id', auth()->id())
+            ->where('status', 'pending')
+            ->latest()
+            ->get();
+
+        $myHandovers = SampleHandover::with(['sample.material', 'toAnalyst'])
+            ->whereHas('sample', function($q){
+                $q->where('primary_analyst_id', auth()->id());
+            })
+            ->where('status', 'pending')
+            ->latest()
+            ->get();
+
         return view('livewire.sample-rawmat-submission', [
-            'samples' => $samples
+            'samples' => $samples,
+            'pendingHandovers' => $pendingHandovers,
+            'myHandovers' => $myHandovers,
         ])->layout('layouts.app')->title('Sample Raw Material Submission');
     }
 }

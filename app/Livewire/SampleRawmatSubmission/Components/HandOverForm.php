@@ -2,9 +2,12 @@
 
 namespace App\Livewire\SampleRawmatSubmission\Components;
 
-use Livewire\Component;
-use App\Models\RawMaterialSample;
+use App\Models\Sample;
+use App\Models\SampleHandover;
+use App\Models\User;
+use App\Models\Role;
 use App\Models\Status;
+use Livewire\Component;
 use Carbon\Carbon;
 
 /**
@@ -21,30 +24,55 @@ use Carbon\Carbon;
  */
 class HandOverForm extends Component
 {
-    public $sample;
-    public $show = false;
-    public $handOverNotes = '';
+    public $showHandOverForm = false;
+    public $selectedSample = null;
+
+    public $to_analyst_id = '';
+    public $reason = '';
+    public $notes = '';
+
+    public $operators = [];
 
     protected $listeners = [
-        'openHandOverForm' => 'open',
-        'closeHandOverForm' => 'close'
+        'openHandOverForm' => 'show',
     ];
 
-    /**
-     * Validation rules
-     *
-     * @var array
-     */
+
     protected $rules = [
-        'handOverNotes' => 'nullable|string|max:1000',
+        'to_analyst_id' => 'required|exists:users,id',
+        'reason' => 'required|string|max:255',
+        'notes' => 'nullable|string|max:1000 ',
     ];
 
-    /**
-     * Open the hand over form modal
-     *
-     * @param int $sampleId
-     * @return void
-     */
+
+    public function mount(){
+        $operatorRole = Role::where('name', 'operator')->first();
+        if($operatorRole){
+            $this->operators = User::where('role_id', $operatorRole->id)
+                ->where('id', '!=', auth()->id())
+                ->get();
+        }else{
+            $this->operators = collect();
+        }
+    }
+
+    public function show($sampleId){
+        $this->resetForm();
+        $this->selectedSample = Sample::with([
+            'category',
+            'material',
+            'reference',
+            'status'
+        ])->findOrFail($sampleId);
+        $this->showHandOverForm = true;
+    }
+
+    public function hide(){
+        $this->showHandOverForm = false;
+        $this->selectedSample = null;
+        $this->resetForm();
+    }
+
     public function open($sampleId)
     {
         try {

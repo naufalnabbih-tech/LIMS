@@ -2,7 +2,7 @@
 
 namespace App\Livewire\SampleRawmatSubmission\Components;
 
-use App\Models\RawMaterialSample;
+use App\Models\Sample;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\Status;
@@ -43,11 +43,11 @@ class AnalysisForm extends Component
     public function show($sampleId)
     {
         $this->resetForm();
-        $this->selectedAnalysisSample = RawMaterialSample::with([
+        $this->selectedAnalysisSample = Sample::with([
             'category',
-            'rawMaterial',
+            'material',
             'reference',
-            'statusRelation'
+            'status'
         ])->findOrFail($sampleId);
         $this->showAnalysisForm = true;
     }
@@ -85,19 +85,11 @@ class AnalysisForm extends Component
 
         $sample = $this->selectedAnalysisSample;
 
-        // Get status IDs
         $inProgressStatus = Status::where('name', 'in_progress')->first();
-        $inProgressRestartStatus = Status::where('name', 'in_progress_restart')->first();
-
-        // Determine the correct status based on current sample status
-        $currentStatusName = $sample->statusRelation ? $sample->statusRelation->name : $sample->status;
-        $newStatusId = $currentStatusName === 'restart_analysis' ?
-            ($inProgressRestartStatus ? $inProgressRestartStatus->id : null) :
-            ($inProgressStatus ? $inProgressStatus->id : null);
 
         // Update sample status and analysis information
         $analysisData = [
-            'status_id' => $newStatusId,
+            'status_id' => $inProgressStatus ? $inProgressStatus->id : null,
             'analysis_method' => $this->analysisMethod,
             'primary_analyst_id' => $this->primaryAnalystId,
             'analysis_started_at' => Carbon::now('Asia/Jakarta'),
