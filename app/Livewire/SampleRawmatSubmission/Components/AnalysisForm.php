@@ -74,11 +74,18 @@ class AnalysisForm extends Component
             'analysisMethod' => 'required|in:individual,joint',
         ];
 
+        $messages = [
+            'analysisMethod.required' => 'Metode analisis wajib dipilih.',
+            'analysisMethod.in' => 'Metode analisis tidak valid.',
+            'secondaryAnalystId.required' => 'Secondary analyst wajib dipilih untuk metode joint analysis.',
+            'secondaryAnalystId.exists' => 'Secondary analyst yang dipilih tidak valid.',
+        ];
+
         if ($this->analysisMethod === 'joint') {
             $rules['secondaryAnalystId'] = 'required|exists:users,id';
         }
 
-        $this->validate($rules);
+        $this->validate($rules, $messages);
 
         // Always set current user as primary analyst (for both individual and joint)
         $this->primaryAnalystId = auth()->id();
@@ -95,18 +102,8 @@ class AnalysisForm extends Component
             'analysis_started_at' => Carbon::now('Asia/Jakarta'),
         ];
 
-        // Store original data for first time analysis start
-        if (!$sample->original_primary_analyst_id) {
-            $analysisData['original_primary_analyst_id'] = $this->primaryAnalystId;
-            $analysisData['original_analysis_method'] = $this->analysisMethod;
-        }
-
         if ($this->analysisMethod === 'joint') {
             $analysisData['secondary_analyst_id'] = $this->secondaryAnalystId;
-            // Store original secondary analyst if first time
-            if (!$sample->original_secondary_analyst_id) {
-                $analysisData['original_secondary_analyst_id'] = $this->secondaryAnalystId;
-            }
         }
 
         $sample->update($analysisData);

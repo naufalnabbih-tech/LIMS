@@ -10,6 +10,8 @@ use App\Livewire\Auth\Login;
 use App\Livewire\UserManagement;
 use App\Livewire\RoleManagement;
 use App\Livewire\SampleRawmatSubmission;
+use App\Livewire\SampleSolderSubmission;
+use App\Livewire\SampleChemicalSubmission;
 use App\Livewire\AnalysisPage;
 use App\Livewire\ResultsReviewPage;
 use App\Livewire\InstrumentConditionManagement;
@@ -20,6 +22,10 @@ use App\Livewire\SolderCategory;
 use App\Livewire\Solder;
 use App\Livewire\SolderReference;
 use App\Livewire\SolderSpecification;
+use App\Livewire\ChemicalCategory;
+use App\Livewire\Chemical;
+use App\Livewire\ChemicalReference;
+use App\Livewire\ChemicalSpecification;
 
 // Guest routes (accessible without authentication)
 Route::middleware('guest')->group(function () {
@@ -56,8 +62,22 @@ Route::middleware(['auth'])->group(function () {
     // Solder Specifications
     Route::get('/solder-specifications', SolderSpecification::class)->name('solder-specifications');
 
+    // Chemical Category Routes
+    Route::get('/chemical-categories', ChemicalCategory::class)->name('chemical-categories');
+
+    // Chemical Routes
+    Route::get('/chemicals', Chemical::class)->name('chemicals');
+
+    // Chemical References
+    Route::get('/chemical-references', ChemicalReference::class)->name('chemical-references');
+
+    // Chemical Specifications
+    Route::get('/chemical-specifications', ChemicalSpecification::class)->name('chemical-specifications');
+
     // Sample Submission Routes
     Route::get('/sample-rawmat-submissions', SampleRawmatSubmission::class)->name('sample-rawmat-submissions');
+    Route::get('/sample-solder-submissions', SampleSolderSubmission::class)->name('sample-solder-submissions');
+    Route::get('/sample-chemical-submissions', SampleChemicalSubmission::class)->name('sample-chemical-submissions');
 
     // Analysis Page Route
     Route::get('/analysis/{sampleId}', AnalysisPage::class)->name('analysis-page');

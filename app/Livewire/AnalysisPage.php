@@ -2,9 +2,9 @@
 
 namespace App\Livewire;
 
-use App\Models\RawMaterialSample;
-use App\Models\RawMatCategory;
-use App\Models\RawMat;
+use App\Models\Sample;
+use App\Models\Category;
+use App\Models\Material;
 use App\Models\Reference;
 use App\Models\TestResult;
 use App\Models\User;
@@ -24,9 +24,9 @@ class AnalysisPage extends Component
     public function mount($sampleId)
     {
         $this->sampleId = $sampleId;
-        $this->sample = RawMaterialSample::with([
+        $this->sample = Sample::with([
             'category',
-            'rawMaterial',
+            'material',
             'reference.specificationsManytoMany',
             'submittedBy',
             'primaryAnalyst',
@@ -321,6 +321,13 @@ class AnalysisPage extends Component
             }
         }
 
+        // Check if sample has pending handover - cannot complete if handover is pending
+        if ($this->sample->hasActiveHandover()) {
+            $this->dispatch('save-error', 'Cannot complete analysis. This sample has a pending handover. Please wait for the handover to be accepted or cancelled first.');
+            session()->flash('error', 'Cannot complete analysis. This sample has a pending handover.');
+            return;
+        }
+
         // Save analysis completion status
         $status = 'analysis_completed';
         $message = "Analysis results saved successfully! $totalTestResults test readings recorded.";
@@ -373,6 +380,12 @@ class AnalysisPage extends Component
 
     public function completeAnalysis()
     {
+        // Check if sample has pending handover - cannot complete if handover is pending
+        if ($this->sample->hasActiveHandover()) {
+            session()->flash('error', 'Cannot complete analysis. This sample has a pending handover. Please wait for the handover to be accepted or cancelled first.');
+            return;
+        }
+
         // Get analysis_completed status ID
         $analysisCompletedStatus = \App\Models\Status::where('name', 'analysis_completed')->first();
 
@@ -388,7 +401,19 @@ class AnalysisPage extends Component
 
     public function backToSamples()
     {
-        return redirect()->route('sample-rawmat-submissions');
+        // Redirect based on sample type
+        $sampleType = $this->sample->sample_type;
+
+        switch ($sampleType) {
+            case 'raw_material':
+                return redirect()->route('sample-rawmat-submissions');
+            case 'solder':
+                return redirect()->route('sample-solder-submissions');
+            case 'chemical':
+                return redirect()->route('sample-chemical-submissions');
+            default:
+                return redirect()->route('sample-rawmat-submissions');
+        }
     }
 
     public function render()

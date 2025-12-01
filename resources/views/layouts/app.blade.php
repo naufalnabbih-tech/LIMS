@@ -165,6 +165,9 @@
         </div>
     </div>
 
+    <!-- Toast Notifications -->
+    <livewire:handover-toast-notification />
+
     <!-- Livewire Scripts -->
     @livewireScripts
 

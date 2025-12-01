@@ -27,34 +27,17 @@ class HandOverForm extends Component
     public $showHandOverForm = false;
     public $selectedSample = null;
 
-    public $to_analyst_id = '';
     public $reason = '';
     public $notes = '';
-
-    public $operators = [];
 
     protected $listeners = [
         'openHandOverForm' => 'show',
     ];
 
-
     protected $rules = [
-        'to_analyst_id' => 'required|exists:users,id',
         'reason' => 'required|string|max:255',
-        'notes' => 'nullable|string|max:1000 ',
+        'notes' => 'nullable|string|max:1000',
     ];
-
-
-    public function mount(){
-        $operatorRole = Role::where('name', 'operator')->first();
-        if($operatorRole){
-            $this->operators = User::where('role_id', $operatorRole->id)
-                ->where('id', '!=', auth()->id())
-                ->get();
-        }else{
-            $this->operators = collect();
-        }
-    }
 
     public function show($sampleId){
         $this->resetForm();
@@ -73,108 +56,83 @@ class HandOverForm extends Component
         $this->resetForm();
     }
 
-    public function open($sampleId)
-    {
-        try {
-            \Log::info('HandOverForm: Opening for sample ID: ' . $sampleId);
-
-            // Reset form first
-            $this->reset(['handOverNotes']);
-            $this->resetErrorBag();
-
-            // Load sample with relationships
-            $this->sample = RawMaterialSample::with([
-                'category',
-                'rawMaterial',
-                'reference',
-                'statusRelation',
-                'primaryAnalyst'
-            ])->find($sampleId);
-
-            if (!$this->sample) {
-                throw new \Exception('Sample not found with ID: ' . $sampleId);
-            }
-
-            $this->show = true;
-
-            \Log::info('HandOverForm: Opened successfully', [
-                'sample_id' => $this->sample->id,
-                'sample_status' => $this->sample->status
-            ]);
-
-        } catch (\Exception $e) {
-            $this->show = false;
-            $this->sample = null;
-            session()->flash('error', 'Error opening hand over form: ' . $e->getMessage());
-            \Log::error('HandOverForm error: ' . $e->getMessage(), [
-                'sample_id' => $sampleId,
-                'trace' => $e->getTraceAsString()
-            ]);
-        }
-    }
-
-    /**
-     * Close the hand over form modal
-     *
-     * @return void
-     */
-    public function close()
-    {
-        $this->show = false;
-        $this->sample = null;
-        $this->reset(['handOverNotes']);
+    public function resetForm(){
+        $this->reason = '';
+        $this->notes = '';
         $this->resetErrorBag();
     }
 
-    /**
-     * Submit the sample for hand over
-     *
-     * @return void
-     */
-    public function submitToHandOver()
-    {
-        $this->validate();
-
+    public function submitHandOver(){
         try {
-            $submittedToHandOverStatus = Status::where('name', 'submitted_to_handover')->first();
+            $this->validate();
 
-            // Store original data if not already stored
-            $updateData = [
-                'status_id' => $submittedToHandOverStatus ? $submittedToHandOverStatus->id : null,
-                'status' => 'submitted_to_handover',
-                'handover_notes' => $this->handOverNotes,
-                'handover_submitted_by' => auth()->id(),
-                'handover_submitted_at' => Carbon::now('Asia/Jakarta'),
-                'handover_to_analyst_id' => null, // Clear specific analyst assignment
-            ];
+            $sample = $this->selectedSample;
 
-            // Store original data if first time starting analysis
-            if (!$this->sample->original_primary_analyst_id) {
-                $updateData['original_primary_analyst_id'] = $this->sample->primary_analyst_id;
-                $updateData['original_secondary_analyst_id'] = $this->sample->secondary_analyst_id;
-                $updateData['original_analysis_method'] = $this->sample->analysis_method;
+            // Refresh the sample to get latest status
+            $sample = Sample::with('status')->findOrFail($sample->id);
+
+            // Check if sample is in progress
+            if(!$sample->isInAnalysis()){
+                $statusName = $sample->status ? $sample->status->name : 'No Status';
+                $this->addError('to_analyst_id', "Only samples in progress can be handed over. Current status: {$statusName}");
+                return;
             }
 
-            $this->sample->update($updateData);
+            //Check if user is primary analyst
+            if($sample->primary_analyst_id != auth()->id()){
+                $this->addError('to_analyst_id', 'Only the primary analyst can hand over this sample.');
+                return;
+            }
 
-            session()->flash('message', "Sample submitted for hand over. Any analyst can now take over this sample.");
+            // Check if sample already has  active handover
+            if($sample->hasActiveHandover()){
+                $this->addError('to_analyst_id', 'This sample already has an active handover.');
+                return;
+            }
 
-            // Dispatch event to parent to refresh the list
+        // Get Hand Over Status
+        $handOverStatus = Status::where('name', 'hand_over')->first();
+
+        // Create Hand Over Record
+        SampleHandover::create([
+            'sample_id' => $sample->id,
+            'from_analyst_id' => auth()->id(),
+            'to_analyst_id' => null, // No specific analyst, anyone can take over
+            'reason' => $this->reason,
+            'notes' => $this->notes,
+            'submitted_at' => Carbon::now('Asia/Jakarta'),
+            'submitted_by' => auth()->id(),
+            'status' => 'pending'
+        ]);
+
+        //Update sample status to "Hand Over"
+        $sample->update([
+            'status_id' => $handOverStatus ? $handOverStatus->id : null,
+        ]);
+
+            session()->flash('message', 'Sample handed over successfully. Waiting for another operator to take over.');
+
+            // Dispatch toast notification
+            $this->dispatch('show-handover-toast',
+                type: 'submitted',
+                message: 'Your sample has been submitted for hand over. Waiting for another analyst to take over.',
+                details: [
+                    'material' => $sample->material->name ?? 'N/A',
+                    'batch' => $sample->batch_lot
+                ]
+            );
+
+            $this->hide();
             $this->dispatch('handOverSubmitted');
-
-            $this->close();
-
+            $this->dispatch('handover-updated');
         } catch (\Exception $e) {
-            session()->flash('error', 'Error submitting hand over: ' . $e->getMessage());
-            \Log::error('HandOverForm submitToHandOver error: ' . $e->getMessage());
+            \Log::error('HandOverForm submitHandOver error: ' . $e->getMessage(), [
+                'sample_id' => $this->selectedSample->id ?? null,
+                'trace' => $e->getTraceAsString()
+            ]);
+            $this->addError('reason', 'Error submitting hand over: ' . $e->getMessage());
         }
     }
-
-    /**
-     * Render the component
-     *
-     * @return \Illuminate\View\View
-     */
     public function render()
     {
         return view('livewire.sample-rawmat-submission.components.hand-over-form');

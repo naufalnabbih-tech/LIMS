@@ -95,13 +95,13 @@
                 </div>
 
                 <!-- Process Actions -->
-                <div class="p-3">
+                <div class="p-3" x-show="sampleData.canStartAnalysis || sampleData.canContinueAnalysis || sampleData.canHandOver || sampleData.canTakeOver">
                     <div class="px-2 py-1.5">
                         <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Process Management
                         </h4>
                     </div>
                     <div class="space-y-1">
-                        <button x-show="['pending', 'submitted'].includes(sampleData.status)"
+                        <button x-show="sampleData.canStartAnalysis"
                             @click="callLivewireMethod('openAnalysisForm', sampleData.sampleId)"
                             class="flex items-center w-full px-3 py-2.5 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 rounded-lg transition-colors duration-150 group cursor-pointer">
                             <div
@@ -118,7 +118,7 @@
                             </div>
                         </button>
 
-                        <button x-show="['in_progress'].includes(sampleData.status)"
+                        <button x-show="sampleData.canContinueAnalysis"
                             @click="callLivewireMethod('continueAnalysis', sampleData.sampleId)"
                             class="flex items-center w-full px-3 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg transition-colors duration-150 group cursor-pointer">
                             <div
@@ -136,7 +136,7 @@
                         </button>
 
                         <!-- Submit to Hand Over Button -->
-                        <button x-show="['in_progress'].includes(sampleData.status)"
+                        <button x-show="sampleData.canHandOver"
                             @click="callLivewireMethod('openHandOverForm', sampleData.sampleId)"
                             class="flex items-center w-full px-3 py-2.5 text-sm text-gray-700 hover:bg-yellow-50 hover:text-yellow-700 rounded-lg transition-colors duration-150 group cursor-pointer">
                             <div
@@ -153,30 +153,29 @@
                             </div>
                         </button>
 
-                        <!-- Accept Hand Over Button -->
-                        <button x-show="['submitted_to_handover'].includes(sampleData.status)"
+                        <!-- Take Over Button -->
+                        <button x-show="sampleData.canTakeOver"
                             @click="callLivewireMethod('openTakeOverForm', sampleData.sampleId)"
-                            class="flex items-center w-full px-3 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700 rounded-lg transition-colors duration-150 group cursor-pointer">
+                            class="flex items-center w-full px-3 py-2.5 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 rounded-lg transition-colors duration-150 group cursor-pointer">
                             <div
-                                class="flex-shrink-0 w-9 h-9 bg-orange-100 group-hover:bg-orange-200 rounded-lg flex items-center justify-center mr-3 transition-colors">
-                                <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor"
+                                class="flex-shrink-0 w-9 h-9 bg-indigo-100 group-hover:bg-indigo-200 rounded-lg flex items-center justify-center mr-3 transition-colors">
+                                <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
                                 </svg>
                             </div>
                             <div class="flex-1 text-left">
-                                <span class="font-medium block">Take Over</span>
-                                <span class="text-xs text-gray-500">Take ownership and continue analysis</span>
+                                <span class="font-medium block">Take Over Sample</span>
+                                <span class="text-xs text-gray-500">Accept and continue this sample analysis</span>
                             </div>
                         </button>
-
 
                     </div>
                 </div>
 
                 <!-- Divider -->
-                <div class="border-t border-gray-100"></div>
+                <div class="border-t border-gray-100" x-show="sampleData.canStartAnalysis || sampleData.canContinueAnalysis || sampleData.canHandOver || sampleData.canTakeOver"></div>
 
                 <!-- Review & Approval Actions -->
                 <div class="p-3">
@@ -296,6 +295,10 @@
                     const statusPermissions = {
                         canEdit: ['submitted', 'pending'].includes(data.status),
                         canStartAnalysis: ['submitted', 'pending'].includes(data.status),
+                        canContinueAnalysis: ['in_progress'].includes(data.status),
+                        canHandOver: ['in_progress'].includes(data.status),
+                        canTakeOver: ['hand_over', 'hand over'].includes(data.status?.toLowerCase()) &&
+                            data.handoverFromAnalystId != data.currentUserId,
                         canCompleteAnalysis: ['in_progress', 'analysis_started'].includes(data.status),
                         canReview: ['analysis_completed', 'pending_review'].includes(data.status),
                         canApprove: ['reviewed'].includes(data.status),
@@ -367,9 +370,8 @@
 
                 callLivewireMethod(method, sampleId) {
                     try {
-                        // Find the main SampleRawmatSubmission component
-                        // Look for the component with the class or data attribute
-                        const mainComponent = document.querySelector('[wire\\:id]');
+                        // Find the main SampleSolderSubmission component by ID
+                        const mainComponent = document.querySelector('#sample-solder-submission-component[wire\\:id]');
 
                         if (mainComponent) {
                             const wireId = mainComponent.getAttribute('wire:id');
@@ -378,7 +380,10 @@
                             if (livewireComponent && typeof livewireComponent[method] === 'function') {
                                 livewireComponent.call(method, sampleId);
                             } else {
-                                console.error(`Method ${method} not found on component`);
+                                console.error(`Method ${method} not found on component`, {
+                                    method,
+                                    availableMethods: Object.keys(livewireComponent).filter(k => typeof livewireComponent[k] === 'function')
+                                });
                             }
                         } else {
                             console.error('Main Livewire component not found');

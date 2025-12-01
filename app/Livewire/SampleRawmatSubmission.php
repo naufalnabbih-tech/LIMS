@@ -44,21 +44,21 @@ class SampleRawmatSubmission extends Component
             'material',
             'reference',
             'submittedBy',
-            'status'
+            'statusRelation'
         ])->findOrFail($sampleId);
 
         try {
             // Prepare label data
             $labelData = [
-                'sample_id' => $sample->id,
-                'material_name' => $sample->material->name ?? 'N/A',
-                'category_name' => $sample->category->name ?? 'N/A',
+                'sample_code' => $sample->sample_code ?? 'N/A',
+                'category' => $sample->category->name ?? 'N/A',
+                'material' => $sample->material->name ?? 'N/A',
+                'reference' => $sample->reference->name ?? 'N/A',
                 'supplier' => $sample->supplier,
                 'batch_lot' => $sample->batch_lot,
-                'submission_date' => $sample->submission_time->format('Y-m-d H:i'),
-                'reference' => $sample->reference->name ?? 'N/A',
                 'vehicle_container' => $sample->vehicle_container_number,
-                'status' => $sample->status ? $sample->status->display_name : ucfirst($sample->status ?? ''),
+                'submission_date' => $sample->submission_time->format('Y-m-d H:i'),
+                'status' => $sample->statusRelation ? $sample->statusRelation->display_name : ucfirst($sample->status ?? 'N/A'),
                 'submitted_by' => $sample->submittedBy->name ?? 'N/A',
             ];
 
@@ -173,18 +173,22 @@ class SampleRawmatSubmission extends Component
         $this->dispatch('openHandOverForm', sampleId: $sampleId);
     }
 
+    public function openTakeOverForm($sampleId)
+    {
+        $this->dispatch('openTakeOverForm', sampleId: $sampleId);
+    }
 
     // Take Over Methods
     public function takeSample($handoverId)
     {
         $handover = SampleHandover::with(['sample', 'toAnalyst'])->findOrFail($handoverId);
 
-        if($handover->to_analyst_id != auth()->id()){
+        if ($handover->to_analyst_id != auth()->id()) {
             session()->flash('error', 'You are not authorized to take this sample.');
             return;
         }
 
-        if(!$handover->isPending()){
+        if (!$handover->isPending()) {
             session()->flash('error', 'This sample has already been taken over.');
             return;
         }
@@ -199,7 +203,7 @@ class SampleRawmatSubmission extends Component
 
         // For Update Handover
         $handover->update([
-            'status' => 'completed',
+            'status' => 'accepted',
             'taken_at' => Carbon::now('Asia/Jakarta'),
             'taken_by' => auth()->id(),
         ]);
@@ -213,19 +217,36 @@ class SampleRawmatSubmission extends Component
     {
         $samples = Sample::with(['category', 'material', 'reference', 'submittedBy', 'status'])
             ->where('sample_type', 'raw_material')
+            ->where(function($query) {
+                // Show all samples that are NOT in_progress
+                $query->whereHas('status', function($q) {
+                    $q->where('name', '!=', 'in_progress');
+                })
+                // OR show in_progress samples only if user is primary or secondary analyst
+                ->orWhere(function($q) {
+                    $q->whereHas('status', function($q2) {
+                        $q2->where('name', 'in_progress');
+                    })
+                    ->where(function($q2) {
+                        $q2->where('primary_analyst_id', auth()->id())
+                          ->orWhere('secondary_analyst_id', auth()->id());
+                    });
+                });
+            })
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
+        // Show all pending handovers (anyone can take over, except own handovers)
         $pendingHandovers = SampleHandover::with(['sample.material', 'fromAnalyst'])
-            ->where('to_analyst_id', auth()->id())
             ->where('status', 'pending')
+            ->whereNull('to_analyst_id') // Only handovers without assigned analyst
+            ->where('from_analyst_id', '!=', auth()->id()) // Exclude own handovers
             ->latest()
             ->get();
 
+        // Show handovers submitted by current user
         $myHandovers = SampleHandover::with(['sample.material', 'toAnalyst'])
-            ->whereHas('sample', function($q){
-                $q->where('primary_analyst_id', auth()->id());
-            })
+            ->where('from_analyst_id', auth()->id())
             ->where('status', 'pending')
             ->latest()
             ->get();

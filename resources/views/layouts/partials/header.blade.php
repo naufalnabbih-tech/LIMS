@@ -3,10 +3,10 @@
     <!-- Left side: Mobile menu button and breadcrumb -->
     <div class="flex items-center">
         <!-- Mobile menu button -->
-        <button type="button" 
+        <button type="button"
                 class="lg:hidden -ml-0.5 -mt-0.5 h-12 w-12 inline-flex items-center justify-center rounded-md text-gray-500 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
                 @click="sidebarOpen = !sidebarOpen"
-                aria-controls="sidebar" 
+                aria-controls="sidebar"
                 aria-expanded="false">
             <span class="sr-only">Open sidebar</span>
             <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -39,7 +39,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                     </svg>
                 </div>
-                <input type="search" 
+                <input type="search"
                        placeholder="Search..."
                        class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
             </div>
@@ -54,88 +54,11 @@
         </button>
 
         <!-- Notifications -->
-        <div class="relative" x-data="{ open: false }">
-            <button type="button" 
-                    @click="open = !open"
-                    class="p-2 rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500">
-                <span class="sr-only">View notifications</span>
-                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5-5V9.09c0-2.38-1.34-4.46-3.37-5.37A1.996 1.996 0 0010 2a1.996 1.996 0 00-1.63 1.72C6.34 4.63 5 6.71 5 9.09V12l-5 5h20z"/>
-                </svg>
-                <!-- Notification badge -->
-                <span class="absolute -top-0.5 -right-0.5 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">3</span>
-            </button>
-
-            <!-- Notifications dropdown -->
-            <div x-show="open" 
-                 @click.away="open = false"
-                 x-transition:enter="transition ease-out duration-100"
-                 x-transition:enter-start="transform opacity-0 scale-95"
-                 x-transition:enter-end="transform opacity-100 scale-100"
-                 x-transition:leave="transition ease-in duration-75"
-                 x-transition:leave-start="transform opacity-100 scale-100"
-                 x-transition:leave-end="transform opacity-0 scale-95"
-                 class="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50"
-                 style="display: none;">
-                <div class="p-4 border-b border-gray-200">
-                    <h3 class="text-lg font-medium text-gray-900">Notifications</h3>
-                </div>
-                <div class="max-h-64 overflow-y-auto">
-                    <div class="p-4 hover:bg-gray-50 border-b border-gray-100">
-                        <div class="flex">
-                            <div class="flex-shrink-0">
-                                <div class="h-8 w-8 bg-blue-500 rounded-full flex items-center justify-center">
-                                    <svg class="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                    </svg>
-                                </div>
-                            </div>
-                            <div class="ml-3 flex-1">
-                                <p class="text-sm text-gray-900">Sample analysis completed</p>
-                                <p class="text-xs text-gray-500">2 minutes ago</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="p-4 hover:bg-gray-50 border-b border-gray-100">
-                        <div class="flex">
-                            <div class="flex-shrink-0">
-                                <div class="h-8 w-8 bg-yellow-500 rounded-full flex items-center justify-center">
-                                    <svg class="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"/>
-                                    </svg>
-                                </div>
-                            </div>
-                            <div class="ml-3 flex-1">
-                                <p class="text-sm text-gray-900">Quality check required</p>
-                                <p class="text-xs text-gray-500">15 minutes ago</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="p-4 hover:bg-gray-50">
-                        <div class="flex">
-                            <div class="flex-shrink-0">
-                                <div class="h-8 w-8 bg-green-500 rounded-full flex items-center justify-center">
-                                    <svg class="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                                    </svg>
-                                </div>
-                            </div>
-                            <div class="ml-3 flex-1">
-                                <p class="text-sm text-gray-900">New raw material added</p>
-                                <p class="text-xs text-gray-500">1 hour ago</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="p-4 border-t border-gray-200">
-                    <a href="#" class="text-sm text-blue-600 hover:text-blue-700 font-medium">View all notifications</a>
-                </div>
-            </div>
-        </div>
+        <livewire:notification-dropdown />
 
         <!-- User menu -->
         <div class="relative" x-data="{ open: false }">
-            <button type="button" 
+            <button type="button"
                     @click="open = !open"
                     class="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                 <span class="sr-only">Open user menu</span>
@@ -147,7 +70,7 @@
             </button>
 
             <!-- User dropdown -->
-            <div x-show="open" 
+            <div x-show="open"
                  @click.away="open = false"
                  x-transition:enter="transition ease-out duration-100"
                  x-transition:enter-start="transform opacity-0 scale-95"
@@ -162,7 +85,7 @@
                     <p class="text-sm text-gray-500">{{ auth()->user()->email ?? 'user@example.com' }}</p>
                 </div>
                 <div class="py-1">
-                    <a href="{{ route('profile') ?? '#' }}" 
+                    <a href="{{ route('profile') ?? '#' }}"
                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                         <div class="flex items-center">
                             <svg class="mr-3 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -171,7 +94,7 @@
                             Your Profile
                         </div>
                     </a>
-                    <a href="{{ route('settings') ?? '#' }}" 
+                    <a href="{{ route('settings') ?? '#' }}"
                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                         <div class="flex items-center">
                             <svg class="mr-3 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -184,7 +107,7 @@
                     <div class="border-t border-gray-100"></div>
                     <form method="POST" action="{{ route('logout') ?? '#' }}">
                         @csrf
-                        <button type="submit" 
+                        <button type="submit"
                                 class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                             <div class="flex items-center">
                                 <svg class="mr-3 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

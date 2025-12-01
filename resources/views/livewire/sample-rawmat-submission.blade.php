@@ -1,4 +1,4 @@
-<div>
+<div id="sample-rawmat-submission-component">
     <div class="flex flex-col">
         <!-- Flash Messages Component -->
         <livewire:components.flash-messages />
@@ -74,8 +74,6 @@
             @endif
         </div>
     </div>
-
-
 
     <!-- Child Components -->
     <livewire:sample-rawmat-submission.components.sample-actions-dropdown />

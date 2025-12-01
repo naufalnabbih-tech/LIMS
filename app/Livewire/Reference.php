@@ -2,10 +2,9 @@
 
 namespace App\Livewire;
 
+use App\Models\Material;
 use App\Models\Reference as ReferenceModel;
 use App\Models\Specification;
-use App\Models\RawMat;
-use App\Enums\OperatorType;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -14,20 +13,20 @@ class Reference extends Component
 {
     use WithPagination;
 
-    public $rawmats;
+    public $materials;
     public $specifications;
 
     public function mount()
     {
-        $this->rawmats = Rawmat::select('id', 'name')->get();
+        $this->materials = Material::select('id', 'name')->get();
         $this->specifications = Specification::select('id', 'name')->get();
     }
 
     // Form data
     public $name = '';
-    public $rawmat_id = '';
-    public $rawmatSearch = '';
-    public $showRawmatDropdown = false;
+    public $material_id = '';
+    public $materialSearch = '';
+    public $showMaterialDropdown = false;
     public $selectedSpecifications = [];
     public $specificationValues = []; // Array to store values for each specification
     public $specificationMaxValues = []; // Array to store max values for range operator
@@ -48,7 +47,7 @@ class Reference extends Component
     protected function rules()
     {
         $rules = [
-            'rawmat_id' => 'required|exists:raw_mats,id',
+            'material_id' => 'required|exists:materials,id',
             'selectedSpecifications' => 'array',
             'selectedSpecifications.*' => 'exists:specifications,id',
             'specificationValues' => 'array',
@@ -59,9 +58,9 @@ class Reference extends Component
         $nameRules = ['required', 'string', 'max:255'];
 
         // Add unique validation
-        if (!empty($this->rawmat_id)) {
+        if (!empty($this->material_id)) {
             $uniqueRule = Rule::unique('references', 'name')
-                ->where('rawmat_id', $this->rawmat_id);
+                ->where('material_id', $this->material_id);
 
             if ($this->editingId) {
                 $uniqueRule->ignore($this->editingId);
@@ -119,20 +118,26 @@ class Reference extends Component
 
     protected $messages = [
         'name.required' => 'Nama reference wajib diisi.',
-        'rawmat_id.required' => 'Raw material wajib dipilih.',
-        'rawmat_id.exists' => 'Raw material yang dipilih tidak valid.',
+        'material_id.required' => 'Raw material wajib dipilih.',
+        'material_id.exists' => 'Raw material yang dipilih tidak valid.',
         'selectedSpecifications.*.exists' => 'Spesifikasi yang dipilih tidak valid.',
         'specificationValues.*.required' => 'Nilai spesifikasi wajib diisi.',
         'specificationValues.*.numeric' => 'Nilai spesifikasi harus berupa angka.',
         'specificationOperators.*.required' => 'Operator wajib dipilih.',
         'specificationOperators.*.in' => 'Operator tidak valid.',
+        'specificationTextValues.*.required' => 'Nilai teks spesifikasi wajib diisi.',
+        'specificationTextValues.*.string' => 'Nilai teks spesifikasi harus berupa teks.',
+        'specificationRanges.*.*.min.required' => 'Nilai minimum wajib diisi.',
+        'specificationRanges.*.*.min.numeric' => 'Nilai minimum harus berupa angka.',
+        'specificationRanges.*.*.max.required' => 'Nilai maksimum wajib diisi.',
+        'specificationRanges.*.*.max.numeric' => 'Nilai maksimum harus berupa angka.',
     ];
 
     public function render()
     {
         $references = ReferenceModel::with([
-            'rawmat',
-            'rawmat.category',
+            'material',
+            'material.category',
             'specificationsManytoMany'
         ])->paginate(10);
 
@@ -143,11 +148,11 @@ class Reference extends Component
         $items = is_array($references->items()) ? $references->items() : [];
 
         foreach ($items as $reference) {
-            $rawmatName = $reference->rawmat->name;
-            if (!$groupedReferences->has($rawmatName)) {
-                $groupedReferences->put($rawmatName, collect());
+            $materialName = $reference->material->name;
+            if (!$groupedReferences->has($materialName)) {
+                $groupedReferences->put($materialName, collect());
             }
-            $groupedReferences->get($rawmatName)->push($reference);
+            $groupedReferences->get($materialName)->push($reference);
         }
 
         return view('livewire.reference', [
@@ -158,8 +163,8 @@ class Reference extends Component
 
     public function openAddModal()
     {
-        // Check if rawmats are available
-        if ($this->rawmats->isEmpty()) {
+        // Check if materials are available
+        if ($this->materials->isEmpty()) {
             session()->flash('error', 'Tidak dapat menambah reference. Silakan tambahkan raw material terlebih dahulu.');
             return;
         }
@@ -181,8 +186,8 @@ class Reference extends Component
         $this->resetForm();
         $this->editingId = $id;
         $this->name = $reference->name;
-        $this->rawmat_id = $reference->rawmat_id;
-        $this->rawmatSearch = $reference->rawmat->name;
+        $this->material_id = $reference->material_id;
+        $this->materialSearch = $reference->material->name;
 
         // Load selected specifications and their values
         $this->selectedSpecifications = $reference->specificationsManytoMany->pluck('id')->toArray();
@@ -216,9 +221,9 @@ class Reference extends Component
     public function resetForm()
     {
         $this->name = '';
-        $this->rawmat_id = '';
-        $this->rawmatSearch = '';
-        $this->showRawmatDropdown = false;
+        $this->material_id = '';
+        $this->materialSearch = '';
+        $this->showMaterialDropdown = false;
         $this->selectedSpecifications = [];
         $this->specificationValues = [];
         $this->specificationMaxValues = [];
@@ -238,7 +243,7 @@ class Reference extends Component
         // Debug: Log the current state before validation
         \Log::info('Store method called with data:', [
             'name' => $this->name,
-            'rawmat_id' => $this->rawmat_id,
+            'material_id' => $this->material_id,
         ]);
 
         $this->validate();
@@ -246,14 +251,14 @@ class Reference extends Component
         try {
             // Additional safety check before creating
             $existingReference = ReferenceModel::where('name', $this->name)
-                ->where('rawmat_id', $this->rawmat_id)
+                ->where('material_id', $this->material_id)
                 ->first();
 
             if ($existingReference) {
                 \Log::error('Duplicate reference found during store:', [
                     'existing_id' => $existingReference->id,
                     'name' => $this->name,
-                    'rawmat_id' => $this->rawmat_id
+                    'material_id' => $this->material_id
                 ]);
 
                 $this->addError('name', 'Reference dengan nama ini untuk raw material yang sama sudah ada.');
@@ -262,7 +267,7 @@ class Reference extends Component
 
             $reference = ReferenceModel::create([
                 'name' => $this->name,
-                'rawmat_id' => $this->rawmat_id,
+                'material_id' => $this->material_id,
             ]);
 
             // Sync specifications with values and operators
@@ -319,7 +324,7 @@ class Reference extends Component
         \Log::info('Update method called with data:', [
             'editingId' => $this->editingId,
             'name' => $this->name,
-            'rawmat_id' => $this->rawmat_id,
+            'material_id' => $this->material_id,
         ]);
 
         $this->validate();
@@ -327,7 +332,7 @@ class Reference extends Component
         try {
             // Additional safety check before updating
             $existingReference = ReferenceModel::where('name', $this->name)
-                ->where('rawmat_id', $this->rawmat_id)
+                ->where('material_id', $this->material_id)
                 ->where('id', '!=', $this->editingId)
                 ->first();
 
@@ -336,7 +341,7 @@ class Reference extends Component
                     'existing_id' => $existingReference->id,
                     'editing_id' => $this->editingId,
                     'name' => $this->name,
-                    'rawmat_id' => $this->rawmat_id
+                    'material_id' => $this->material_id
                 ]);
 
                 $this->addError('name', 'Reference dengan nama ini untuk raw material yang sama sudah ada.');
@@ -346,7 +351,7 @@ class Reference extends Component
             $reference = ReferenceModel::find($this->editingId);
             $reference->update([
                 'name' => $this->name,
-                'rawmat_id' => $this->rawmat_id,
+                'material_id' => $this->material_id,
             ]);
 
             // Sync specifications with values and operators
@@ -476,22 +481,27 @@ class Reference extends Component
 
     public function getFilteredRawmatsProperty()
     {
-        if (empty($this->rawmatSearch)) {
-            return $this->rawmats;
+        if (empty($this->materialSearch)) {
+            return $this->materials;
         }
 
-        return $this->rawmats->filter(function ($rawmat) {
-            return stripos($rawmat->name, $this->rawmatSearch) !== false;
+        return $this->materials->filter(function ($material) {
+            return stripos($material->name, $this->materialSearch) !== false;
         });
     }
 
-    public function selectRawmat($id, $name)
+    // Alias for blade compatibility
+    public function getFilteredMaterialsProperty()
     {
-        $this->rawmat_id = $id;
-        $this->rawmatSearch = $name;
-        $this->showRawmatDropdown = false;
+        return $this->getFilteredRawmatsProperty();
+    }
 
-        // Validate name again when rawmat changes
+    public function selectMaterial($id, $name)
+    {
+        $this->material_id = $id;
+        $this->materialSearch = $name;
+        $this->showMaterialDropdown = false;
+        // Validate name again when material changes
         if (!empty($this->name)) {
             $this->validateOnly('name');
         }
@@ -499,26 +509,26 @@ class Reference extends Component
 
     public function updatedName()
     {
-        if (!empty($this->rawmat_id) && !empty($this->name)) {
+        if (!empty($this->material_id) && !empty($this->name)) {
             $this->validateOnly('name');
         }
     }
 
-    public function updatedRawmatSearch()
+    public function updatedMaterialSearch()
     {
-        $this->showRawmatDropdown = !empty($this->rawmatSearch);
-        if (empty($this->rawmatSearch)) {
-            $this->rawmat_id = '';
+        $this->showMaterialDropdown = !empty($this->materialSearch);
+        if (empty($this->materialSearch)) {
+            $this->material_id = '';
         }
     }
 
-    public function openRawmatDropdown()
+    public function openMaterialDropdown()
     {
-        $this->showRawmatDropdown = true;
+        $this->showMaterialDropdown = true;
     }
 
-    public function closeRawmatDropdown()
+    public function closeMaterialDropdown()
     {
-        $this->showRawmatDropdown = false;
+        $this->showMaterialDropdown = false;
     }
 }

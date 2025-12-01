@@ -3,7 +3,7 @@
 namespace App\Livewire\SampleRawmatSubmission\Components;
 
 use Livewire\Component;
-use App\Models\RawMaterialSample;
+use App\Models\Sample;
 use App\Models\Status;
 
 class SampleDetails extends Component
@@ -24,17 +24,18 @@ class SampleDetails extends Component
      */
     public function open($sampleId)
     {
-        $this->sample = RawMaterialSample::with([
+        $this->sample = Sample::with([
             'category',
-            'rawMaterial',
+            'material',
             'reference',
             'submittedBy',
             'statusRelation',
             'primaryAnalyst',
             'secondaryAnalyst',
             'testResults.testedBy',
-            'handoverSubmittedBy',
-            'handoverTakenBy',
+            'handovers.fromAnalyst',
+            'handovers.toAnalyst',
+            'handovers.newSecondaryAnalyst',
             'reviewedBy',
             'approvedBy'
         ])->find($sampleId);
@@ -132,6 +133,35 @@ class SampleDetails extends Component
         $statusHistory = [];
         $counter = 1;
 
+        // Get all handovers ordered by time to track analyst changes
+        $handovers = $this->sample->handovers()
+            ->with(['fromAnalyst', 'toAnalyst'])
+            ->orderBy('submitted_at')
+            ->get();
+
+        // Helper function to get the correct analyst at a specific time
+        $getAnalystAtTime = function($timestamp) use ($handovers) {
+            // Find the most recent handover BEFORE this timestamp that was accepted
+            $relevantHandover = $handovers
+                ->where('taken_at', '!=', null)
+                ->where('taken_at', '<=', $timestamp)
+                ->sortByDesc('taken_at')
+                ->first();
+
+            if ($relevantHandover) {
+                return $relevantHandover->toAnalyst;
+            }
+
+            // If no handover before this time, use the original primary analyst
+            // Get from the first handover's fromAnalyst, or current primaryAnalyst
+            $firstHandover = $handovers->first();
+            if ($firstHandover && $firstHandover->fromAnalyst) {
+                return $firstHandover->fromAnalyst;
+            }
+
+            return $this->sample->primaryAnalyst;
+        };
+
         // 1. Sample Submitted/Created
         $statusHistory[] = [
             'id' => $counter++,
@@ -142,67 +172,70 @@ class SampleDetails extends Component
             'previous_time' => null,
         ];
 
+        // Collect ALL events to sort chronologically
+        $events = [];
+
         // 2. Analysis Started
         if ($this->sample->analysis_started_at) {
+            $analyst = $getAnalystAtTime($this->sample->analysis_started_at);
             $analysts = [];
-            if ($this->sample->primaryAnalyst) {
-                $analysts[] = $this->sample->primaryAnalyst->name;
+            if ($analyst) {
+                $analysts[] = $analyst->name;
             }
             if ($this->sample->analysis_method === 'joint' && $this->sample->secondaryAnalyst) {
                 $analysts[] = $this->sample->secondaryAnalyst->name;
             }
             $analystText = !empty($analysts) ? implode(' & ', $analysts) : 'Unknown Analyst';
 
-            $statusHistory[] = [
-                'id' => $counter++,
-                'time_in' => $this->sample->analysis_started_at,
+            $events[] = [
+                'time' => $this->sample->analysis_started_at,
                 'status' => $getStatusData('in_progress')['display_name'],
                 'status_color' => $getStatusData('in_progress')['color_class'],
                 'analyst' => $analystText,
-                'previous_time' => end($statusHistory)['time_in'],
             ];
         }
 
         // 3. Analysis Completed
         if ($this->sample->analysis_completed_at) {
+            $analyst = $getAnalystAtTime($this->sample->analysis_completed_at);
             $analysts = [];
-            if ($this->sample->primaryAnalyst) {
-                $analysts[] = $this->sample->primaryAnalyst->name;
+            if ($analyst) {
+                $analysts[] = $analyst->name;
             }
             if ($this->sample->analysis_method === 'joint' && $this->sample->secondaryAnalyst) {
                 $analysts[] = $this->sample->secondaryAnalyst->name;
             }
             $analystText = !empty($analysts) ? implode(' & ', $analysts) : 'Unknown Analyst';
 
-            $statusHistory[] = [
-                'id' => $counter++,
-                'time_in' => $this->sample->analysis_completed_at,
+            $events[] = [
+                'time' => $this->sample->analysis_completed_at,
                 'status' => $getStatusData('analysis_completed')['display_name'],
                 'status_color' => $getStatusData('analysis_completed')['color_class'],
                 'analyst' => $analystText,
-                'previous_time' => end($statusHistory)['time_in'],
             ];
         }
 
-        // Collect events
-        $events = [];
+        // 4. Handovers
+        foreach ($handovers as $handover) {
+            // Hand over submitted
+            if ($handover->submitted_at) {
+                $events[] = [
+                    'time' => $handover->submitted_at,
+                    'status' => $getStatusData('hand_over')['display_name'],
+                    'status_color' => $getStatusData('hand_over')['color_class'],
+                    'analyst' => ($handover->fromAnalyst->name ?? 'Unknown') . ' → ' . ($handover->toAnalyst->name ?? 'Unknown'),
+                ];
+            }
 
-        if ($this->sample->handover_submitted_at) {
-            $events[] = [
-                'time' => $this->sample->handover_submitted_at,
-                'status' => $getStatusData('submitted_to_handover')['display_name'],
-                'status_color' => $getStatusData('submitted_to_handover')['color_class'],
-                'analyst' => $this->sample->handoverSubmittedBy->name ?? 'Unknown',
-            ];
-        }
-
-        if ($this->sample->handover_taken_at) {
-            $events[] = [
-                'time' => $this->sample->handover_taken_at,
-                'status' => $getStatusData('in_progress')['display_name'],
-                'status_color' => $getStatusData('in_progress')['color_class'],
-                'analyst' => $this->sample->handoverTakenBy->name ?? 'Unknown',
-            ];
+            // Hand over taken/accepted
+            if ($handover->taken_at) {
+                $events[] = [
+                    'time' => $handover->taken_at,
+                    'status' => $getStatusData('in_progress')['display_name'],
+                    'status_color' => $getStatusData('in_progress')['color_class'],
+                    'analyst' => $handover->toAnalyst->name ?? 'Unknown',
+                ];
+            }
         }
 
         if ($this->sample->reviewed_at) {

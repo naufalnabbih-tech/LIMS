@@ -1,14 +1,18 @@
 @php
-    // Calculate status name (replicate the logic from SampleTableRow component)
-    $statusName = $sample->statusRelation
-        ? $sample->statusRelation->name
-        : ($sample->status ?? 'submitted');
+    // Calculate status name
+    $statusName = $sample->status
+        ? $sample->status->name
+        : 'pending';
+
+    // Get active handover info for permission checking
+    $activeHandover = $sample->handovers()->where('status','pending')->first();
+    $handoverFromAnalystId = $activeHandover ? $activeHandover->from_analyst_id : null;
 @endphp
 
 <tr class="hover:bg-gray-50">
     <td class="px-6 py-4 whitespace-nowrap">
         <div class="text-sm font-medium text-gray-900">
-            {{ $sample->rawMaterial->name ?? 'N/A' }}</div>
+            {{ $sample->material->name ?? 'N/A' }}</div>
         <div class="text-sm text-gray-500">{{ $sample->category->name ?? 'N/A' }}</div>
         <div class="text-xs text-gray-400">Batch: {{ $sample->batch_lot }}</div>
     </td>
@@ -73,7 +77,9 @@
                 batch: @js($sample->batch_lot ?? 'N/A'),
                 status: @js($statusName),
                 supplier: @js($sample->supplier ?? 'N/A'),
-                material: @js($sample->rawMaterial->name ?? 'N/A'),
+                material: @js($sample->material->name ?? 'N/A'),
+                handoverFromAnalystId: @js($handoverFromAnalystId),
+                currentUserId: @js(auth()->id()),
                 buttonRect: $el.getBoundingClientRect()
             })
         "

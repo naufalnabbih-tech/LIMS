@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\TestResultBySampleGroupedResource;
 use App\Http\Resources\TestResultGroupedResource;
-use App\Models\RawMaterialSample;
+use App\Models\Sample;
 use Illuminate\Http\Request;
 use App\Models\TestResult;
 use Illuminate\Http\JsonResponse;
@@ -80,7 +80,7 @@ class TestResultController extends Controller
 
     public function bySample(int $sampleId): JsonResponse
     {
-        $sample = RawMaterialSample::find($sampleId);
+        $sample = Sample::find($sampleId);
 
         if (!$sample) {
             return response()->json([

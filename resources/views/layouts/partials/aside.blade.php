@@ -22,15 +22,57 @@
              Dashboard
          </a>
 
-         <!-- Sample Raw Material Submission -->
-         <a href="{{ route('sample-rawmat-submissions') }}" wire:navigate
-             class="flex items-center px-3 py-2 text-sm font-medium rounded-md {{ request()->routeIs('sample-rawmat-submissions') ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
-             <svg class="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-             </svg>
-             Raw Material Sample Submission
-         </a>
+         <!-- Sample Submission Dropdown -->
+        <div class="cursor-pointer" x-data="{ open: {{ request()->routeIs('sample-rawmat-submissions', 'sample-solder-submissions', 'sample-chemical-submissions') ? 'true' : 'false' }} }">
+            <button @click="open = !open"
+                class="w-full flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md cursor-pointer {{ request()->routeIs('sample-rawmat-submissions', 'sample-solder-submissions', 'sample-chemical-submissions') ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
+                <div class="flex items-center">
+                    <svg class="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Sample Submission
+                </div>
+                <svg class="h-4 w-4 transform transition-transform duration-150" :class="{ 'rotate-180': open }"
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+            </button>
+
+            <div x-show="open" x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
+                x-transition:leave="transition ease-in duration-150"
+                x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-2"
+                class="mt-2 ml-4 space-y-1">
+
+                <a href="{{ route('sample-rawmat-submissions') }}" wire:navigate
+                    class="flex items-center px-3 py-2 text-sm font-medium rounded-md {{ request()->routeIs('sample-rawmat-submissions') ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
+                    <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                    Raw Material
+                </a>
+
+                <a href="{{ route('sample-solder-submissions') }}" wire:navigate
+                    class="flex items-center px-3 py-2 text-sm font-medium rounded-md {{ request()->routeIs('sample-solder-submissions') ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
+                    <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Solder
+                </a>
+
+                <a href="{{ route('sample-chemical-submissions') }}" wire:navigate
+                    class="flex items-center px-3 py-2 text-sm font-medium rounded-md {{ request()->routeIs('sample-chemical-submissions') ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
+                    <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                    </svg>
+                    Chemical
+                </a>
+            </div>
+        </div>
 
          <!-- Materials Dropdown -->
          <div class="pt-4 cursor-pointer" x-data="{ open: {{ request()->routeIs('rawmat-categories', 'rawmats', 'specifications', 'references') ? 'true' : 'false' }} }">
@@ -146,6 +188,68 @@
 
                  <a href="{{ route('solder-references') }}" wire:navigate
                      class="flex items-center px-3 py-2 text-sm font-medium rounded-md {{ request()->routeIs('solder-references') ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
+                     <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                             d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253" />
+                     </svg>
+                     References
+                 </a>
+             </div>
+         </div>
+
+         <!-- Chemical Databook Dropdown -->
+         <div class="pt-4 cursor-pointer" x-data="{ open: {{ request()->routeIs('chemical-categories', 'chemicals', 'chemical-specifications', 'chemical-references') ? 'true' : 'false' }} }">
+             <button @click="open = !open"
+                 class="w-full flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md cursor-pointer {{ request()->routeIs('chemical-categories', 'chemicals', 'chemical-specifications', 'chemical-references') ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
+                 <div class="flex items-center">
+                     <svg class="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                             d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                     </svg>
+                     Chemical Databook
+                 </div>
+                 <svg class="h-4 w-4 transform transition-transform duration-150" :class="{ 'rotate-180': open }"
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                 </svg>
+             </button>
+
+             <div x-show="open" x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 -translate-y-2"
+                 x-transition:enter-end="opacity-100 translate-y-0"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100 translate-y-0"
+                 x-transition:leave-end="opacity-0 -translate-y-2" class="mt-2 ml-4 space-y-1">
+
+                 <a href="{{ route('chemical-categories') }}" wire:navigate
+                     class="flex items-center px-3 py-2 text-sm font-medium rounded-md {{ request()->routeIs('chemical-categories') ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
+                     <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                             d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                     </svg>
+                     Categories
+                 </a>
+
+                 <a href="{{ route('chemicals') }}" wire:navigate
+                     class="flex items-center px-3 py-2 text-sm font-medium rounded-md {{ request()->routeIs('chemicals') ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
+                     <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                             d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                     </svg>
+                     Chemicals
+                 </a>
+
+                 <a href="{{ route('chemical-specifications') }}" wire:navigate
+                     class="flex items-center px-3 py-2 text-sm font-medium rounded-md {{ request()->routeIs('chemical-specifications') ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
+                     <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                             d="M9 5H7a2 2 0 00-2 2v11a2 2 0 002 2h9a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                     </svg>
+                     Specifications
+                 </a>
+
+                 <a href="{{ route('chemical-references') }}" wire:navigate
+                     class="flex items-center px-3 py-2 text-sm font-medium rounded-md {{ request()->routeIs('chemical-references') ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
                      <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253" />

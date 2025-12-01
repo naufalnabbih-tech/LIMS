@@ -126,22 +126,22 @@ class ThermohygrometerConditionManagement extends Component
     }
 
     protected $messages = [
-        'shift.required' => 'Please select a shift.',
-        'operator_name.required' => 'Operator name is required.',
-        'time.required' => 'Time is required.',
-        'date.required' => 'Date is required.',
-        'thermohygrometerConditions.*.condition.required' => 'Please select condition for all thermohygrometers.',
-        'thermohygrometerConditions.*.condition.in' => 'Invalid condition selection.',
-        'thermohygrometerConditions.*.temperature.required' => 'Temperature is required when condition is good.',
-        'thermohygrometerConditions.*.temperature.numeric' => 'Temperature must be a valid number.',
-        'thermohygrometerConditions.*.temperature.min' => 'Temperature must be at least -50°C.',
-        'thermohygrometerConditions.*.temperature.max' => 'Temperature must not exceed 100°C.',
-        'thermohygrometerConditions.*.humidity.required' => 'Humidity is required when condition is good.',
-        'thermohygrometerConditions.*.humidity.numeric' => 'Humidity must be a valid number.',
-        'thermohygrometerConditions.*.humidity.min' => 'Humidity must be at least 0%.',
-        'thermohygrometerConditions.*.humidity.max' => 'Humidity must not exceed 100%.',
-        'thermohygrometerConditions.*.description.required' => 'Description is required when thermohygrometer condition is damaged.',
-        'thermohygrometerConditions.*.description.max' => 'Description cannot exceed 1000 characters.',
+        'shift.required' => 'Silakan pilih shift.',
+        'operator_name.required' => 'Nama operator wajib diisi.',
+        'time.required' => 'Waktu wajib diisi.',
+        'date.required' => 'Tanggal wajib diisi.',
+        'thermohygrometerConditions.*.condition.required' => 'Silakan pilih kondisi untuk semua thermohygrometer.',
+        'thermohygrometerConditions.*.condition.in' => 'Pilihan kondisi tidak valid.',
+        'thermohygrometerConditions.*.temperature.required' => 'Temperatur wajib diisi ketika kondisi baik.',
+        'thermohygrometerConditions.*.temperature.numeric' => 'Temperatur harus berupa angka.',
+        'thermohygrometerConditions.*.temperature.min' => 'Temperatur minimal -50°C.',
+        'thermohygrometerConditions.*.temperature.max' => 'Temperatur maksimal 100°C.',
+        'thermohygrometerConditions.*.humidity.required' => 'Kelembaban wajib diisi ketika kondisi baik.',
+        'thermohygrometerConditions.*.humidity.numeric' => 'Kelembaban harus berupa angka.',
+        'thermohygrometerConditions.*.humidity.min' => 'Kelembaban minimal 0%.',
+        'thermohygrometerConditions.*.humidity.max' => 'Kelembaban maksimal 100%.',
+        'thermohygrometerConditions.*.description.required' => 'Deskripsi wajib diisi ketika kondisi thermohygrometer rusak.',
+        'thermohygrometerConditions.*.description.max' => 'Deskripsi tidak boleh lebih dari 1000 karakter.',
     ];
 
     public function updatingSearch()
@@ -239,48 +239,48 @@ class ThermohygrometerConditionManagement extends Component
     {
         $this->validationErrors = [];
         $errors = [];
-        
+
         // Check basic form fields
         if (empty($this->shift)) {
-            $errors[] = 'Please select a shift';
+            $errors[] = 'Silakan pilih shift';
         }
         if (empty(trim($this->operator_name))) {
-            $errors[] = 'Please enter operator name';
+            $errors[] = 'Silakan masukkan nama operator';
         }
         if (empty($this->time)) {
-            $errors[] = 'Please enter time';
+            $errors[] = 'Silakan masukkan waktu';
         }
         if (empty($this->date)) {
-            $errors[] = 'Please enter date';
+            $errors[] = 'Silakan masukkan tanggal';
         }
-        
+
         // Check if all thermohygrometers have conditions selected
         $thermohygrometers = Thermohygrometer::orderBy('name')->get();
         foreach ($thermohygrometers as $thermohygrometer) {
-            if (!isset($this->thermohygrometerConditions[$thermohygrometer->id]) || 
+            if (!isset($this->thermohygrometerConditions[$thermohygrometer->id]) ||
                 empty($this->thermohygrometerConditions[$thermohygrometer->id]['condition'])) {
-                $errors[] = "Please select condition for {$thermohygrometer->name}";
+                $errors[] = "Silakan pilih kondisi untuk {$thermohygrometer->name}";
             } else {
                 // Check condition-specific requirements
                 if ($this->thermohygrometerConditions[$thermohygrometer->id]['condition'] === 'good') {
                     if (empty($this->thermohygrometerConditions[$thermohygrometer->id]['temperature'])) {
-                        $errors[] = "Please enter temperature for {$thermohygrometer->name}";
+                        $errors[] = "Silakan masukkan temperatur untuk {$thermohygrometer->name}";
                     }
                     if (empty($this->thermohygrometerConditions[$thermohygrometer->id]['humidity'])) {
-                        $errors[] = "Please enter humidity for {$thermohygrometer->name}";
+                        $errors[] = "Silakan masukkan kelembaban untuk {$thermohygrometer->name}";
                     }
                 } elseif ($this->thermohygrometerConditions[$thermohygrometer->id]['condition'] === 'damaged' &&
                     empty(trim($this->thermohygrometerConditions[$thermohygrometer->id]['description']))) {
-                    $errors[] = "Please describe damage for {$thermohygrometer->name}";
+                    $errors[] = "Silakan deskripsikan kerusakan untuk {$thermohygrometer->name}";
                 }
             }
         }
-        
+
         if (!empty($errors)) {
             $this->validationErrors = $errors;
             return;
         }
-        
+
         // If validation passes, proceed with saving
         $this->save();
     }
@@ -299,7 +299,7 @@ class ThermohygrometerConditionManagement extends Component
         }
         
         if (!empty($missingConditions)) {
-            session()->flash('error', 'Please select conditions for all thermohygrometers: ' . implode(', ', $missingConditions));
+            session()->flash('error', 'Silakan pilih kondisi untuk semua thermohygrometer: ' . implode(', ', $missingConditions));
             return;
         }
 
@@ -314,8 +314,8 @@ class ThermohygrometerConditionManagement extends Component
                         'shift' => $this->shift,
                         'operator_name' => $this->operator_name,
                         'condition' => $thermohygrometerData['condition'],
-                        'temperature' => $thermohygrometerData['temperature'],
-                        'humidity' => $thermohygrometerData['humidity'],
+                        'temperature' => !empty($thermohygrometerData['temperature']) ? $thermohygrometerData['temperature'] : null,
+                        'humidity' => !empty($thermohygrometerData['humidity']) ? $thermohygrometerData['humidity'] : null,
                         'description' => $thermohygrometerData['description'],
                         'time' => $this->time,
                         'date' => $this->date,
@@ -323,12 +323,12 @@ class ThermohygrometerConditionManagement extends Component
                 }
             }
 
-            session()->flash('success', 'Thermohygrometer conditions created successfully for all thermohygrometers.');
+            session()->flash('success', 'Kondisi thermohygrometer berhasil disimpan untuk semua perangkat.');
             $this->closeModal();
             $this->dispatch('$refresh');
         } catch (\Exception $e) {
             \Log::error('Error creating thermohygrometer conditions: ' . $e->getMessage());
-            session()->flash('error', 'An error occurred while saving thermohygrometer conditions.');
+            session()->flash('error', 'Terjadi kesalahan saat menyimpan kondisi thermohygrometer.');
         }
     }
 
@@ -462,10 +462,10 @@ class ThermohygrometerConditionManagement extends Component
                 ->where('date', $condition->date)
                 ->delete();
                 
-            session()->flash('success', 'Thermohygrometer condition entry deleted successfully.');
+            session()->flash('success', 'Data kondisi thermohygrometer berhasil dihapus.');
             $this->dispatch('$refresh');
         } catch (\Exception $e) {
-            session()->flash('error', 'An error occurred while deleting the condition entry.');
+            session()->flash('error', 'Terjadi kesalahan saat menghapus data kondisi.');
         }
     }
 

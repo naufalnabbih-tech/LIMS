@@ -2,7 +2,7 @@
 
 namespace App\Livewire;
 
-use App\Models\RawMaterialSample;
+use App\Models\Sample;
 use App\Models\TestResult;
 use App\Models\User;
 use Livewire\Component;
@@ -42,9 +42,9 @@ class ResultsReviewPage extends Component
 
     private function loadSampleData()
     {
-        $this->sample = RawMaterialSample::with([
+        $this->sample = Sample::with([
             'category',
-            'rawMaterial',
+            'material',
             'reference.specificationsManytoMany',
             'submittedBy',
             'primaryAnalyst',
@@ -281,10 +281,12 @@ class ResultsReviewPage extends Component
         // This is a basic implementation - you should adapt it to your role system
         $user = auth()->user();
 
-        $this->canReview = in_array($this->sample->status, ['analysis_completed', 'reviewed']) &&
+        $statusName = $this->sample->status ? strtolower($this->sample->status->name) : null;
+
+        $this->canReview = in_array($statusName, ['analysis_completed', 'reviewed']) &&
             $user && $user->id !== $this->sample->primary_analyst_id;
 
-        $this->canApprove = in_array($this->sample->status, ['review', 'reviewed', 'analysis_completed']) && $user;
+        $this->canApprove = in_array($statusName, ['review', 'reviewed', 'analysis_completed']) && $user;
     }
 
     public function openApprovalForm($action)
@@ -380,7 +382,7 @@ class ResultsReviewPage extends Component
             'status' => 'approved', // Keep for backward compatibility
             'approved_at' => Carbon::now('Asia/Jakarta'),
             'approved_by' => auth()->id(),
-            'notes' => $this->sample->notes . "\n\nApproved on " . Carbon::now('Asia/Jakarta')->format('M d, Y \a\t H:i')
+            'notes' => $this->sample->notes
         ];
 
         // If sample was never reviewed, automatically set reviewed timestamp to maintain history
@@ -408,7 +410,7 @@ class ResultsReviewPage extends Component
             'status' => 'rejected',
             'rejected_at' => $now,
             'rejected_by' => auth()->id(),
-            'notes' => $this->sample->notes . "\n\nRejected on " . $now->format('M d, Y \a\t H:i')
+            'notes' => $this->sample->notes
         ];
 
         // If sample was never reviewed, automatically set reviewed timestamp to maintain history
@@ -428,7 +430,19 @@ class ResultsReviewPage extends Component
 
     public function backToSamples()
     {
-        return redirect()->route('sample-rawmat-submissions');
+        // Redirect based on sample type
+        $sampleType = $this->sample->sample_type;
+
+        switch ($sampleType) {
+            case 'raw_material':
+                return redirect()->route('sample-rawmat-submissions');
+            case 'solder':
+                return redirect()->route('sample-solder-submissions');
+            case 'chemical':
+                return redirect()->route('sample-chemical-submissions');
+            default:
+                return redirect()->route('sample-rawmat-submissions');
+        }
     }
 
     public function render()

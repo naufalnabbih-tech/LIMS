@@ -15,8 +15,21 @@ class Specification extends Model
        return $this->belongsToMany(Reference::class, 'reference_specification', 'specification_id', 'reference_id');
     }
 
+    // Alias for backward compatibility - now uses unified references table
     public function solderReferenceManytoMany()
     {
-       return $this->belongsToMany(SolderReference::class, 'solder_reference_specification', 'specification_id', 'solder_reference_id');
+       return $this->referenceManytoMany();
+    }
+
+    public function chemicalReferenceManytoMany()
+    {
+       return $this->referenceManytoMany();
+    }
+
+    public function references()
+    {
+        return $this->belongsToMany(Reference::class, 'reference_specification', 'specification_id', 'reference_id')
+            ->withPivot(['operator', 'value', 'max_value', 'text_value'])
+            ->withTimestamps();
     }
 }

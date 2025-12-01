@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Livewire\SampleRawmatSubmission\Components;
+namespace App\Livewire\SampleChemicalSubmission\Components;
 
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use App\Models\RawMaterialSample;
-use App\Models\RawMatCategory;
-use App\Models\RawMat;
+use App\Models\Sample;
+use App\Models\Category;
+use App\Models\Material;
 use App\Models\Reference;
 use Illuminate\Support\Facades\Storage;
 
@@ -19,7 +19,7 @@ class EditSampleForm extends Component
 
     // Edit form properties
     public $edit_category_id = '';
-    public $edit_raw_mat_id = '';
+    public $edit_material_id = '';
     public $edit_reference_id = '';
     public $edit_supplier = '';
     public $edit_batch_lot = '';
@@ -31,7 +31,7 @@ class EditSampleForm extends Component
     public $edit_notes = '';
 
     public $categories = [];
-    public $editRawMaterials = [];
+    public $editMaterials = [];
     public $editReferences = [];
 
     protected $listeners = [
@@ -40,8 +40,8 @@ class EditSampleForm extends Component
     ];
 
     protected $rules = [
-        'edit_category_id' => 'required|exists:raw_mat_categories,id',
-        'edit_raw_mat_id' => 'required|exists:raw_mats,id',
+        'edit_category_id' => 'required|exists:categories,id',
+        'edit_material_id' => 'required|exists:materials,id',
         'edit_reference_id' => 'required|exists:references,id',
         'edit_supplier' => 'required|string|max:255',
         'edit_batch_lot' => 'required|string|max:255',
@@ -53,6 +53,33 @@ class EditSampleForm extends Component
         'edit_notes' => 'nullable|string|max:1000',
     ];
 
+    protected $messages = [
+        'edit_category_id.required' => 'Kategori wajib dipilih.',
+        'edit_category_id.exists' => 'Kategori yang dipilih tidak valid.',
+        'edit_material_id.required' => 'Material wajib dipilih.',
+        'edit_material_id.exists' => 'Material yang dipilih tidak valid.',
+        'edit_reference_id.required' => 'Reference wajib dipilih.',
+        'edit_reference_id.exists' => 'Reference yang dipilih tidak valid.',
+        'edit_supplier.required' => 'Supplier wajib diisi.',
+        'edit_supplier.string' => 'Supplier harus berupa teks.',
+        'edit_supplier.max' => 'Supplier maksimal 255 karakter.',
+        'edit_batch_lot.required' => 'Batch/Lot wajib diisi.',
+        'edit_batch_lot.string' => 'Batch/Lot harus berupa teks.',
+        'edit_batch_lot.max' => 'Batch/Lot maksimal 255 karakter.',
+        'edit_vehicle_container_number.required' => 'Nomor kendaraan/kontainer wajib diisi.',
+        'edit_vehicle_container_number.string' => 'Nomor kendaraan/kontainer harus berupa teks.',
+        'edit_vehicle_container_number.max' => 'Nomor kendaraan/kontainer maksimal 255 karakter.',
+        'edit_has_coa.boolean' => 'Status COA tidak valid.',
+        'edit_coa_file.file' => 'COA harus berupa file.',
+        'edit_coa_file.mimes' => 'COA harus berformat: pdf, doc, docx, jpg, jpeg, atau png.',
+        'edit_coa_file.max' => 'Ukuran file COA maksimal 10MB.',
+        'edit_submission_date.required' => 'Tanggal submission wajib diisi.',
+        'edit_submission_date.date' => 'Tanggal submission tidak valid.',
+        'edit_submission_time.required' => 'Waktu submission wajib diisi.',
+        'edit_notes.string' => 'Catatan harus berupa teks.',
+        'edit_notes.max' => 'Catatan maksimal 1000 karakter.',
+    ];
+
     /**
      * Open the edit form modal
      *
@@ -61,9 +88,9 @@ class EditSampleForm extends Component
      */
     public function open($sampleId)
     {
-        $this->sample = RawMaterialSample::with([
+        $this->sample = Sample::with([
             'category',
-            'rawMaterial',
+            'material',
             'reference'
         ])->find($sampleId);
 
@@ -81,7 +108,7 @@ class EditSampleForm extends Component
      */
     private function loadCategories()
     {
-        $this->categories = RawMatCategory::orderBy('name')->get();
+        $this->categories = Category::orderBy('name')->get();
     }
 
     /**
@@ -92,7 +119,7 @@ class EditSampleForm extends Component
     private function loadFormData()
     {
         $this->edit_category_id = $this->sample->category_id;
-        $this->edit_raw_mat_id = $this->sample->raw_mat_id;
+        $this->edit_material_id = $this->sample->material_id;
         $this->edit_reference_id = $this->sample->reference_id;
         $this->edit_supplier = $this->sample->supplier;
         $this->edit_batch_lot = $this->sample->batch_lot;
@@ -104,14 +131,14 @@ class EditSampleForm extends Component
 
         // Load raw materials for selected category
         if ($this->edit_category_id) {
-            $this->editRawMaterials = RawMat::where('category_id', $this->edit_category_id)
+            $this->editMaterials = Material::where('category_id', $this->edit_category_id)
                 ->orderBy('name')
                 ->get();
         }
 
         // Load references for selected raw material
-        if ($this->edit_raw_mat_id) {
-            $this->editReferences = Reference::where('rawmat_id', $this->edit_raw_mat_id)
+        if ($this->edit_material_id) {
+            $this->editReferences = Reference::where('material_id', $this->edit_material_id)
                 ->orderBy('name')
                 ->get();
         }
@@ -124,12 +151,12 @@ class EditSampleForm extends Component
      */
     public function updatedEditCategoryId($value)
     {
-        $this->editRawMaterials = RawMat::where('category_id', $value)
+        $this->editMaterials = Material::where('category_id', $value)
             ->orderBy('name')
             ->get();
 
         // Reset dependent fields
-        $this->edit_raw_mat_id = '';
+        $this->edit_material_id = '';
         $this->edit_reference_id = '';
         $this->editReferences = [];
     }
@@ -139,9 +166,9 @@ class EditSampleForm extends Component
      *
      * @return void
      */
-    public function updatedEditRawMatId($value)
+    public function updatedEditMaterialId($value)
     {
-        $this->editReferences = Reference::where('rawmat_id', $value)
+        $this->editReferences = Reference::where('material_id', $value)
             ->orderBy('name')
             ->get();
 
@@ -160,7 +187,7 @@ class EditSampleForm extends Component
         $this->sample = null;
         $this->reset([
             'edit_category_id',
-            'edit_raw_mat_id',
+            'edit_material_id',
             'edit_reference_id',
             'edit_supplier',
             'edit_batch_lot',
@@ -170,7 +197,7 @@ class EditSampleForm extends Component
             'edit_submission_date',
             'edit_submission_time',
             'edit_notes',
-            'editRawMaterials',
+            'editMaterials',
             'editReferences'
         ]);
         $this->resetValidation();
@@ -190,7 +217,7 @@ class EditSampleForm extends Component
 
             $this->sample->update([
                 'category_id' => $this->edit_category_id,
-                'raw_mat_id' => $this->edit_raw_mat_id,
+                'material_id' => $this->edit_material_id,
                 'reference_id' => $this->edit_reference_id,
                 'supplier' => $this->edit_supplier,
                 'batch_lot' => $this->edit_batch_lot,
@@ -201,15 +228,22 @@ class EditSampleForm extends Component
             ]);
 
             // Handle CoA file upload
-            if ($this->edit_coa_file) {
-                // Delete old file if exists
+            if ($this->edit_has_coa) {
+                if ($this->edit_coa_file) {
+                    // Delete old file if exists
+                    if ($this->sample->coa_file_path) {
+                        Storage::disk('public')->delete($this->sample->coa_file_path);
+                    }
+                    // Store new file
+                    $path = $this->edit_coa_file->store('coa-files', 'public');
+                    $this->sample->update(['coa_file_path' => $path]);
+                }
+            } else {
+                // If CoA was unchecked, delete the existing file
                 if ($this->sample->coa_file_path) {
                     Storage::disk('public')->delete($this->sample->coa_file_path);
+                    $this->sample->update(['coa_file_path' => null]);
                 }
-
-                // Store new file
-                $path = $this->edit_coa_file->store('coa-files', 'public');
-                $this->sample->update(['coa_file_path' => $path]);
             }
 
             session()->flash('message', 'Sample updated successfully.');
@@ -224,6 +258,6 @@ class EditSampleForm extends Component
 
     public function render()
     {
-        return view('livewire.sample-rawmat-submission.components.edit-sample-form');
+        return view('livewire.sample-chemical-submission.components.edit-sample-form');
     }
 }

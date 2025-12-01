@@ -4,8 +4,8 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use Livewire\WithPagination;
-use App\Models\Solder as SolderModel;
-use App\Models\SolderCategory;
+use App\Models\Material;
+use App\Models\Category;
 use Illuminate\Validation\Rule;
 
 class Solder extends Component
@@ -17,7 +17,9 @@ class Solder extends Component
     public function mount()
     {
         // Optimized for 3G networks - load only essential fields
-        $this->categories = SolderCategory::select('id', 'name')->get();
+        $this->categories = Category::select('id', 'name')
+            ->where('type', 'solder')
+            ->get();
     }
 
     // Form data
@@ -38,13 +40,13 @@ class Solder extends Component
     protected function rules()
     {
         $rules = [
-            'name' => 'required|string|max:255|unique:solders,name',
-            'category_id' => 'required|exists:solder_categories,id',
+            'name' => 'required|string|max:255|unique:materials,name',
+            'category_id' => 'required|exists:categories,id',
         ];
 
         // For edit, exclude current record from unique validation
         if ($this->editingId) {
-            $rules['name'] = Rule::unique('solders', 'name')->ignore($this->editingId);
+            $rules['name'] = Rule::unique('materials', 'name')->ignore($this->editingId);
         }
 
         return $rules;
@@ -60,7 +62,11 @@ class Solder extends Component
     public function render()
     {
         return view('livewire.solder', [
-            'solders' => SolderModel::with('category')->paginate(10),
+            'solders' => Material::with('category')
+                ->whereHas('category', function($q) {
+                    $q->where('type', 'solder');
+                })
+                ->paginate(10),
         ])->layout('layouts.app')->title('Solders');
     }
 
@@ -114,7 +120,7 @@ class Solder extends Component
         $this->validate();
 
         try {
-            SolderModel::create([
+            Material::create([
                 'name' => $this->name,
                 'category_id' => $this->category_id,
             ]);
@@ -133,7 +139,7 @@ class Solder extends Component
         $this->isSubmitting = true;
         $this->validate();
         try {
-            $solder = SolderModel::find($this->editingId);
+            $solder = Material::find($this->editingId);
             $solder->update([
                 'name' => $this->name,
                 'category_id' => $this->category_id,
@@ -151,7 +157,7 @@ class Solder extends Component
     public function delete($id)
     {
         try {
-            $solder = SolderModel::findOrFail($id);
+            $solder = Material::findOrFail($id);
             $solder->delete();
             session()->flash('success', 'Solder berhasil dihapus');
         } catch (\Exception $e) {

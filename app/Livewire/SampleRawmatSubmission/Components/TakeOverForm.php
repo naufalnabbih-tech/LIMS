@@ -3,7 +3,7 @@
 namespace App\Livewire\SampleRawmatSubmission\Components;
 
 use Livewire\Component;
-use App\Models\RawMaterialSample;
+use App\Models\Sample;
 use App\Models\Status;
 use App\Models\User;
 use App\Models\Role;
@@ -54,6 +54,21 @@ class TakeOverForm extends Component
     }
 
     /**
+     * Custom validation messages
+     *
+     * @return array
+     */
+    protected function messages()
+    {
+        return [
+            'takeOverAnalysisMethod.required' => 'Metode analisis wajib dipilih.',
+            'takeOverAnalysisMethod.in' => 'Metode analisis tidak valid.',
+            'takeOverSecondaryAnalystId.required' => 'Secondary analyst wajib dipilih untuk metode joint analysis.',
+            'takeOverSecondaryAnalystId.exists' => 'Secondary analyst yang dipilih tidak valid.',
+        ];
+    }
+
+    /**
      * Mount the component and load operators list
      *
      * @return void
@@ -87,9 +102,9 @@ class TakeOverForm extends Component
             $this->resetErrorBag();
 
             // Load sample with relationships
-            $this->sample = RawMaterialSample::with([
+            $this->sample = Sample::with([
                 'category',
-                'rawMaterial',
+                'material',
                 'reference',
                 'statusRelation',
                 'primaryAnalyst'
@@ -140,24 +155,33 @@ class TakeOverForm extends Component
         $this->validate();
 
         try {
+            // Get the pending handover for this sample
+            $handover = $this->sample->handovers()
+                ->where('status', 'pending')
+                ->first();
+
+            if (!$handover) {
+                throw new \Exception('No pending handover found for this sample.');
+            }
+
+            // Update handover record
+            $handover->update([
+                'to_analyst_id' => auth()->id(), // Set who took over
+                'taken_at' => Carbon::now('Asia/Jakarta'),
+                'taken_by' => auth()->id(),
+                'status' => 'accepted',
+                'new_analysis_method' => $this->takeOverAnalysisMethod,
+                'new_secondary_analyst_id' => $this->takeOverAnalysisMethod === 'joint' ? $this->takeOverSecondaryAnalystId : null,
+            ]);
+
+            // Update sample status to In Progress
             $inProgressStatus = Status::where('name', 'in_progress')->first();
 
             $updateData = [
                 'status_id' => $inProgressStatus ? $inProgressStatus->id : null,
-                'status' => 'in_progress',
                 'primary_analyst_id' => auth()->id(),
                 'analysis_method' => $this->takeOverAnalysisMethod,
-                'handover_taken_by' => auth()->id(),
-                'handover_taken_at' => Carbon::now('Asia/Jakarta'),
-                'handover_to_analyst_id' => null, // Clear hand over assignment
             ];
-
-            // Store original data if first time starting analysis
-            if (!$this->sample->original_primary_analyst_id) {
-                $updateData['original_primary_analyst_id'] = $this->sample->primary_analyst_id;
-                $updateData['original_secondary_analyst_id'] = $this->sample->secondary_analyst_id;
-                $updateData['original_analysis_method'] = $this->sample->analysis_method;
-            }
 
             if ($this->takeOverAnalysisMethod === 'joint') {
                 $updateData['secondary_analyst_id'] = $this->takeOverSecondaryAnalystId;
@@ -175,8 +199,20 @@ class TakeOverForm extends Component
 
             session()->flash('message', $message);
 
+            // Dispatch toast notification for user who took over
+            $this->dispatch('show-handover-toast',
+                type: 'taken',
+                message: 'You have successfully taken over this sample!',
+                details: [
+                    'material' => $this->sample->material->name ?? 'N/A',
+                    'batch' => $this->sample->batch_lot,
+                    'by' => auth()->user()->name
+                ]
+            );
+
             // Dispatch event to parent to refresh the list
             $this->dispatch('takeOverSubmitted');
+            $this->dispatch('handover-updated');
 
             $this->close();
 

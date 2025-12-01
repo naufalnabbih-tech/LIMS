@@ -4,8 +4,8 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use Livewire\WithPagination;
-use App\Models\RawMat as RawMatModel;
-use App\Models\RawMatCategory;
+use App\Models\Material;
+use App\Models\Category;
 use Illuminate\Validation\Rule;
 class Rawmat extends Component
 {
@@ -16,7 +16,9 @@ class Rawmat extends Component
     public function mount()
     {
         // Optimized for 3G networks - load only essential fields
-        $this->categories = RawMatCategory::select('id', 'name')->get();
+        $this->categories = Category::select('id', 'name')
+            ->where('type', 'raw_material')
+            ->get();
     }
 
 
@@ -38,15 +40,13 @@ class Rawmat extends Component
     protected function rules()
     {
         $rules = [
-            'name' => 'required|string|max:255|unique:raw_mats,name',
-
-            'category_id' => 'required|exists:raw_mat_categories,id', // Added validation for category
+            'name' => 'required|string|max:255|unique:materials,name',
+            'category_id' => 'required|exists:categories,id',
         ];
 
         // For edit, exclude current record from unique validation
         if ($this->editingId) {
-            $rules['name'] = Rule::unique('raw_mats', 'name')->ignore($this->editingId);
-
+            $rules['name'] = Rule::unique('materials', 'name')->ignore($this->editingId);
         }
 
         return $rules;
@@ -62,7 +62,11 @@ class Rawmat extends Component
     public function render()
     {
         return view('livewire.rawmat', [
-            'rawmat' => RawMatModel::with('category')->paginate(10),
+            'rawmat' => Material::with('category')
+                ->whereHas('category', function($q) {
+                    $q->where('type', 'raw_material');
+                })
+                ->paginate(10),
         ])->layout('layouts.app')->title('Raw Materials');
     }
 
@@ -86,11 +90,16 @@ class Rawmat extends Component
 
     public function openEditModal($id, $name, $category_id)
     {
-        $this->resetForm();
         $this->editingId = $id;
         $this->name = $name;
-        $this->category_id = $category_id;
+        $this->category_id = (string) $category_id; // Ensure it's a string to match option values
+        $this->isSubmitting = false;
+        $this->resetErrorBag();
+        $this->resetValidation();
         $this->isEditModalOpen = true;
+
+        // Force Livewire to re-render with new values
+        $this->dispatch('$refresh');
     }
 
     public function closeEditModal()
@@ -116,10 +125,9 @@ class Rawmat extends Component
         $this->validate();
 
         try {
-            RawMatModel::create([
+            Material::create([
                 'name' => $this->name,
                 'category_id' => $this->category_id,
-
             ]);
 
             $this->closeAddModal();
@@ -136,11 +144,10 @@ class Rawmat extends Component
         $this->isSubmitting = true;
         $this->validate();
         try {
-            $material = RawMatModel::find($this->editingId);
+            $material = Material::find($this->editingId);
             $material->update([
                 'name' => $this->name,
                 'category_id' => $this->category_id,
-
             ]);
 
             $this->closeEditModal();
@@ -155,7 +162,7 @@ class Rawmat extends Component
     public function delete($id)
     {
         try {
-            $material = RawMatModel::findOrFail($id);
+            $material = Material::findOrFail($id);
             $material->delete();
             session()->flash('success', 'Raw Material berhasil dihapus');
         } catch (\Exception $e) {

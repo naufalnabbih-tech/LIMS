@@ -2,9 +2,9 @@
 
 namespace App\Livewire;
 
-use App\Models\SolderReference as SolderReferenceModel;
+use App\Models\Reference;
 use App\Models\Specification;
-use App\Models\Solder;
+use App\Models\Material;
 use App\Enums\OperatorType;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
@@ -20,12 +20,16 @@ class SolderReference extends Component
 
     public function mount()
     {
-        $this->solders = Solder::select('id', 'name')->get();
+        $this->solders = Material::select('id', 'name')
+            ->whereHas('category', function($q) {
+                $q->where('type', 'solder');
+            })
+            ->get();
         $this->specifications = Specification::select('id', 'name')->get();
     }
 
     public $name = '';
-    public $solder_id = '';
+    public $material_id = '';
     public $solderSearch = '';
     public $showSolderDropdown = false;
     public $selectedSpecifications = [];
@@ -45,7 +49,7 @@ class SolderReference extends Component
     protected function rules()
     {
         $rules = [
-            'solder_id' => 'required|exists:solders,id',
+            'material_id' => 'required|exists:materials,id',
             'selectedSpecifications' => 'array',
             'selectedSpecifications.*' => 'exists:specifications,id',
             'specificationValues' => 'array',
@@ -54,9 +58,9 @@ class SolderReference extends Component
 
         $nameRules = ['required', 'string', 'max:255'];
 
-        if (!empty($this->solder_id)) {
-            $uniqueRule = Rule::unique('solder_references', 'name')
-                ->where('solder_id', $this->solder_id);
+        if (!empty($this->material_id)) {
+            $uniqueRule = Rule::unique('references', 'name')
+                ->where('material_id', $this->material_id);
 
             if ($this->editingId) {
                 $uniqueRule->ignore($this->editingId);
@@ -114,26 +118,36 @@ class SolderReference extends Component
 
     protected $messages = [
         'name.required' => 'Nama reference wajib diisi.',
-        'solder_id.required' => 'Solder wajib dipilih.',
-        'solder_id.exists' => 'Solder yang dipilih tidak valid.',
+        'material_id.required' => 'Solder wajib dipilih.',
+        'material_id.exists' => 'Solder yang dipilih tidak valid.',
         'selectedSpecifications.*.exists' => 'Spesifikasi yang dipilih tidak valid.',
         'specificationValues.*.required' => 'Nilai spesifikasi wajib diisi.',
         'specificationValues.*.numeric' => 'Nilai spesifikasi harus berupa angka.',
         'specificationOperators.*.required' => 'Operator wajib dipilih.',
         'specificationOperators.*.in' => 'Operator tidak valid.',
+        'specificationTextValues.*.required' => 'Nilai teks spesifikasi wajib diisi.',
+        'specificationTextValues.*.string' => 'Nilai teks spesifikasi harus berupa teks.',
+        'specificationRanges.*.*.min.required' => 'Nilai minimum wajib diisi.',
+        'specificationRanges.*.*.min.numeric' => 'Nilai minimum harus berupa angka.',
+        'specificationRanges.*.*.max.required' => 'Nilai maksimum wajib diisi.',
+        'specificationRanges.*.*.max.numeric' => 'Nilai maksimum harus berupa angka.',
     ];
 
     public function render()
     {
-        $references = SolderReferenceModel::with([
-            'solder',
-            'solder.category',
+        $references = Reference::with([
+            'material',
+            'material.category',
             'specificationsManytoMany'
-        ])->paginate(10);
+        ])
+        ->whereHas('material.category', function($q) {
+            $q->where('type', 'solder');
+        })
+        ->paginate(10);
 
         $groupedReferences = collect();
         foreach ($references->items() as $reference) {
-            $solderName = $reference->solder->name;
+            $solderName = $reference->material->name;
             if (!$groupedReferences->has($solderName)) {
                 $groupedReferences->put($solderName, collect());
             }
@@ -165,13 +179,13 @@ class SolderReference extends Component
 
     public function openEditModal($id)
     {
-        $reference = SolderReferenceModel::with('specificationsManytoMany')->find($id);
+        $reference = Reference::with('specificationsManytoMany')->find($id);
 
         $this->resetForm();
         $this->editingId = $id;
         $this->name = $reference->name;
-        $this->solder_id = $reference->solder_id;
-        $this->solderSearch = $reference->solder->name;
+        $this->material_id = $reference->material_id;
+        $this->solderSearch = $reference->material->name;
 
         $this->selectedSpecifications = $reference->specificationsManytoMany->pluck('id')->toArray();
 
@@ -198,7 +212,7 @@ class SolderReference extends Component
     public function resetForm()
     {
         $this->name = '';
-        $this->solder_id = '';
+        $this->material_id = '';
         $this->solderSearch = '';
         $this->showSolderDropdown = false;
         $this->selectedSpecifications = [];
@@ -219,8 +233,8 @@ class SolderReference extends Component
         $this->validate();
 
         try {
-            $existingReference = SolderReferenceModel::where('name', $this->name)
-                ->where('solder_id', $this->solder_id)
+            $existingReference = Reference::where('name', $this->name)
+                ->where('material_id', $this->material_id)
                 ->first();
 
             if ($existingReference) {
@@ -228,9 +242,9 @@ class SolderReference extends Component
                 return;
             }
 
-            $reference = SolderReferenceModel::create([
+            $reference = Reference::create([
                 'name' => $this->name,
-                'solder_id' => $this->solder_id,
+                'material_id' => $this->material_id,
             ]);
 
             if (!empty($this->selectedSpecifications)) {
@@ -287,8 +301,8 @@ class SolderReference extends Component
         $this->validate();
 
         try {
-            $existingReference = SolderReferenceModel::where('name', $this->name)
-                ->where('solder_id', $this->solder_id)
+            $existingReference = Reference::where('name', $this->name)
+                ->where('material_id', $this->material_id)
                 ->where('id', '!=', $this->editingId)
                 ->first();
 
@@ -297,10 +311,10 @@ class SolderReference extends Component
                 return;
             }
 
-            $reference = SolderReferenceModel::find($this->editingId);
+            $reference = Reference::find($this->editingId);
             $reference->update([
                 'name' => $this->name,
-                'solder_id' => $this->solder_id,
+                'material_id' => $this->material_id,
             ]);
 
             $syncData = [];
@@ -351,7 +365,7 @@ class SolderReference extends Component
     public function delete($id)
     {
         try {
-            $reference = SolderReferenceModel::findOrFail($id);
+            $reference = Reference::findOrFail($id);
             $reference->delete();
             session()->flash('success', 'Solder reference berhasil dihapus');
             $this->showMessage = true;
@@ -426,7 +440,7 @@ class SolderReference extends Component
 
     public function selectSolder($id, $name)
     {
-        $this->solder_id = $id;
+        $this->material_id = $id;
         $this->solderSearch = $name;
         $this->showSolderDropdown = false;
 
@@ -437,7 +451,7 @@ class SolderReference extends Component
 
     public function updatedName()
     {
-        if (!empty($this->solder_id) && !empty($this->name)) {
+        if (!empty($this->material_id) && !empty($this->name)) {
             $this->validateOnly('name');
         }
     }
@@ -446,7 +460,7 @@ class SolderReference extends Component
     {
         $this->showSolderDropdown = !empty($this->solderSearch);
         if (empty($this->solderSearch)) {
-            $this->solder_id = '';
+            $this->material_id = '';
         }
     }
 

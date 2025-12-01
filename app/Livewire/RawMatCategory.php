@@ -4,7 +4,7 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use Livewire\WithPagination;
-use App\Models\RawMatCategory as RawMatCategoryModel;
+use App\Models\Category;
 use Illuminate\Validation\Rule;
 class RawMatCategory extends Component
 {
@@ -26,7 +26,12 @@ class RawMatCategory extends Component
     protected function rules()
     {
         $rules = [
-            'name' => 'required|string|max:255|unique:raw_mat_categories,name',
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('categories', 'name')->where('type', 'raw_material')
+            ],
         ];
 
         // For edit, exclude current record from unique validation
@@ -35,7 +40,9 @@ class RawMatCategory extends Component
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('raw_mat_categories', 'name')->ignore($this->editingId)
+                Rule::unique('categories', 'name')
+                    ->where('type', 'raw_material')
+                    ->ignore($this->editingId)
             ];
         }
 
@@ -90,7 +97,8 @@ class RawMatCategory extends Component
         $this->validate();
 
         try {
-            RawMatCategoryModel::create([
+            Category::create([
+                'type' => 'raw_material',
                 'name' => $this->name
             ]);
 
@@ -115,7 +123,7 @@ class RawMatCategory extends Component
         $this->validate();
 
         try {
-            $category = RawMatCategoryModel::findOrFail($this->editingId);
+            $category = Category::findOrFail($this->editingId);
             $category->update([
                 'name' => $this->name
             ]);
@@ -138,7 +146,7 @@ class RawMatCategory extends Component
     public function delete($id)
     {
         try {
-            $category = RawMatCategoryModel::findOrFail($id);
+            $category = Category::findOrFail($id);
             $category->delete();
             $this->dispatch('$refresh');
             session()->flash('success', 'Kategori berhasil dihapus.');
@@ -159,7 +167,8 @@ class RawMatCategory extends Component
     public function render()
     {
         return view('livewire.rawmat-category', [
-            'categories' => RawMatCategoryModel::select('id', 'name')
+            'categories' => Category::select('id', 'name', 'type')
+                ->where('type', 'raw_material')
                 ->latest()
                 ->paginate(10)
         ])->layout('layouts.app')->title('Raw Material Categories');

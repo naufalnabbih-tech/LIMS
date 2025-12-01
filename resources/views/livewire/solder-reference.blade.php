@@ -254,7 +254,7 @@
                             <div class="relative">
                                 <input type="text" wire:model.live.debounce.1000ms="solderSearch"
                                     wire:click="openSolderDropdown" placeholder="Search solder..."
-                                    class="@error('solder_id') border-red-500 @else border-gray-300 @enderror w-full rounded-lg border px-4 py-3 pr-10 shadow-sm"
+                                    class="@error('material_id') border-red-500 @else border-gray-300 @enderror w-full rounded-lg border px-4 py-3 pr-10 shadow-sm"
                                     autocomplete="off">
 
                                 <!-- Dropdown icon -->
@@ -294,7 +294,7 @@
                                     </div>
                                 @endif
                             </div>
-                            @error('solder_id')
+                            @error('material_id')
                                 <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                             @enderror
                         </div>
@@ -357,41 +357,43 @@
                                                     <div class="space-y-2 flex-1">
                                                         @if (isset($specificationRanges[$specId]))
                                                             @foreach ($specificationRanges[$specId] as $index => $range)
-                                                                <div class="flex items-center space-x-2">
-                                                                    <input type="number" step="any"
-                                                                        wire:model="specificationRanges.{{ $specId }}.{{ $index }}.min"
-                                                                        placeholder="Min"
-                                                                        class="@error('specificationRanges.' . $specId . '.' . $index . '.min') border-red-500 @else border-gray-300 @enderror w-24 rounded-lg border px-2 py-2 text-sm shadow-sm">
-                                                                    <span class="text-gray-500">-</span>
-                                                                    <input type="number" step="any"
-                                                                        wire:model="specificationRanges.{{ $specId }}.{{ $index }}.max"
-                                                                        placeholder="Max"
-                                                                        class="@error('specificationRanges.' . $specId . '.' . $index . '.max') border-red-500 @else border-gray-300 @enderror w-24 rounded-lg border px-2 py-2 text-sm shadow-sm">
-                                                                    @if ($index > 0)
-                                                                        <button type="button"
-                                                                            wire:click="removeRangeRow({{ $specId }}, {{ $index }})"
-                                                                            class="text-red-500 hover:text-red-700">
-                                                                            <svg class="h-4 w-4" fill="none"
-                                                                                stroke="currentColor"
-                                                                                viewBox="0 0 24 24">
-                                                                                <path stroke-linecap="round"
-                                                                                    stroke-linejoin="round"
-                                                                                    stroke-width="2"
-                                                                                    d="M6 18L18 6M6 6l12 12"></path>
-                                                                            </svg>
-                                                                        </button>
-                                                                    @endif
+                                                                <div>
+                                                                    <div class="flex items-center space-x-2">
+                                                                        <input type="number" step="any"
+                                                                            wire:model="specificationRanges.{{ $specId }}.{{ $index }}.min"
+                                                                            placeholder="Min"
+                                                                            class="@error('specificationRanges.' . $specId . '.' . $index . '.min') border-red-500 @else border-gray-300 @enderror w-24 rounded-lg border px-2 py-2 text-sm shadow-sm">
+                                                                        <span class="text-gray-500">-</span>
+                                                                        <input type="number" step="any"
+                                                                            wire:model="specificationRanges.{{ $specId }}.{{ $index }}.max"
+                                                                            placeholder="Max"
+                                                                            class="@error('specificationRanges.' . $specId . '.' . $index . '.max') border-red-500 @else border-gray-300 @enderror w-24 rounded-lg border px-2 py-2 text-sm shadow-sm">
+                                                                        @if ($index > 0)
+                                                                            <button type="button"
+                                                                                wire:click="removeRangeRow({{ $specId }}, {{ $index }})"
+                                                                                class="text-red-500 hover:text-red-700">
+                                                                                <svg class="h-4 w-4" fill="none"
+                                                                                    stroke="currentColor"
+                                                                                    viewBox="0 0 24 24">
+                                                                                    <path stroke-linecap="round"
+                                                                                        stroke-linejoin="round"
+                                                                                        stroke-width="2"
+                                                                                        d="M6 18L18 6M6 6l12 12"></path>
+                                                                                </svg>
+                                                                            </button>
+                                                                        @endif
+                                                                    </div>
+                                                                    @error('specificationRanges.' . $specId . '.' . $index .
+                                                                        '.min')
+                                                                        <p class="mt-1 text-xs text-red-500">
+                                                                            {{ $message }}</p>
+                                                                    @enderror
+                                                                    @error('specificationRanges.' . $specId . '.' . $index .
+                                                                        '.max')
+                                                                        <p class="mt-1 text-xs text-red-500">
+                                                                            {{ $message }}</p>
+                                                                    @enderror
                                                                 </div>
-                                                                @error('specificationRanges.' . $specId . '.' . $index .
-                                                                    '.min')
-                                                                    <p class="mt-1 text-xs text-red-500">
-                                                                        {{ $message }}</p>
-                                                                @enderror
-                                                                @error('specificationRanges.' . $specId . '.' . $index .
-                                                                    '.max')
-                                                                    <p class="mt-1 text-xs text-red-500">
-                                                                        {{ $message }}</p>
-                                                                @enderror
                                                             @endforeach
                                                         @endif
                                                     </div>
@@ -483,7 +485,7 @@
                             <div class="relative">
                                 <input type="text" wire:model.live.debounce.1000ms="solderSearch"
                                     wire:click="openSolderDropdown" placeholder="Search solder..."
-                                    class="@error('solder_id') border-red-500 @else border-gray-300 @enderror w-full rounded-lg border px-4 py-3 pr-10 shadow-sm"
+                                    class="@error('material_id') border-red-500 @else border-gray-300 @enderror w-full rounded-lg border px-4 py-3 pr-10 shadow-sm"
                                     autocomplete="off">
 
                                 <!-- Dropdown icon -->
@@ -523,7 +525,7 @@
                                     </div>
                                 @endif
                             </div>
-                            @error('solder_id')
+                            @error('material_id')
                                 <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                             @enderror
                         </div>
@@ -584,30 +586,42 @@
                                                     <div class="space-y-2 flex-1">
                                                         @if (isset($specificationRanges[$specId]))
                                                             @foreach ($specificationRanges[$specId] as $index => $range)
-                                                                <div class="flex items-center space-x-2">
-                                                                    <input type="text"
-                                                                        wire:model="specificationRanges.{{ $specId }}.{{ $index }}.min"
-                                                                        placeholder="Min"
-                                                                        class="@error('specificationRanges.' . $specId . '.' . $index . '.min') border-red-500 @else border-gray-300 @enderror w-24 rounded-lg border px-3 py-2 text-sm shadow-sm">
-                                                                    <span class="text-gray-500">-</span>
-                                                                    <input type="text"
-                                                                        wire:model="specificationRanges.{{ $specId }}.{{ $index }}.max"
-                                                                        placeholder="Max"
-                                                                        class="@error('specificationRanges.' . $specId . '.' . $index . '.max') border-red-500 @else border-gray-300 @enderror w-24 rounded-lg border px-3 py-2 text-sm shadow-sm">
-                                                                    @if ($index > 0)
-                                                                        <button type="button"
-                                                                            wire:click="removeRangeRow({{ $specId }}, {{ $index }})"
-                                                                            class="text-red-500 hover:text-red-700">
-                                                                            <svg class="h-4 w-4" fill="none"
-                                                                                stroke="currentColor"
-                                                                                viewBox="0 0 24 24">
-                                                                                <path stroke-linecap="round"
-                                                                                    stroke-linejoin="round"
-                                                                                    stroke-width="2"
-                                                                                    d="M6 18L18 6M6 6l12 12"></path>
-                                                                            </svg>
-                                                                        </button>
-                                                                    @endif
+                                                                <div>
+                                                                    <div class="flex items-center space-x-2">
+                                                                        <input type="text"
+                                                                            wire:model="specificationRanges.{{ $specId }}.{{ $index }}.min"
+                                                                            placeholder="Min"
+                                                                            class="@error('specificationRanges.' . $specId . '.' . $index . '.min') border-red-500 @else border-gray-300 @enderror w-24 rounded-lg border px-3 py-2 text-sm shadow-sm">
+                                                                        <span class="text-gray-500">-</span>
+                                                                        <input type="text"
+                                                                            wire:model="specificationRanges.{{ $specId }}.{{ $index }}.max"
+                                                                            placeholder="Max"
+                                                                            class="@error('specificationRanges.' . $specId . '.' . $index . '.max') border-red-500 @else border-gray-300 @enderror w-24 rounded-lg border px-3 py-2 text-sm shadow-sm">
+                                                                        @if ($index > 0)
+                                                                            <button type="button"
+                                                                                wire:click="removeRangeRow({{ $specId }}, {{ $index }})"
+                                                                                class="text-red-500 hover:text-red-700">
+                                                                                <svg class="h-4 w-4" fill="none"
+                                                                                    stroke="currentColor"
+                                                                                    viewBox="0 0 24 24">
+                                                                                    <path stroke-linecap="round"
+                                                                                        stroke-linejoin="round"
+                                                                                        stroke-width="2"
+                                                                                        d="M6 18L18 6M6 6l12 12"></path>
+                                                                                </svg>
+                                                                            </button>
+                                                                        @endif
+                                                                    </div>
+                                                                    @error('specificationRanges.' . $specId . '.' . $index .
+                                                                        '.min')
+                                                                        <p class="mt-1 text-xs text-red-500">
+                                                                            {{ $message }}</p>
+                                                                    @enderror
+                                                                    @error('specificationRanges.' . $specId . '.' . $index .
+                                                                        '.max')
+                                                                        <p class="mt-1 text-xs text-red-500">
+                                                                            {{ $message }}</p>
+                                                                    @enderror
                                                                 </div>
                                                             @endforeach
                                                         @endif

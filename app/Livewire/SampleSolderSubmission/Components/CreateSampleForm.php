@@ -54,6 +54,34 @@ class CreateSampleForm extends Component
         'notes' => 'nullable|string|max:1000',
     ];
 
+    protected $messages = [
+        'category_id.required' => 'Kategori wajib dipilih.',
+        'category_id.exists' => 'Kategori yang dipilih tidak valid.',
+        'material_id.required' => 'Material wajib dipilih.',
+        'material_id.exists' => 'Material yang dipilih tidak valid.',
+        'reference_id.required' => 'Reference wajib dipilih.',
+        'reference_id.exists' => 'Reference yang dipilih tidak valid.',
+        'supplier.required' => 'Supplier wajib diisi.',
+        'supplier.string' => 'Supplier harus berupa teks.',
+        'supplier.max' => 'Supplier maksimal 255 karakter.',
+        'batch_lot.required' => 'Batch/Lot wajib diisi.',
+        'batch_lot.string' => 'Batch/Lot harus berupa teks.',
+        'batch_lot.max' => 'Batch/Lot maksimal 255 karakter.',
+        'vehicle_container_number.required' => 'Nomor kendaraan/kontainer wajib diisi.',
+        'vehicle_container_number.string' => 'Nomor kendaraan/kontainer harus berupa teks.',
+        'vehicle_container_number.max' => 'Nomor kendaraan/kontainer maksimal 255 karakter.',
+        'has_coa.boolean' => 'Status COA tidak valid.',
+        'coa_file.required_if' => 'File COA wajib diunggah jika memiliki COA.',
+        'coa_file.file' => 'COA harus berupa file.',
+        'coa_file.mimes' => 'COA harus berformat: pdf, doc, docx, jpg, jpeg, atau png.',
+        'coa_file.max' => 'Ukuran file COA maksimal 10MB.',
+        'submission_date.required' => 'Tanggal submission wajib diisi.',
+        'submission_date.date' => 'Tanggal submission tidak valid.',
+        'submission_time.required' => 'Waktu submission wajib diisi.',
+        'notes.string' => 'Catatan harus berupa teks.',
+        'notes.max' => 'Catatan maksimal 1000 karakter.',
+    ];
+
     public function mount()
     {
         $this->categories = Category::where('type', 'solder')->get();  // ✅ GANTI KE 'solder'
@@ -120,6 +148,9 @@ class CreateSampleForm extends Component
         try {
             $this->validate();
 
+            // Clear any previous scroll-to-error dispatch
+            $this->dispatch('clear-scroll-error');
+
             $coaFilePath = null;
             if ($this->has_coa && $this->coa_file) {
                 $coaFilePath = $this->coa_file->store('coa-files', 'public');
@@ -129,7 +160,7 @@ class CreateSampleForm extends Component
             $pendingStatus = Status::where('name', 'pending')->first();
 
             Sample::create([
-                'sample_type' => 'solder',  // ✅ GANTI KE 'solder'
+                'sample_type' => 'solder',
                 'category_id' => $this->category_id,
                 'material_id' => $this->material_id,
                 'reference_id' => $this->reference_id,
@@ -145,9 +176,13 @@ class CreateSampleForm extends Component
                 'notes' => $this->notes,
             ]);
 
-            session()->flash('message', 'Solder sample submitted successfully!');  // ✅ GANTI MESSAGE
+            session()->flash('message', 'Solder sample submitted successfully!');
             $this->hide();
             $this->dispatch('sampleCreated');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Dispatch event to scroll to first error
+            $this->dispatch('scroll-to-error');
+            throw $e;
         } catch (\Exception $e) {
             session()->flash('error', 'Error submitting sample: ' . $e->getMessage());
             \Log::error('Sample submission error: ' . $e->getMessage());

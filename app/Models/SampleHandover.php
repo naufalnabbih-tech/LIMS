@@ -10,19 +10,19 @@ class SampleHandover extends Model
         'sample_id',
         'from_analyst_id',
         'to_analyst_id',
-        'new_analysis_method',        // FIXED: was 'new_analyst_method'
+        'new_analysis_method',
         'new_secondary_analyst_id',
         'notes',
         'reason',
-        'handed_over_at',             // FIXED: was 'submitted_at'
-        'handed_over_by',             // FIXED: was 'submitted_by'
+        'submitted_at',               // Match database column
+        'submitted_by',               // Match database column
         'taken_at',
         'taken_by',
         'status',
     ];
 
     protected $casts = [
-        'handed_over_at' => 'datetime',  // FIXED: was 'submitted_at'
+        'submitted_at' => 'datetime',  // Match database column
         'taken_at' => 'datetime',
     ];
 
@@ -47,9 +47,9 @@ class SampleHandover extends Model
         return $this->belongsTo(User::class, 'new_secondary_analyst_id');
     }
 
-    public function handedOverBy()
+    public function submittedBy()
     {
-        return $this->belongsTo(User::class, 'handed_over_by');
+        return $this->belongsTo(User::class, 'submitted_by');
     }
 
     public function takenBy()
@@ -63,9 +63,9 @@ class SampleHandover extends Model
         return $q->where('status', 'pending');
     }
 
-    public function scopeCompleted($q)
+    public function scopeAccepted($q)
     {
-        return $q->where('status', 'completed');
+        return $q->where('status', 'accepted');
     }
 
     public function scopeForUser($q, $userId)
@@ -79,8 +79,8 @@ class SampleHandover extends Model
         return $this->status === 'pending';
     }
 
-    public function isCompleted()
+    public function isAccepted()
     {
-        return $this->status === 'completed';
+        return $this->status === 'accepted';
     }
 }

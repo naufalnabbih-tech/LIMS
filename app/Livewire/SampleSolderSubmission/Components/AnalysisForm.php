@@ -74,11 +74,18 @@ class AnalysisForm extends Component
             'analysisMethod' => 'required|in:individual,joint',
         ];
 
+        $messages = [
+            'analysisMethod.required' => 'Metode analisis wajib dipilih.',
+            'analysisMethod.in' => 'Metode analisis tidak valid.',
+            'secondaryAnalystId.required' => 'Secondary analyst wajib dipilih untuk metode joint analysis.',
+            'secondaryAnalystId.exists' => 'Secondary analyst yang dipilih tidak valid.',
+        ];
+
         if ($this->analysisMethod === 'joint') {
             $rules['secondaryAnalystId'] = 'required|exists:users,id';
         }
 
-        $this->validate($rules);
+        $this->validate($rules, $messages);
 
         // Always set current user as primary analyst (for both individual and joint)
         $this->primaryAnalystId = auth()->id();

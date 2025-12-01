@@ -75,7 +75,7 @@
                             <td class="px-4 py-3 whitespace-nowrap text-right text-sm">
                                 <div class="flex justify-end space-x-2">
                                     <button
-                                        wire:click="openEditModal({{ $rm->id }}, '{{ $rm->name }}', '{{ $rm->category_id }})')"
+                                        wire:click="openEditModal({{ $rm->id }}, '{{ addslashes($rm->name) }}', {{ $rm->category_id }})"
                                         class="inline-flex items-center px-3 py-1 bg-amber-100 hover:bg-amber-200 text-amber-700 text-xs font-medium rounded-md transition-colors duration-150 cursor-pointer">
                                         <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor"
                                             viewBox="0 0 24 24">
@@ -292,7 +292,7 @@
                                     @if ($categories->isEmpty())
                                         <option value="">Tidak ada kategori tersedia</option>
                                     @else
-                                        <option value="">Select Category</option>
+                                        <option value="" hidden>Select Category</option>
                                         @foreach ($categories as $category)
                                             <option value="{{ $category->id }}">{{ $category->name }}</option>
                                         @endforeach
@@ -325,6 +325,9 @@
                             </button>
                         </div>
                     </form>
+
+
+
                 </div>
             </div>
         </div>
@@ -359,7 +362,7 @@
                         <div class="mb-5">
                             <label for="edit-name" class="block text-sm font-bold mb-2">Raw Material Name</label>
                             <input type="text" id="edit-name" wire:model="name"
-                                class="shadow-sm border @error('name') border-red-500 @else border-gray-300 @enderror rounded-lg w-full py-3 px-4 cursor-pointer"
+                                class="shadow-sm border @error('name') border-red-500 @else border-gray-300 @enderror rounded-lg w-full py-3 px-4 cursor-text"
                                 required>
                             @error('name')
                                 <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
@@ -374,7 +377,7 @@
                                 <select id="edit-category" wire:model="category_id"
                                     class="shadow-sm border @error('category_id') border-red-500 @else border-gray-300 @enderror rounded-lg w-full py-3 px-4 pr-10 cursor-pointer appearance-none"
                                     required>
-                                    <option value="">Select Category</option>
+                                    <option value="" {{ $category_id ? 'disabled hidden' : '' }} >Select Category</option>
                                     @foreach ($categories as $category)
                                         <option value="{{ $category->id }}">{{ $category->name }}</option>
                                     @endforeach

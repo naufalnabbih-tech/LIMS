@@ -4,7 +4,7 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use Livewire\WithPagination;
-use App\Models\SolderCategory as SolderCategoryModel;
+use App\Models\Category;
 use Illuminate\Validation\Rule;
 
 class SolderCategory extends Component
@@ -27,7 +27,12 @@ class SolderCategory extends Component
     protected function rules()
     {
         $rules = [
-            'name' => 'required|string|max:255|unique:solder_categories,name',
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('categories', 'name')->where('type', 'solder')
+            ],
         ];
 
         // For edit, exclude current record from unique validation
@@ -36,7 +41,9 @@ class SolderCategory extends Component
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('solder_categories', 'name')->ignore($this->editingId)
+                Rule::unique('categories', 'name')
+                    ->where('type', 'solder')
+                    ->ignore($this->editingId)
             ];
         }
 
@@ -91,8 +98,9 @@ class SolderCategory extends Component
         $this->validate();
 
         try {
-            SolderCategoryModel::create([
-                'name' => $this->name
+            Category::create([
+                'name' => $this->name,
+                'type' => 'solder'
             ]);
 
             $this->closeAddModal();
@@ -116,9 +124,10 @@ class SolderCategory extends Component
         $this->validate();
 
         try {
-            $category = SolderCategoryModel::findOrFail($this->editingId);
+            $category = Category::findOrFail($this->editingId);
             $category->update([
-                'name' => $this->name
+                'name' => $this->name,
+                'type' => 'solder'
             ]);
 
             $this->closeEditModal();
@@ -139,7 +148,7 @@ class SolderCategory extends Component
     public function delete($id)
     {
         try {
-            $category = SolderCategoryModel::findOrFail($id);
+            $category = Category::findOrFail($id);
             $category->delete();
             $this->dispatch('$refresh');
             session()->flash('success', 'Kategori berhasil dihapus.');
@@ -161,7 +170,8 @@ class SolderCategory extends Component
     public function render()
     {
         return view('livewire.solder-category', [
-            'categories' => SolderCategoryModel::select('id', 'name')
+            'categories' => Category::select('id', 'name')
+                ->where('type', 'solder')
                 ->latest()
                 ->paginate(10)
         ])->layout('layouts.app')->title('Solder Categories');

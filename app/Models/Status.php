@@ -21,9 +21,15 @@ class Status extends Model
         'sort_order' => 'integer',
     ];
 
+    public function samples(): HasMany
+    {
+        return $this->hasMany(Sample::class, 'status_id');
+    }
+
+    // Keep for backward compatibility during transition
     public function rawMaterialSamples(): HasMany
     {
-        return $this->hasMany(RawMaterialSample::class, 'status_id');
+        return $this->samples();
     }
 
     public function scopeActive($query)

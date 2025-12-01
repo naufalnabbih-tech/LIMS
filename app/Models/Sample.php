@@ -91,7 +91,13 @@ class Sample extends Model
 
     public function status()
     {
-        return $this->belongsTo(Status::class);
+        return $this->belongsTo(Status::class, 'status_id');
+    }
+
+    // Alias for backward compatibility
+    public function statusRelation()
+    {
+        return $this->status();
     }
 
     public function reviewedBy()
@@ -131,17 +137,20 @@ class Sample extends Model
 
     public function isPending()
     {
-        return $this->status->name === 'Pending';
+        if (!$this->status) return false;
+        return in_array(strtolower($this->status->name), ['pending', 'submitted']);
     }
 
     public function isInAnalysis()
     {
-        return $this->status->name === 'In Progress';
+        if (!$this->status) return false;
+        return in_array(strtolower($this->status->name), ['in_progress', 'in progress', 'analysis_started']);
     }
 
     public function isCompleted()
     {
-        return $this->status->name === 'Completed';
+        if (!$this->status) return false;
+        return in_array(strtolower($this->status->name), ['completed', 'analysis_completed']);
     }
 
     public function hasActiveHandover()
@@ -152,5 +161,35 @@ class Sample extends Model
     public function getActiveHandover()
     {
         return $this->handovers()->where('status', 'pending')->first();
+    }
+
+    // Accessor for status label
+    public function getStatusLabelAttribute()
+    {
+        if ($this->status) {
+            return $this->status->display_name ?? $this->status->name;
+        }
+        return 'Pending';
+    }
+
+    // Accessor for status color (Tailwind CSS classes)
+    public function getStatusColorAttribute()
+    {
+        if (!$this->status) {
+            return 'bg-gray-100 text-gray-800';
+        }
+
+        // Map hex colors to Tailwind classes
+        $colorMap = [
+            '#6B7280' => 'bg-gray-100 text-gray-800',       // Gray - Pending
+            '#3B82F6' => 'bg-blue-100 text-blue-800',       // Blue - In Progress
+            '#F59E0B' => 'bg-amber-100 text-amber-800',     // Amber - Analysis Completed
+            '#F97316' => 'bg-orange-100 text-orange-800',   // Orange - Hand Over
+            '#8B5CF6' => 'bg-purple-100 text-purple-800',   // Purple - Reviewed
+            '#10B981' => 'bg-green-100 text-green-800',     // Green - Approved
+            '#EF4444' => 'bg-red-100 text-red-800',         // Red - Rejected
+        ];
+
+        return $colorMap[$this->status->color] ?? 'bg-gray-100 text-gray-800';
     }
 }

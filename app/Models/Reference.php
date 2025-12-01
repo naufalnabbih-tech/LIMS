@@ -35,6 +35,12 @@ class Reference extends Model
                 ])->withTimestamps();
     }
 
+    // Alias for backward compatibility
+    public function specificationsManytoMany()
+    {
+        return $this->specifications();
+    }
+
     public function samples()
     {
         return $this->hasMany(Sample::class);
