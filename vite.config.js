@@ -14,11 +14,11 @@ export default defineConfig({
         }),
         tailwindcss(),
     ],
-    server: {
-        host: '10.8.18.83',
-        port: 5173,
-        hmr: {
-            host: '10.8.18.83',
-        },
-    },
+    // server: {
+    //     host: '10.8.18.83',
+    //     port: 5173,
+    //     hmr: {
+    //         host: '10.8.18.83',
+    //     },
+    // },
 });
