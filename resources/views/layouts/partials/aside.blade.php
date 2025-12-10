@@ -1,7 +1,7 @@
  <!-- Clean Sidebar -->
- <div class="flex h-full flex-col bg-white">
+ <div class="flex h-screen flex-col bg-white sticky top-0">
      <!-- Logo -->
-     <div class="flex h-16 items-center px-6 border-b border-gray-100">
+     <div class="flex h-16 items-center px-6 border-b border-gray-100 flex-shrink-0">
          <div class="flex items-center">
              <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                  <span class="text-white font-bold text-sm">L</span>
@@ -13,6 +13,7 @@
      <!-- Navigation -->
      <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
          <!-- Dashboard -->
+         @permission('view_dashboard')
          <a href="{{ route('dashboard') }}" wire:navigate
              class="flex items-center px-3 py-2 text-sm font-medium rounded-md {{ request()->routeIs('dashboard') ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
              <svg class="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -21,8 +22,10 @@
              </svg>
              Dashboard
          </a>
+         @endpermission
 
          <!-- Sample Submission Dropdown -->
+         @anypermission('manage_samples', 'view_samples')
         <div class="cursor-pointer" x-data="{ open: {{ request()->routeIs('sample-rawmat-submissions', 'sample-solder-submissions', 'sample-chemical-submissions') ? 'true' : 'false' }} }">
             <button @click="open = !open"
                 class="w-full flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md cursor-pointer {{ request()->routeIs('sample-rawmat-submissions', 'sample-solder-submissions', 'sample-chemical-submissions') ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
@@ -73,8 +76,10 @@
                 </a>
             </div>
         </div>
+        @endanypermission
 
          <!-- Materials Dropdown -->
+         @anypermission('manage_raw_materials', 'view_raw_materials', 'manage_raw_material_specifications', 'view_raw_material_specifications', 'manage_raw_material_references', 'view_raw_material_references', 'manage_raw_material_categories', 'view_raw_material_categories')
          <div class="pt-4 cursor-pointer" x-data="{ open: {{ request()->routeIs('rawmat-categories', 'rawmats', 'specifications', 'references') ? 'true' : 'false' }} }">
              <button @click="open = !open"
                  class="w-full flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md cursor-pointer {{ request()->routeIs('rawmat-categories', 'rawmats', 'specifications', 'references') ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
@@ -83,7 +88,7 @@
                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                              d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                      </svg>
-                     Raw Material Databook
+                     Raw Material
                  </div>
                  <svg class="h-4 w-4 transform transition-transform duration-150" :class="{ 'rotate-180': open }"
                      fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -97,6 +102,7 @@
                  x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-2"
                  class="mt-2 ml-4 space-y-1">
 
+                 @anypermission('manage_raw_material_categories', 'view_raw_material_categories')
                  <a href="{{ route('rawmat-categories') }}" wire:navigate
                      class="flex items-center px-3 py-2 text-sm font-medium rounded-md {{ request()->routeIs('rawmat-categories') ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
                      <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -105,7 +111,9 @@
                      </svg>
                      Categories
                  </a>
+                 @endanypermission
 
+                 @anypermission('manage_raw_materials', 'view_raw_materials')
                  <a href="{{ route('rawmats') }}" wire:navigate
                      class="flex items-center px-3 py-2 text-sm font-medium rounded-md {{ request()->routeIs('rawmats') ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
                      <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -114,8 +122,10 @@
                      </svg>
                      Raw Materials
                  </a>
+                 @endanypermission
 
-                 <a href="{{ route('specifications') }}" wire:navigate
+                 @anypermission('manage_raw_material_specifications', 'view_raw_material_specifications')
+                <a href="{{ route('specifications') }}" wire:navigate
                      class="flex items-center px-3 py-2 text-sm font-medium rounded-md {{ request()->routeIs('specifications') ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
                      <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -123,8 +133,10 @@
                      </svg>
                      Specifications
                  </a>
+                 @endanypermission
 
-                 <a href="{{ route('references') }}" wire:navigate
+                 @anypermission('manage_raw_material_references', 'view_raw_material_references')
+                <a href="{{ route('references') }}" wire:navigate
                      class="flex items-center px-3 py-2 text-sm font-medium rounded-md {{ request()->routeIs('references') ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
                      <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -132,19 +144,22 @@
                      </svg>
                      References
                  </a>
+                 @endanypermission
              </div>
          </div>
+         @endanypermission
 
          <!-- Solder Databook Dropdown -->
-         <div class="pt-4 cursor-pointer" x-data="{ open: {{ request()->routeIs('solder-categories', 'solders', 'solder-specifications', 'solder-references') ? 'true' : 'false' }} }">
+         @anypermission('manage_solders', 'view_solders', 'manage_solder_specifications', 'view_solder_specifications', 'manage_solder_references', 'view_solder_references', 'manage_solder_categories', 'view_solder_categories')
+         <div class="pt-4 cursor-pointer" x-data="{ open: {{ request()->routeIs('solder-categories', 'solder', 'solder-specifications', 'solder-references') ? 'true' : 'false' }} }">
              <button @click="open = !open"
-                 class="w-full flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md cursor-pointer {{ request()->routeIs('solder-categories', 'solders', 'solder-specifications', 'solder-references') ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
+                 class="w-full flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md cursor-pointer {{ request()->routeIs('solder-categories', 'solder', 'solder-specifications', 'solder-references') ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
                  <div class="flex items-center">
                      <svg class="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                              d="M13 10V3L4 14h7v7l9-11h-7z" />
                      </svg>
-                     Solder Databook
+                     Tin Solder
                  </div>
                  <svg class="h-4 w-4 transform transition-transform duration-150" :class="{ 'rotate-180': open }"
                      fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -159,7 +174,8 @@
                  x-transition:leave-start="opacity-100 translate-y-0"
                  x-transition:leave-end="opacity-0 -translate-y-2" class="mt-2 ml-4 space-y-1">
 
-                 <a href="{{ route('solder-categories') }}" wire:navigate
+                 @anypermission('manage_solder_categories', 'view_solder_categories')
+                <a href="{{ route('solder-categories') }}" wire:navigate
                      class="flex items-center px-3 py-2 text-sm font-medium rounded-md {{ request()->routeIs('solder-categories') ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
                      <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -167,17 +183,21 @@
                      </svg>
                      Categories
                  </a>
+                 @endanypermission
 
-                 <a href="{{ route('solders') }}" wire:navigate
-                     class="flex items-center px-3 py-2 text-sm font-medium rounded-md {{ request()->routeIs('solders') ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
+                 @anypermission('manage_solders', 'view_solders')
+                <a href="{{ route('solder') }}" wire:navigate
+                     class="flex items-center px-3 py-2 text-sm font-medium rounded-md {{ request()->routeIs('solder') ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
                      <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                              d="M13 10V3L4 14h7v7l9-11h-7z" />
                      </svg>
-                     Solders
+                     Solder
                  </a>
+                 @endanypermission
 
-                 <a href="{{ route('solder-specifications') }}" wire:navigate
+                 @anypermission('manage_solder_specifications', 'view_solder_specifications')
+                <a href="{{ route('solder-specifications') }}" wire:navigate
                      class="flex items-center px-3 py-2 text-sm font-medium rounded-md {{ request()->routeIs('solder-specifications') ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
                      <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -185,8 +205,10 @@
                      </svg>
                      Specifications
                  </a>
+                 @endanypermission
 
-                 <a href="{{ route('solder-references') }}" wire:navigate
+                 @anypermission('manage_solder_references', 'view_solder_references')
+                <a href="{{ route('solder-references') }}" wire:navigate
                      class="flex items-center px-3 py-2 text-sm font-medium rounded-md {{ request()->routeIs('solder-references') ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
                      <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -194,10 +216,13 @@
                      </svg>
                      References
                  </a>
+                 @endanypermission
              </div>
          </div>
+         @endanypermission
 
          <!-- Chemical Databook Dropdown -->
+         @anypermission('manage_chemicals', 'view_chemicals', 'manage_chemical_specifications', 'view_chemical_specifications', 'manage_chemical_references', 'view_chemical_references', 'manage_chemical_categories', 'view_chemical_categories')
          <div class="pt-4 cursor-pointer" x-data="{ open: {{ request()->routeIs('chemical-categories', 'chemicals', 'chemical-specifications', 'chemical-references') ? 'true' : 'false' }} }">
              <button @click="open = !open"
                  class="w-full flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md cursor-pointer {{ request()->routeIs('chemical-categories', 'chemicals', 'chemical-specifications', 'chemical-references') ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
@@ -206,7 +231,7 @@
                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                              d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
                      </svg>
-                     Chemical Databook
+                     Tin Chemical
                  </div>
                  <svg class="h-4 w-4 transform transition-transform duration-150" :class="{ 'rotate-180': open }"
                      fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -221,7 +246,8 @@
                  x-transition:leave-start="opacity-100 translate-y-0"
                  x-transition:leave-end="opacity-0 -translate-y-2" class="mt-2 ml-4 space-y-1">
 
-                 <a href="{{ route('chemical-categories') }}" wire:navigate
+                 @anypermission('manage_chemical_categories', 'view_chemical_categories')
+                <a href="{{ route('chemical-categories') }}" wire:navigate
                      class="flex items-center px-3 py-2 text-sm font-medium rounded-md {{ request()->routeIs('chemical-categories') ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
                      <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -229,8 +255,10 @@
                      </svg>
                      Categories
                  </a>
+                 @endanypermission
 
-                 <a href="{{ route('chemicals') }}" wire:navigate
+                 @anypermission('manage_chemicals', 'view_chemicals')
+                <a href="{{ route('chemicals') }}" wire:navigate
                      class="flex items-center px-3 py-2 text-sm font-medium rounded-md {{ request()->routeIs('chemicals') ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
                      <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -238,8 +266,10 @@
                      </svg>
                      Chemicals
                  </a>
+                 @endanypermission
 
-                 <a href="{{ route('chemical-specifications') }}" wire:navigate
+                 @anypermission('manage_chemical_specifications', 'view_chemical_specifications')
+                <a href="{{ route('chemical-specifications') }}" wire:navigate
                      class="flex items-center px-3 py-2 text-sm font-medium rounded-md {{ request()->routeIs('chemical-specifications') ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
                      <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -247,8 +277,10 @@
                      </svg>
                      Specifications
                  </a>
+                 @endanypermission
 
-                 <a href="{{ route('chemical-references') }}" wire:navigate
+                 @anypermission('manage_chemical_references', 'view_chemical_references')
+                <a href="{{ route('chemical-references') }}" wire:navigate
                      class="flex items-center px-3 py-2 text-sm font-medium rounded-md {{ request()->routeIs('chemical-references') ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
                      <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -256,10 +288,74 @@
                      </svg>
                      References
                  </a>
+                 @endanypermission
              </div>
          </div>
+         @endanypermission
+
+         <!-- CoA Management Dropdown -->
+         @anypermission('manage_coas', 'view_coas')
+         <div class="pt-4 cursor-pointer" x-data="{ open: {{ request()->routeIs('coa-management', 'coa-templates', 'coa-document-formats') ? 'true' : 'false' }} }">
+             <button @click="open = !open"
+                 class="w-full flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md cursor-pointer {{ request()->routeIs('coa-management', 'coa-templates', 'coa-document-formats') ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
+                 <div class="flex items-center">
+                     <svg class="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                     </svg>
+                     Certificate of Analysis
+                 </div>
+                 <svg class="h-4 w-4 transform transition-transform duration-150" :class="{ 'rotate-180': open }"
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                 </svg>
+             </button>
+
+             <div x-show="open" x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 -translate-y-2"
+                 x-transition:enter-end="opacity-100 translate-y-0"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100 translate-y-0"
+                 x-transition:leave-end="opacity-0 -translate-y-2" class="mt-2 ml-4 space-y-1">
+
+                 @anypermission('manage_coas', 'view_coas')
+                 <a href="{{ route('coa-management') }}" wire:navigate
+                     class="flex items-center px-3 py-2 text-sm font-medium rounded-md {{ request()->routeIs('coa-management') ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
+                     <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                     </svg>
+                     CoA List
+                 </a>
+                 @endanypermission
+
+                 @anypermission('manage_coas', 'view_coas')
+                 <a href="{{ route('coa-templates') }}" wire:navigate
+                     class="flex items-center px-3 py-2 text-sm font-medium rounded-md {{ request()->routeIs('coa-templates') ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
+                     <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                             d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                     </svg>
+                     Templates
+                 </a>
+                 @endanypermission
+
+                 @anypermission('manage_coas', 'view_coas')
+                 <a href="{{ route('coa-document-formats') }}" wire:navigate
+                     class="flex items-center px-3 py-2 text-sm font-medium rounded-md {{ request()->routeIs('coa-document-formats') ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
+                     <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                             d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                     </svg>
+                     Document Formats
+                 </a>
+                 @endanypermission
+             </div>
+         </div>
+         @endanypermission
 
          <!-- System Management Dropdown -->
+         @anypermission('manage_users', 'view_users', 'manage_roles', 'manage_instruments', 'view_instruments')
          <div class="pt-4 cursor-pointer" x-data="{ open: {{ request()->routeIs('users', 'roles', 'instruments', 'thermohygrometers') ? 'true' : 'false' }} }">
              <button @click="open = !open"
                  class="w-full flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md cursor-pointer {{ request()->routeIs('users', 'roles', 'instruments', 'thermohygrometers') ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
@@ -285,6 +381,7 @@
                  x-transition:leave-start="opacity-100 translate-y-0"
                  x-transition:leave-end="opacity-0 -translate-y-2" class="mt-2 ml-4 space-y-1">
 
+                 @anypermission('manage_users', 'view_users')
                  <a href="{{ route('users') }}" wire:navigate
                      class="flex items-center px-3 py-2 text-sm font-medium rounded-md {{ request()->routeIs('users') ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
                      <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -293,7 +390,11 @@
                      </svg>
                      User Management
                  </a>
+                 @endanypermission
 
+
+
+                 @permission('manage_roles')
                  <a href="{{ route('roles') }}" wire:navigate
                      class="flex items-center px-3 py-2 text-sm font-medium rounded-md {{ request()->routeIs('roles') ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
                      <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -302,7 +403,9 @@
                      </svg>
                      Role Management
                  </a>
+                 @endpermission
 
+                 @anypermission('manage_instruments', 'view_instruments')
                  <a href="{{ route('instruments') }}" wire:navigate
                      class="flex items-center px-3 py-2 text-sm font-medium rounded-md {{ request()->routeIs('instruments') ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
                      <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -311,7 +414,9 @@
                      </svg>
                      Instrument Management
                  </a>
+                 @endanypermission
 
+                 @anypermission('manage_thermohygrometers', 'view_thermohygrometers')
                  <a href="{{ route('thermohygrometers') }}" wire:navigate
                      class="flex items-center px-3 py-2 text-sm font-medium rounded-md {{ request()->routeIs('thermohygrometers') ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
                      <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -320,12 +425,14 @@
                      </svg>
                      Thermohygrometer Management
                  </a>
-
+                 @endanypermission
 
              </div>
          </div>
+         @endanypermission
 
          <!-- Condition Dropdown -->
+         @anypermission('manage_instrument_conditions', 'view_instrument_conditions', 'manage_thermohygrometer_conditions', 'view_thermohygrometer_conditions')
          <div class="pt-4 cursor-pointer" x-data="{ open: {{ request()->routeIs('instrument-conditions', 'thermohygrometer-conditions') ? 'true' : 'false' }} }">
              <button @click="open = !open"
                  class="w-full flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md cursor-pointer {{ request()->routeIs('instrument-conditions', 'thermohygrometer-conditions') ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
@@ -349,6 +456,7 @@
                  x-transition:leave-start="opacity-100 translate-y-0"
                  x-transition:leave-end="opacity-0 -translate-y-2" class="mt-2 ml-4 space-y-1">
 
+                 @anypermission('manage_instrument_conditions', 'view_instrument_conditions')
                  <a href="{{ route('instrument-conditions') }}" wire:navigate
                      class="flex items-center px-3 py-2 text-sm font-medium rounded-md {{ request()->routeIs('instrument-conditions') ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
                      <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -357,6 +465,9 @@
                      </svg>
                      Instrument Condition
                  </a>
+                 @endanypermission
+
+                 @anypermission('manage_thermohygrometer_conditions', 'view_thermohygrometer_conditions')
                  <a href="{{ route('thermohygrometer-conditions') }}" wire:navigate
                      class="flex items-center px-3 py-2 text-sm font-medium rounded-md {{ request()->routeIs('thermohygrometer-conditions') ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
                      <svg class="mr-3 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -365,12 +476,14 @@
                      </svg>
                      Thermohygrometer Conditions
                  </a>
+                 @endanypermission
              </div>
          </div>
+         @endanypermission
      </nav>
 
-     <!-- User Profile -->
-     <div class="border-t border-gray-100 p-4">
+     <!-- User Profile - Always at bottom -->
+     <div class="bg-white border-t border-gray-100 p-4 flex-shrink-0">
          <div class="flex items-center">
              <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
                  <span

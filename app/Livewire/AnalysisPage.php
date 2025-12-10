@@ -20,6 +20,8 @@ class AnalysisPage extends Component
     public $notes = '';
     public $isCompleted = false;
     public $activeReadings = []; // Track which readings are active per parameter
+    public $isSaving = false; // Track auto-save state
+    public $lastSavedAt = null; // Track last save time
 
     public function mount($sampleId)
     {
@@ -40,8 +42,8 @@ class AnalysisPage extends Component
         // Initialize analysis results based on reference parameters
         $this->initializeAnalysisResults();
 
-        // Load existing analysis results if completed
-        if ($this->isCompleted) {
+        // Load existing analysis results if any test results exist (for both in_progress and completed)
+        if ($this->sample->testResults->isNotEmpty()) {
             $this->loadExistingResults();
         }
     }
@@ -57,15 +59,25 @@ class AnalysisPage extends Component
 
                 // Build specification display text
                 $specText = '';
-                if ($spec->pivot->operator && $spec->pivot->value !== null) {
-                    if ($spec->pivot->operator === '-') {
+                if ($spec->pivot->operator) {
+                    if ($spec->pivot->operator === '-' && $spec->pivot->value !== null) {
                         // Range operator: display as "min - max"
                         $specText = $spec->pivot->value . ' - ' . $spec->pivot->max_value;
-                    } else {
+                    } elseif ($spec->pivot->operator === 'should_be' && $spec->pivot->text_value !== null) {
+                        // Should_be operator: display as "= text_value"
+                        $specText = '= ' . $spec->pivot->text_value;
+                    } elseif ($spec->pivot->value !== null) {
                         // Other operators: display as "operator value"
-                        $specText = $spec->pivot->operator . ' ' . $spec->pivot->value;
+                        // Replace == with = for display
+                        $displayOperator = $spec->pivot->operator === '==' ? '=' : $spec->pivot->operator;
+                        $specText = $displayOperator . ' ' . $spec->pivot->value;
                     }
                 }
+
+                // Determine target value based on operator
+                $targetValue = $spec->pivot->operator === 'should_be'
+                    ? $spec->pivot->text_value
+                    : $spec->pivot->value;
 
                 $this->analysisResults[$specKey] = [
                     'readings' => [
@@ -79,10 +91,11 @@ class AnalysisPage extends Component
                     'spec' => $specText ?: 'As per reference',
                     'spec_name' => $spec->name,
                     'spec_id' => $spec->id,
-                    'target_value' => $spec->pivot->value,
+                    'target_value' => $targetValue,
                     'operator' => $spec->pivot->operator,
                     'max_value' => $spec->pivot->max_value,
-                    'unit' => $spec->unit ?? ''
+                    'text_value' => $spec->pivot->text_value ?? null,
+                    'unit' => $spec->pivot->unit ?? ''
                 ];
 
                 // Initialize with only initial reading active
@@ -104,7 +117,18 @@ class AnalysisPage extends Component
                 $readingTypes = ['initial', 'middle', 'final'];
                 $readingType = $readingTypes[$testResult->reading_number - 1] ?? 'initial';
 
-                $this->analysisResults[$specKey]['readings'][$readingType]['value'] = $testResult->test_value;
+                // Load value from correct column based on operator
+                if ($testResult->spec_operator === 'should_be') {
+                    // For should_be, use test_value_text (no formatting needed)
+                    $value = $testResult->test_value_text;
+                } else {
+                    // For numeric operators, use test_value and format
+                    $value = is_numeric($testResult->test_value)
+                        ? rtrim(rtrim(number_format($testResult->test_value, 4, '.', ''), '0'), '.')
+                        : $testResult->test_value;
+                }
+
+                $this->analysisResults[$specKey]['readings'][$readingType]['value'] = $value;
                 $this->analysisResults[$specKey]['readings'][$readingType]['timestamp'] = $testResult->tested_at;
 
                 // Add to active readings if not already there
@@ -119,10 +143,37 @@ class AnalysisPage extends Component
             $this->calculateParameterValues($parameter);
         }
 
-        // Load notes
-        $this->notes = $this->sample->notes ?? '';
+        // Load analysis notes from first test result (not sample notes)
+        // Since analysis notes are saved to all test results, we can load from any one
+        $firstTestResult = $testResults->first();
+        $this->notes = $firstTestResult ? $firstTestResult->notes : '';
     }
 
+
+    // Livewire hook: auto-save when analysis value updated via wire:model
+    public function updated($propertyName)
+    {
+        // Check if updated property is an analysis reading value
+        if (str_starts_with($propertyName, 'analysisResults.')) {
+            // Extract parameter and reading type
+            // Format: analysisResults.{parameter}.readings.{readingType}.value
+            preg_match('/analysisResults\.([^.]+)\.readings\.([^.]+)\.value/', $propertyName, $matches);
+
+            if (count($matches) === 3) {
+                $parameter = $matches[1];
+                $readingType = $matches[2];
+
+                // Update timestamp
+                $this->analysisResults[$parameter]['readings'][$readingType]['timestamp'] = now();
+
+                // Calculate average and final values
+                $this->calculateParameterValues($parameter);
+
+                // Auto-save
+                $this->autoSave();
+            }
+        }
+    }
 
     public function updateAnalysisReading($parameter, $readingType, $value)
     {
@@ -132,14 +183,121 @@ class AnalysisPage extends Component
 
             // Calculate average and final values
             $this->calculateParameterValues($parameter);
+
+            // Auto-save after value update
+            $this->autoSave();
+        }
+    }
+
+    public function autoSave()
+    {
+        $this->isSaving = true;
+
+        try {
+            // Clear existing test results for this sample
+            $this->sample->testResults()->delete();
+
+            // Save individual test results to database
+            foreach ($this->analysisResults as $parameter => $result) {
+                foreach ($result['readings'] as $readingType => $reading) {
+                    // Only save if there's a value
+                    if (!empty($reading['value'])) {
+                        // Map reading type to reading number
+                        $readingNumbers = ['initial' => 1, 'middle' => 2, 'final' => 3];
+                        $readingNumber = $readingNumbers[$readingType] ?? 1;
+
+                        // Evaluate if this specific reading passes
+                        $passes = false;
+                        if (isset($result['spec_id']) && $result['target_value'] !== null && $result['operator']) {
+                            // Handle should_be operator for text values
+                            if ($result['operator'] === 'should_be') {
+                                $passes = $this->evaluateSpecification(
+                                    $reading['value'],
+                                    $result['target_value'],
+                                    $result['operator'],
+                                    null
+                                );
+                            } else {
+                                // For numeric operators
+                                $maxValue = isset($result['max_value']) ? floatval($result['max_value']) : null;
+                                $passes = $this->evaluateSpecification(
+                                    floatval($reading['value']),
+                                    floatval($result['target_value']),
+                                    $result['operator'],
+                                    $maxValue
+                                );
+                            }
+                        }
+
+                        // Build base test data
+                        $testData = [
+                            'sample_id' => $this->sample->id,
+                            'specification_id' => $result['spec_id'],
+                            'parameter_name' => $result['spec_name'],
+                            'reading_number' => $readingNumber,
+                            'tested_at' => $reading['timestamp'] ?? Carbon::now('Asia/Jakarta'),
+                            'tested_by' => auth()->id(),
+                            'notes' => $this->notes,
+                            'status' => $passes ? 'pass' : 'fail',
+                            'spec_operator' => $result['operator'] ?? null,
+                            'spec_unit' => $result['unit'] ?? null
+                        ];
+
+                        // Handle data storage based on operator type
+                        if ($result['operator'] === 'should_be') {
+                            // For text-based should_be: store text in test_value_text, spec values as NULL
+                            $testData['test_value_text'] = $reading['value'];
+                            $testData['test_value'] = null;
+                            $testData['spec_min_value'] = null; // Can't store text in FLOAT column
+                            $testData['spec_max_value'] = null;
+                        } else {
+                            // For numeric operators: store numbers in test_value, spec values as floats
+                            $testData['test_value'] = $reading['value'];
+                            $testData['test_value_text'] = null;
+                            $testData['spec_min_value'] = $result['target_value'] ?? null;
+                            $testData['spec_max_value'] = $result['max_value'] ?? null;
+                        }
+
+                        TestResult::create($testData);
+                    }
+                }
+            }
+
+            $this->lastSavedAt = now()->format('H:i:s');
+        } catch (\Exception $e) {
+            \Log::error('Auto-save error: ' . $e->getMessage());
+        } finally {
+            $this->isSaving = false;
         }
     }
 
     public function calculateParameterValues($parameter)
     {
         $readings = $this->analysisResults[$parameter]['readings'];
-        $values = [];
+        $operator = $this->analysisResults[$parameter]['operator'] ?? null;
 
+        // For "should_be" operator, handle as text values
+        if ($operator === 'should_be') {
+            $textValues = [];
+            foreach ($readings as $reading) {
+                if (!empty($reading['value'])) {
+                    $textValues[] = $reading['value'];
+                }
+            }
+
+            if (!empty($textValues)) {
+                // For text values, just use the last reading as final value
+                $this->analysisResults[$parameter]['final_value'] = end($textValues);
+                $this->analysisResults[$parameter]['average_value'] = end($textValues); // Use final as average for display
+            } else {
+                $this->analysisResults[$parameter]['average_value'] = null;
+                $this->analysisResults[$parameter]['final_value'] = null;
+            }
+            return;
+        }
+
+        // For numeric operators, calculate as before
+        $values = [];
         foreach ($readings as $reading) {
             if (!empty($reading['value']) && is_numeric($reading['value'])) {
                 $values[] = floatval($reading['value']);
@@ -227,7 +385,25 @@ class AnalysisPage extends Component
 
     public function saveResults()
     {
-        // Validate that some results have been entered
+        // First validate that ALL specifications have been filled (no pending status)
+        $pendingSpecs = [];
+        foreach ($this->analysisResults as $parameter => $result) {
+            // Recalculate to ensure average_value is up to date
+            $this->calculateParameterValues($parameter);
+
+            if ($result['average_value'] === null) {
+                $pendingSpecs[] = $result['spec_name'];
+            }
+        }
+
+        if (!empty($pendingSpecs)) {
+            $message = 'Please complete all analysis readings before saving. Pending parameters: ' . implode(', ', $pendingSpecs);
+            $this->dispatch('save-error', $message);
+            session()->flash('error', $message);
+            return;
+        }
+
+        // Validate that some results have been entered and evaluate specifications
         $hasResults = false;
         $passedSpecs = 0;
         $failedSpecs = 0;
@@ -246,19 +422,23 @@ class AnalysisPage extends Component
             if ($hasReadings) {
                 $hasResults = true;
 
-                // Recalculate values to ensure they're up to date
-                $this->calculateParameterValues($parameter);
-
                 // Use average value for specification evaluation
                 $testValue = $result['average_value'];
 
                 // Check if result meets specification
                 if (isset($result['spec_id']) && $result['target_value'] !== null && $result['operator'] && $testValue !== null) {
-                    $targetValue = floatval($result['target_value']);
                     $operator = $result['operator'];
-                    $maxValue = isset($result['max_value']) ? floatval($result['max_value']) : null;
 
-                    $passes = $this->evaluateSpecification($testValue, $targetValue, $operator, $maxValue);
+                    // For should_be operator, use text comparison
+                    if ($operator === 'should_be') {
+                        $passes = $this->evaluateSpecification($testValue, $result['target_value'], $operator, null);
+                    } else {
+                        // For numeric operators
+                        $targetValue = floatval($result['target_value']);
+                        $maxValue = isset($result['max_value']) ? floatval($result['max_value']) : null;
+                        $passes = $this->evaluateSpecification($testValue, $targetValue, $operator, $maxValue);
+                    }
+
                     if ($passes) {
                         $passedSpecs++;
                     } else {
@@ -281,7 +461,8 @@ class AnalysisPage extends Component
         foreach ($this->analysisResults as $parameter => $result) {
             if ($result['average_value'] !== null) {
                 foreach ($result['readings'] as $readingType => $reading) {
-                    if (!empty($reading['value']) && is_numeric($reading['value'])) {
+                    // Only save if there's a value (numeric OR text)
+                    if (!empty($reading['value'])) {
                         // Map reading type to reading number
                         $readingNumbers = ['initial' => 1, 'middle' => 2, 'final' => 3];
                         $readingNumber = $readingNumbers[$readingType] ?? 1;
@@ -289,31 +470,56 @@ class AnalysisPage extends Component
                         // Evaluate if this specific reading passes
                         $passes = false;
                         if (isset($result['spec_id']) && $result['target_value'] !== null && $result['operator']) {
-                            $maxValue = isset($result['max_value']) ? floatval($result['max_value']) : null;
-                            $passes = $this->evaluateSpecification(
-                                floatval($reading['value']),
-                                floatval($result['target_value']),
-                                $result['operator'],
-                                $maxValue
-                            );
+                            // Handle should_be operator for text values
+                            if ($result['operator'] === 'should_be') {
+                                $passes = $this->evaluateSpecification(
+                                    $reading['value'],
+                                    $result['target_value'],
+                                    $result['operator'],
+                                    null
+                                );
+                            } else {
+                                // For numeric operators
+                                $maxValue = isset($result['max_value']) ? floatval($result['max_value']) : null;
+                                $passes = $this->evaluateSpecification(
+                                    floatval($reading['value']),
+                                    floatval($result['target_value']),
+                                    $result['operator'],
+                                    $maxValue
+                                );
+                            }
                         }
 
-                        TestResult::create([
+                        // Build base test data
+                        $testData = [
                             'sample_id' => $this->sample->id,
                             'specification_id' => $result['spec_id'],
                             'parameter_name' => $result['spec_name'],
-                            'test_value' => floatval($reading['value']),
                             'reading_number' => $readingNumber,
                             'tested_at' => $reading['timestamp'] ?? Carbon::now('Asia/Jakarta'),
                             'tested_by' => auth()->id(),
                             'notes' => $this->notes,
                             'status' => $passes ? 'pass' : 'fail',
-                            // Snapshot specification values at time of testing
                             'spec_operator' => $result['operator'] ?? null,
-                            'spec_min_value' => $result['target_value'] ?? null,
-                            'spec_max_value' => $result['max_value'] ?? null,
                             'spec_unit' => $result['unit'] ?? null
-                        ]);
+                        ];
+
+                        // Handle data storage based on operator type
+                        if ($result['operator'] === 'should_be') {
+                            // For text-based should_be: store text in test_value_text, spec values as NULL
+                            $testData['test_value_text'] = $reading['value'];
+                            $testData['test_value'] = null;
+                            $testData['spec_min_value'] = null;
+                            $testData['spec_max_value'] = null;
+                        } else {
+                            // For numeric operators: store numbers in test_value, spec values as floats
+                            $testData['test_value'] = floatval($reading['value']);
+                            $testData['test_value_text'] = null;
+                            $testData['spec_min_value'] = $result['target_value'] ?? null;
+                            $testData['spec_max_value'] = $result['max_value'] ?? null;
+                        }
+
+                        TestResult::create($testData);
 
                         $totalTestResults++;
                     }
@@ -345,7 +551,6 @@ class AnalysisPage extends Component
             'status_id' => $analysisCompletedStatus ? $analysisCompletedStatus->id : null,
             'status' => 'analysis_completed', // Keep for backward compatibility
             'analysis_completed_at' => Carbon::now('Asia/Jakarta'),
-            'notes' => $this->notes,
         ]);
 
         $this->isCompleted = true;
@@ -356,6 +561,9 @@ class AnalysisPage extends Component
     private function evaluateSpecification($testValue, $targetValue, $operator, $maxValue = null)
     {
         switch ($operator) {
+            case 'should_be':
+                // Case-insensitive text comparison
+                return strcasecmp(trim($testValue), trim($targetValue)) === 0;
             case '>=':
                 return $testValue >= $targetValue;
             case '>':
@@ -418,7 +626,7 @@ class AnalysisPage extends Component
 
     public function render()
     {
-        return view('livewire.analysis-page')
+        return view('livewire.analysis.analysis-page')
             ->layout('layouts.app')
             ->title('Analysis - Sample #' . $this->sample->id);
     }

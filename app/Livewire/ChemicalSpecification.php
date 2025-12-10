@@ -46,7 +46,7 @@ class ChemicalSpecification extends Component
             ->withCount('chemicalReferenceManytoMany')
             ->paginate(10);
 
-        return view('livewire.chemical-specification', [
+        return view('livewire.sample-chemical-submission.components.specification', [
             'specifications' => $specifications,
         ])->layout('layouts.app')->title('Solder Specifications');
     }

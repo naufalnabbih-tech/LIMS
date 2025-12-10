@@ -169,7 +169,7 @@ class ChemicalCategory extends Component
 
     public function render()
     {
-        return view('livewire.chemical-category', [
+        return view('livewire.sample-chemical-submission.components.category', [
             'categories' => Category::select('id', 'name')
                 ->where('type', 'chemical')
                 ->latest()

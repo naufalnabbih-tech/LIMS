@@ -8,6 +8,7 @@ class Material extends Model
 {
     protected $fillable = [
         'name',
+        'code',
         'category_id',
     ];
 

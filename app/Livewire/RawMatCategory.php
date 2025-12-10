@@ -166,7 +166,7 @@ class RawMatCategory extends Component
     }
     public function render()
     {
-        return view('livewire.rawmat-category', [
+        return view('livewire.sample-rawmat-submission.components.category', [
             'categories' => Category::select('id', 'name', 'type')
                 ->where('type', 'raw_material')
                 ->latest()

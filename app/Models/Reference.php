@@ -31,7 +31,8 @@ class Reference extends Model
                     'operator',
                     'value',
                     'max_value',
-                    'text_value'
+                    'text_value',
+                    'unit'
                 ])->withTimestamps();
     }
 
@@ -60,6 +61,7 @@ class Reference extends Model
             'value' => $spec->pivot->value,
             'max_value' => $spec->pivot->max_value,
             'text_value' => $spec->pivot->text_value,
+            'unit' => $spec->pivot->unit,
         ];
     }
 }

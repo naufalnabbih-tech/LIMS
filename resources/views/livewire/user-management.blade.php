@@ -15,12 +15,12 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                             </svg>
                         </div>
-                        <input wire:model.live.debounce.300ms="search" 
-                               type="text" 
-                               placeholder="Search users..." 
+                        <input wire:model.live.debounce.300ms="search"
+                               type="text"
+                               placeholder="Search users..."
                                class="block w-64 pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
                     </div>
-                    
+
                     <!-- Add Button -->
                     <button wire:click="openCreateModal"
                         class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer">
@@ -59,7 +59,7 @@
                             <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{{ $user->name }}</td>
                             <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{{ $user->email }}</td>
                             <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
                                     @if($user->role && $user->role->name === 'admin') bg-red-100 text-red-800
                                     @elseif($user->role && $user->role->name === 'manager') bg-yellow-100 text-yellow-800
                                     @else bg-green-100 text-green-800
@@ -72,7 +72,7 @@
                             </td>
                             <td class="px-4 py-3 whitespace-nowrap text-right text-sm">
                                 <div class="flex justify-end space-x-2">
-                                    <button wire:click="openEditModal({{ $user->id }})" 
+                                    <button wire:click="openEditModal({{ $user->id }})"
                                             class="inline-flex items-center px-3 py-1 bg-amber-100 hover:bg-amber-200 text-amber-700 text-xs font-medium rounded-md transition-colors duration-150 cursor-pointer">
                                         <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -81,7 +81,7 @@
                                         Edit
                                     </button>
                                     @if($user->id !== auth()->id())
-                                        <button wire:click="delete({{ $user->id }})" 
+                                        <button wire:click="delete({{ $user->id }})"
                                                 wire:confirm="Are you sure you want to delete this user?"
                                                 class="inline-flex items-center px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs font-medium rounded-md transition-colors duration-150 cursor-pointer">
                                             <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -277,7 +277,7 @@
                     @endif
 
                     <form wire:submit="save">
-                            
+
                         <div class="mb-5">
                             <label for="name" class="block text-sm font-bold mb-2">Name</label>
                             <input type="text" id="name" wire:model="name"

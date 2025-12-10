@@ -15,6 +15,7 @@ return new class extends Migration {
             $table->float('value')->nullable();
             $table->float('max_value')->nullable();
             $table->string('text_value')->nullable();
+            $table->string('unit')->nullable();
             $table->timestamps();
             // Ensure unique combination of reference and specification
             $table->unique(['reference_id', 'specification_id'], 'ref_spec_unique');

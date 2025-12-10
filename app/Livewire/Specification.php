@@ -49,7 +49,7 @@ class Specification extends Component
             ->withCount('referenceManytoMany')
             ->paginate(10);
 
-        return view('livewire.specification', [
+        return view('livewire.sample-rawmat-submission.components.specification', [
             'specifications' => $specifications,
         ])->layout('layouts.app')->title('Specifications');
     }

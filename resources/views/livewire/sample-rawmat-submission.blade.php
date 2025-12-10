@@ -10,6 +10,7 @@
                     <h2 class="text-xl font-semibold text-gray-900">Raw Material Sample Submission</h2>
                     <p class="text-sm text-gray-600 mt-1">Submit and manage raw material samples for testing</p>
                 </div>
+                @permission('manage_samples')
                 <div>
                     <button wire:click="$dispatch('openCreateForm')"
                         class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer">
@@ -17,6 +18,7 @@
                         Submit Sample
                     </button>
                 </div>
+                @endpermission
             </div>
         </div>
 

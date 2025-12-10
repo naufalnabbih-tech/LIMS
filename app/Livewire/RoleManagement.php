@@ -16,10 +16,10 @@ class RoleManagement extends Component
     public $description = '';
     public $permissions = [];
     public $is_active = true;
-    
+
     #[Url(as: 'q')]
     public $search = '';
-    
+
     public $selectedRoleId = null;
     public $showModal = false;
     public $isEditing = false;
@@ -43,47 +43,73 @@ class RoleManagement extends Component
         'manage_users' => 'Manage Users',
         'manage_roles' => 'Manage Roles',
         'view_users' => 'View Users',
-        'manage_settings' => 'Manage Settings',
-        
+
         // Raw Materials Management
         'manage_raw_materials' => 'Manage Raw Materials',
         'view_raw_materials' => 'View Raw Materials',
-        'manage_categories' => 'Manage Raw Material Categories',
-        'view_categories' => 'View Raw Material Categories',
-        
-        // References & Specifications
-        'manage_references' => 'Manage References',
-        'view_references' => 'View References',
-        'manage_specifications' => 'Manage Specifications',
-        'view_specifications' => 'View Specifications',
-        
+        'manage_raw_material_categories' => 'Manage Raw Material Categories',
+        'view_raw_material_categories' => 'View Raw Material Categories',
+        'manage_raw_material_specifications' => 'Manage Raw Material Specifications',
+        'view_raw_material_specifications' => 'View Raw Material Specifications',
+        'manage_raw_material_references' => 'Manage Raw Material References',
+        'view_raw_material_references' => 'View Raw Material References',
+
+        // Solder Management
+        'manage_solders' => 'Manage Solders',
+        'view_solders' => 'View Solders',
+        'manage_solder_categories' => 'Manage Solder Categories',
+        'view_solder_categories' => 'View Solder Categories',
+        'manage_solder_specifications' => 'Manage Solder Specifications',
+        'view_solder_specifications' => 'View Solder Specifications',
+        'manage_solder_references' => 'Manage Solder References',
+        'view_solder_references' => 'View Solder References',
+
+        // Chemical Management
+        'manage_chemicals' => 'Manage Chemicals',
+        'view_chemicals' => 'View Chemicals',
+        'manage_chemical_categories' => 'Manage Chemical Categories',
+        'view_chemical_categories' => 'View Chemical Categories',
+        'manage_chemical_specifications' => 'Manage Chemical Specifications',
+        'view_chemical_specifications' => 'View Chemical Specifications',
+        'manage_chemical_references' => 'Manage Chemical References',
+        'view_chemical_references' => 'View Chemical References',
+
         // Sample Management
         'manage_samples' => 'Manage Sample Submissions',
         'view_samples' => 'View Sample Submissions',
         'manage_sample_analysis' => 'Manage Sample Analysis',
         'view_sample_analysis' => 'View Sample Analysis',
-        
+        'edit_analysis' => 'Edit Analysis Results',
+
         // Instrument Management
         'manage_instruments' => 'Manage Instruments',
         'view_instruments' => 'View Instruments',
         'manage_instrument_conditions' => 'Manage Instrument Conditions',
         'view_instrument_conditions' => 'View Instrument Conditions',
-        
+
         // Thermohygrometer Management
         'manage_thermohygrometers' => 'Manage Thermohygrometers',
         'view_thermohygrometers' => 'View Thermohygrometers',
         'manage_thermohygrometer_conditions' => 'Manage Thermohygrometer Conditions',
         'view_thermohygrometer_conditions' => 'View Thermohygrometer Conditions',
-        
+
         // Reports & Analytics
         'view_reports' => 'View Reports',
         'view_analysis_reports' => 'View Analysis Reports',
         'view_audit_reports' => 'View Audit Reports',
         'export_reports' => 'Export Reports',
-        
+
         // Dashboard & Profile
         'view_dashboard' => 'View Dashboard',
         'manage_profile' => 'Manage Own Profile',
+
+        // CoA Management
+        'manage_coa' => 'Manage CoA',
+        'view_coa' => 'View CoA',
+        'create_coa' => 'Create CoA',
+        'edit_coa' => 'Edit CoA',
+        'approve_coa' => 'Approve CoA',
+        'delete_coa' => 'Delete CoA',
     ];
 
     public function updatingSearch()
@@ -127,7 +153,7 @@ class RoleManagement extends Component
     public function save()
     {
         $rules = $this->rules;
-        
+
         if ($this->isEditing) {
             $rules['name'] = 'required|min:2|unique:roles,name,' . $this->selectedRoleId;
         }
@@ -157,7 +183,7 @@ class RoleManagement extends Component
     public function delete($roleId)
     {
         $role = Role::findOrFail($roleId);
-        
+
         // Check if role has users
         if ($role->users()->count() > 0) {
             session()->flash('error', 'Cannot delete role that is assigned to users.');
@@ -179,7 +205,7 @@ class RoleManagement extends Component
     {
         $role = Role::findOrFail($roleId);
         $role->update(['is_active' => !$role->is_active]);
-        
+
         $status = $role->is_active ? 'activated' : 'deactivated';
         session()->flash('success', "Role {$status} successfully.");
         $this->dispatch('refreshRoles');

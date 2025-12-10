@@ -24,7 +24,8 @@ return new class extends Migration
             $table->float('spec_max_value')->nullable();
             $table->string('spec_unit', 50)->nullable();
 
-            $table->decimal('test_value', 10, 4);
+            $table->decimal('test_value', 10, 4)->nullable();
+            $table->string('test_value_text')->nullable(); // For non-numeric results
             $table->integer('reading_number')->default(1); // For multiple readings of same parameter
             $table->timestamp('tested_at');
             $table->foreignId('tested_by')->constrained('users');

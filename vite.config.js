@@ -5,16 +5,20 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
     plugins: [
         laravel({
-            input: ['resources/css/app.css', 'resources/js/app.js'],
+            input: [
+                'resources/css/app.css',
+                'resources/js/app.js',
+                'resources/js/dashboard-charts.js'
+            ],
             refresh: true,
         }),
         tailwindcss(),
     ],
-    // server: {
-    //     host: '10.8.18.83',
-    //     port: 5173,
-    //     hmr: {
-    //         host: '10.8.18.83',
-    //     },
-    // },
+    server: {
+        host: '10.8.18.83',
+        port: 5173,
+        hmr: {
+            host: '10.8.18.83',
+        },
+    },
 });

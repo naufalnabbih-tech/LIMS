@@ -13,6 +13,7 @@ return new class extends Migration {
         Schema::create('materials', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('code')->unique();
             $table->foreignId('category_id')->constrained('categories')->onDelete('cascade');
             $table->timestamps();
 

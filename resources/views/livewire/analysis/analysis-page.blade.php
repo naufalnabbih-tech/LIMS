@@ -10,7 +10,27 @@
                         Reference: <span class="font-semibold">{{ $reference->name ?? 'N/A' }}</span>
                     </p>
                 </div>
-                <div class="flex space-x-3">
+                <div class="flex items-center space-x-3">
+                    <!-- Auto-save Indicator -->
+                    <div class="flex items-center space-x-2 text-sm">
+                        @if($isSaving)
+                            <div class="flex items-center text-blue-600">
+                                <svg class="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span>Saving...</span>
+                            </div>
+                        @elseif($lastSavedAt)
+                            <div class="flex items-center text-green-600">
+                                <svg class="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                                <span>Saved at {{ $lastSavedAt }}</span>
+                            </div>
+                        @endif
+                    </div>
+
                     <button wire:click="backToSamples"
                         class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 cursor-pointer">
                         ← Back to Samples
@@ -227,27 +247,43 @@
                                                             isset($data['operator']) &&
                                                             $data['target_value'] !== null
                                                         ) {
-                                                            $testValue = floatval($data['average_value']);
-                                                            $targetValue = floatval($data['target_value']);
                                                             $operator = $data['operator'];
 
-                                                            switch ($operator) {
-                                                                case '>=':
-                                                                    $passes = $testValue >= $targetValue;
-                                                                    break;
-                                                                case '>':
-                                                                    $passes = $testValue > $targetValue;
-                                                                    break;
-                                                                case '<=':
-                                                                    $passes = $testValue <= $targetValue;
-                                                                    break;
-                                                                case '<':
-                                                                    $passes = $testValue < $targetValue;
-                                                                    break;
-                                                                case '=':
-                                                                case '==':
-                                                                    $passes = abs($testValue - $targetValue) < 0.001;
-                                                                    break;
+                                                            // For "should_be" operator, compare as text
+                                                            if ($operator === 'should_be') {
+                                                                $testValue = trim($data['average_value']);
+                                                                $targetValue = trim($data['target_value']);
+                                                                $passes = strcasecmp($testValue, $targetValue) === 0;
+                                                            } else {
+                                                                // For numeric operators, compare as numbers
+                                                                $testValue = floatval($data['average_value']);
+                                                                $targetValue = floatval($data['target_value']);
+
+                                                                switch ($operator) {
+                                                                    case '>=':
+                                                                        $passes = $testValue >= $targetValue;
+                                                                        break;
+                                                                    case '>':
+                                                                        $passes = $testValue > $targetValue;
+                                                                        break;
+                                                                    case '<=':
+                                                                        $passes = $testValue <= $targetValue;
+                                                                        break;
+                                                                    case '<':
+                                                                        $passes = $testValue < $targetValue;
+                                                                        break;
+                                                                    case '=':
+                                                                    case '==':
+                                                                        $passes = abs($testValue - $targetValue) < 0.001;
+                                                                        break;
+                                                                    case '-':
+                                                                        // Range operator
+                                                                        $maxValue = isset($data['max_value']) ? floatval($data['max_value']) : null;
+                                                                        if ($maxValue !== null) {
+                                                                            $passes = $testValue >= $targetValue && $testValue <= $maxValue;
+                                                                        }
+                                                                        break;
+                                                                }
                                                             }
 
                                                             if (!$passes) {
@@ -297,11 +333,22 @@
                                                                 @endif
                                                             </div>
                                                             <div class="flex items-center space-x-2">
-                                                                <input type="number" step="0.01"
-                                                                    wire:model.lazy="analysisResults.{{ $parameter }}.readings.{{ $readingType }}.value"
-                                                                    wire:change="calculateParameterValues('{{ $parameter }}')"
-                                                                    placeholder="0.00"
-                                                                    class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                                                @if($data['operator'] === 'should_be')
+                                                                    <input type="text"
+                                                                        wire:model.blur="analysisResults.{{ $parameter }}.readings.{{ $readingType }}.value"
+                                                                        placeholder="Enter value"
+                                                                        class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                                                @else
+                                                                    <input type="number" step="0.01"
+                                                                        wire:model.blur="analysisResults.{{ $parameter }}.readings.{{ $readingType }}.value"
+                                                                        placeholder="0.00"
+                                                                        class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                                                @endif
+                                                                @if(!empty($data['unit']))
+                                                                    <span class="inline-flex items-center px-2.5 py-1.5 text-sm font-medium text-amber-800 bg-amber-50 border border-amber-200 rounded-md whitespace-nowrap">
+                                                                        {{ $data['unit'] }}
+                                                                    </span>
+                                                                @endif
                                                             </div>
                                                         </div>
                                                     @endforeach
@@ -335,6 +382,11 @@
                                                                 <span class="text-sm text-gray-900">
                                                                     {{ $data['readings'][$readingType]['value'] }}
                                                                 </span>
+                                                                @if(!empty($data['unit']))
+                                                                    <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium text-amber-800 bg-amber-50 border border-amber-200 rounded">
+                                                                        {{ $data['unit'] }}
+                                                                    </span>
+                                                                @endif
                                                             </div>
                                                         </div>
                                                     @endif
@@ -345,18 +397,34 @@
                                         <!-- Average/Summary -->
                                         @if ($data['average_value'])
                                             <div class="pt-2 border-t border-gray-200">
-                                                <div class="grid grid-cols-2 gap-4 text-xs">
-                                                    <div>
-                                                        <span class="font-medium text-gray-700">Average:</span>
-                                                        <span
-                                                            class="text-gray-900 ml-1">{{ $data['average_value'] }}</span>
+                                                @if($data['operator'] === 'should_be')
+                                                    <!-- For should_be operator, only show result -->
+                                                    <div class="text-xs">
+                                                        <span class="font-medium text-gray-700">Result:</span>
+                                                        <span class="text-gray-900 ml-1">{{ $data['final_value'] }}</span>
+                                                        @if(!empty($data['unit']))
+                                                            <span class="text-amber-700 ml-1">{{ $data['unit'] }}</span>
+                                                        @endif
                                                     </div>
-                                                    <div>
-                                                        <span class="font-medium text-gray-700">Final:</span>
-                                                        <span
-                                                            class="text-gray-900 ml-1">{{ $data['final_value'] }}</span>
+                                                @else
+                                                    <!-- For numeric operators, show average and final -->
+                                                    <div class="grid grid-cols-2 gap-4 text-xs">
+                                                        <div>
+                                                            <span class="font-medium text-gray-700">Average:</span>
+                                                            <span class="text-gray-900 ml-1">{{ $data['average_value'] }}</span>
+                                                            @if(!empty($data['unit']))
+                                                                <span class="text-amber-700 ml-1">{{ $data['unit'] }}</span>
+                                                            @endif
+                                                        </div>
+                                                        <div>
+                                                            <span class="font-medium text-gray-700">Final:</span>
+                                                            <span class="text-gray-900 ml-1">{{ $data['final_value'] }}</span>
+                                                            @if(!empty($data['unit']))
+                                                                <span class="text-amber-700 ml-1">{{ $data['unit'] }}</span>
+                                                            @endif
+                                                        </div>
                                                     </div>
-                                                </div>
+                                                @endif
                                             </div>
                                         @endif
                                     </div>
@@ -367,7 +435,7 @@
                                 <!-- Notes Section -->
                                 <div class="mt-8 pt-6 border-t border-gray-200">
                                     <label class="block text-sm font-medium text-gray-900 mb-2">Analysis Notes</label>
-                                    <textarea wire:model.defer="notes" rows="4"
+                                    <textarea wire:model="notes" rows="4"
                                         placeholder="Enter any observations, comments, or additional notes about the analysis..."
                                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
                                 </div>

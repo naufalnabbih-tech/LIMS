@@ -20,15 +20,16 @@ return new class extends Migration
             $table->time('time')->after('description');
             $table->date('date')->after('time');
 
-            // Modify existing columns to be nullable for migration
+            // Modify existing columns
             $table->decimal('temperature', 5, 2)->nullable()->change();
             $table->decimal('humidity', 5, 2)->nullable()->change();
 
-            // Drop old columns that are no longer used
+            // Drop old columns
             $table->dropColumn('recorded_at');
             $table->dropColumn('notes');
 
-            // Add indexes for better query performance
+            // Add indexes
+            // Index name: thermohygrometer_conditions_shift_operator_name_time_date_index
             $table->index(['shift', 'operator_name', 'time', 'date']);
             $table->index('date');
         });
@@ -40,6 +41,15 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('thermohygrometer_conditions', function (Blueprint $table) {
+            // --- PERBAIKAN: Hapus Index DULUAN sebelum hapus kolom ---
+
+            // Kita perlu menybutkan nama index secara eksplisit atau array kolom yang sama persis
+            // agar Laravel bisa generate nama yang cocok.
+            $table->dropIndex(['shift', 'operator_name', 'time', 'date']);
+            $table->dropIndex(['date']);
+
+            // --- Baru setelah index dihapus, kita hapus kolomnya ---
+
             // Drop new columns
             $table->dropColumn(['shift', 'operator_name', 'condition', 'description', 'time', 'date']);
 
@@ -50,10 +60,6 @@ return new class extends Migration
             // Revert temperature and humidity to NOT NULL
             $table->decimal('temperature', 5, 2)->nullable(false)->change();
             $table->decimal('humidity', 5, 2)->nullable(false)->change();
-
-            // Drop new indexes
-            $table->dropIndex(['shift', 'operator_name', 'time', 'date']);
-            $table->dropIndex(['date']);
         });
     }
 };

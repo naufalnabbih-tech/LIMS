@@ -50,7 +50,7 @@ class EditSampleForm extends Component
         'edit_coa_file' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240',
         'edit_submission_date' => 'required|date',
         'edit_submission_time' => 'required',
-        'edit_notes' => 'nullable|string|max:1000',
+        'edit_notes' => 'required|string|max:1000',
     ];
 
     protected $messages = [
@@ -201,6 +201,10 @@ class EditSampleForm extends Component
             'editReferences'
         ]);
         $this->resetValidation();
+    }
+
+    public function removeEditCOAFile(){
+        $this->edit_coa_file = null;
     }
 
     /**

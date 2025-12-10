@@ -51,4 +51,56 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Role::class);
     }
+
+    /**
+     * Check if user has a specific permission
+     */
+    public function hasPermission($permission)
+    {
+        if (!$this->role || !$this->role->is_active) {
+            return false;
+        }
+
+        return $this->role->hasPermission($permission);
+    }
+
+    /**
+     * Check if user has any of the given permissions
+     */
+    public function hasAnyPermission($permissions)
+    {
+        foreach ($permissions as $permission) {
+            if ($this->hasPermission($permission)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Check if user has all of the given permissions
+     */
+    public function hasAllPermissions($permissions)
+    {
+        foreach ($permissions as $permission) {
+            if (!$this->hasPermission($permission)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Alias for hasPermission for Laravel convention
+     */
+    public function can($permission, $arguments = [])
+    {
+        // Check parent can() first (for Gate checks)
+        if (parent::can($permission, $arguments)) {
+            return true;
+        }
+
+        // Then check our RBAC permission
+        return $this->hasPermission($permission);
+    }
 }

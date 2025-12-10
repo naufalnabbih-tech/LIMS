@@ -13,6 +13,7 @@ class AnalysisForm extends Component
 {
   // Form visibility
     public $showAnalysisForm = false;
+    public $showConfirmation = false;
 
     // Selected sample
     public $selectedAnalysisSample = null;
@@ -64,7 +65,37 @@ class AnalysisForm extends Component
         $this->analysisMethod = '';
         $this->primaryAnalystId = '';
         $this->secondaryAnalystId = '';
+        $this->showConfirmation = false;
         $this->resetErrorBag();
+    }
+
+    public function validateBeforeConfirm()
+    {
+        // Validate the form
+        $rules = [
+            'analysisMethod' => 'required|in:individual,joint',
+        ];
+
+        $messages = [
+            'analysisMethod.required' => 'Metode analisis wajib dipilih.',
+            'analysisMethod.in' => 'Metode analisis tidak valid.',
+            'secondaryAnalystId.required' => 'Secondary analyst wajib dipilih untuk metode joint analysis.',
+            'secondaryAnalystId.exists' => 'Secondary analyst yang dipilih tidak valid.',
+        ];
+
+        if ($this->analysisMethod === 'joint') {
+            $rules['secondaryAnalystId'] = 'required|exists:users,id';
+        }
+
+        try {
+            $this->validate($rules, $messages);
+
+            // If validation passes, show confirmation modal
+            $this->showConfirmation = true;
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        }
     }
 
     public function startAnalysisProcess()

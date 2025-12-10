@@ -37,8 +37,8 @@
         <div class="bg-white shadow-sm rounded-lg border border-gray-200 mb-4">
             <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                 <div>
-                    <h2 class="text-xl font-semibold text-gray-900">Solder Specification</h2>
-                    <p class="text-sm text-gray-600 mt-1">Manage and define solder analysis specifications</p>
+                    <h2 class="text-xl font-semibold text-gray-900">Chemical Specification</h2>
+                    <p class="text-sm text-gray-600 mt-1">Manage and define chemical analysis specifications</p>
                 </div>
                 <div>
                     <button wire:click="openAddModal()"
@@ -66,7 +66,7 @@
                                 Specification Name</th>
                             <th
                                 class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">
-                                Used by Solder References</th>
+                                Used by Chemical References</th>
                             <th
                                 class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                                 Action</th>
@@ -81,7 +81,7 @@
                                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{{ $specification->name }}
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                                    @if ($specification->solder_reference_manyto_many_count > 0)
+                                    @if ($specification->chemical_reference_manyto_many_count > 0)
                                         <span
                                             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                             <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor"
@@ -89,7 +89,7 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                             </svg>
-                                            {{ $specification->solder_reference_manyto_many_count }} reference(s)
+                                            {{ $specification->chemical_reference_manyto_many_count }} reference(s)
                                         </span>
                                     @else
                                         <span
@@ -117,11 +117,11 @@
                                         <button wire:click="delete({{ $specification->id }})"
                                             wire:confirm="Are you sure you want to delete this specification?"
                                             class="inline-flex items-center px-3 py-1 text-xs font-medium rounded-md transition-colors duration-150
-                                                   {{ $specification->solder_reference_manyto_many_count > 0
+                                                   {{ $specification->chemical_reference_manyto_many_count > 0
                                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                                        : 'bg-red-100 hover:bg-red-200 text-red-700 cursor-pointer' }}"
-                                            {{ $specification->solder_reference_manyto_many_count > 0 ? 'title=Cannot delete: Specification is being used by solder references' : '' }}
-                                            {{ $specification->solder_reference_manyto_many_count > 0 ? 'disabled' : '' }}>
+                                            {{ $specification->chemical_reference_manyto_many_count > 0 ? 'title=Cannot delete: Specification is being used by chemical references' : '' }}
+                                            {{ $specification->chemical_reference_manyto_many_count > 0 ? 'disabled' : '' }}>
                                             <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -145,10 +145,10 @@
                                             </svg>
                                         </div>
                                         <h3 class="text-lg font-medium text-gray-900 mb-2">No specifications found</h3>
-                                        <p class="text-sm text-gray-500 mb-4">Get started by adding your first solder analysis
+                                        <p class="text-sm text-gray-500 mb-4">Get started by adding your first chemical analysis
                                             specification</p>
                                         <button wire:click="openAddModal()"
-                                            class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200">
+                                            class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 cursor-pointer">
                                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

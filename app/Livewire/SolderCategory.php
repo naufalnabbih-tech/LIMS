@@ -169,7 +169,7 @@ class SolderCategory extends Component
 
     public function render()
     {
-        return view('livewire.solder-category', [
+        return view('livewire.sample-solder-submission.components.category', [
             'categories' => Category::select('id', 'name')
                 ->where('type', 'solder')
                 ->latest()

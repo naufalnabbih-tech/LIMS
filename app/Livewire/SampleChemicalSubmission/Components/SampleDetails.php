@@ -284,7 +284,7 @@ class SampleDetails extends Component
                     'time_in' => $this->sample->updated_at,
                     'status' => $getStatusData('rejected')['display_name'],
                     'status_color' => $getStatusData('rejected')['color_class'],
-                    'analyst' => 'QC Manager',
+                    'analyst' => $this->sample->rejectedBy->name ?? 'QC Manager',
                     'previous_time' => $lastEntry ? $lastEntry['time_in'] : null,
                 ];
             }

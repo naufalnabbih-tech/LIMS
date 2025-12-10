@@ -1,9 +1,5 @@
-/**
- * Sample Actions Dropdown Component
- * Manages the dropdown menu for sample actions with positioning logic
- */
-window.sampleDropdown = function() {
-    return {
+document.addEventListener('alpine:init', () => {
+    Alpine.data('sampleDropdownLogic', () => ({
         isOpen: false,
         sampleData: {},
         justOpened: false,
@@ -16,35 +12,37 @@ window.sampleDropdown = function() {
             transitionDuration: 150
         },
 
-        /**
-         * Open dropdown with sample data
-         */
+        init() {
+            // Global helper untuk membuka/menutup dropdown dari tombol tabel
+            window.globalDropdown = {
+                open: (sampleId, data) => this.openDropdown(sampleId, data),
+                close: () => this.closeDropdown()
+            };
+            console.log('Global dropdown initialized (Livewire v3)');
+        },
+
         openDropdown(sampleId, data) {
             this.sampleData = this.createSampleData(sampleId, data);
             if (data.buttonRect) this.calculatePosition(data.buttonRect);
             this.showDropdown();
         },
 
-        /**
-         * Close dropdown with transition
-         */
         closeDropdown() {
             this.isOpen = false;
             setTimeout(() => this.resetData(), this.config.transitionDuration);
         },
 
-        /**
-         * Create sample data with permissions based on status
-         */
         createSampleData(sampleId, data) {
+            // Rules permission berdasarkan status
             const statusPermissions = {
                 canEdit: ['submitted', 'pending'].includes(data.status),
                 canStartAnalysis: ['submitted', 'pending'].includes(data.status),
                 canContinueAnalysis: ['in_progress'].includes(data.status),
-                canHandOver: ['in_progress'].includes(data.status) &&
-                             data.currentUserId === data.primaryAnalystId,
+                // Handover hanya untuk analis utama
+                canHandOver: ['in_progress'].includes(data.status),
+                // Takeover untuk analis penerima (bukan yang menyerahkan)
                 canTakeOver: ['hand_over', 'hand over'].includes(data.status?.toLowerCase()) &&
-                            data.handoverFromAnalystId != data.currentUserId,
+                    data.handoverFromAnalystId != data.currentUserId,
                 canCompleteAnalysis: ['in_progress', 'analysis_started'].includes(data.status),
                 canReview: ['analysis_completed', 'pending_review'].includes(data.status),
                 canApprove: ['reviewed'].includes(data.status),
@@ -55,28 +53,13 @@ window.sampleDropdown = function() {
                 sampleId,
                 ...data,
                 ...statusPermissions,
-                position: {
-                    left: 300,
-                    top: 200
-                }
+                position: { left: 300, top: 200 }
             };
         },
 
-        /**
-         * Calculate optimal dropdown position based on button position
-         */
         calculatePosition(buttonRect) {
-            const {
-                dropdownWidth,
-                dropdownHeight,
-                margin,
-                viewportMargin
-            } = this.config;
-
-            const viewport = {
-                width: window.innerWidth,
-                height: window.innerHeight
-            };
+            const { dropdownWidth, dropdownHeight, margin, viewportMargin } = this.config;
+            const viewport = { width: window.innerWidth, height: window.innerHeight };
 
             const space = {
                 left: buttonRect.left,
@@ -85,12 +68,14 @@ window.sampleDropdown = function() {
                 below: viewport.height - buttonRect.bottom
             };
 
+            // Horizontal positioning
             const left = space.left >= dropdownWidth ?
                 buttonRect.left - dropdownWidth - margin :
                 space.right >= dropdownWidth ?
                 buttonRect.right + margin :
                 (viewport.width - dropdownWidth) / 2;
 
+            // Vertical positioning
             const top = space.below >= dropdownHeight ?
                 buttonRect.bottom + margin :
                 space.above >= dropdownHeight ?
@@ -103,68 +88,50 @@ window.sampleDropdown = function() {
             };
         },
 
-        /**
-         * Show dropdown with animation
-         */
         showDropdown() {
             this.justOpened = true;
             this.isOpen = true;
             setTimeout(() => this.justOpened = false, 100);
         },
 
-        /**
-         * Reset dropdown data
-         */
         resetData() {
             this.sampleData = {};
             this.justOpened = false;
         },
 
-        /**
-         * Handle click outside dropdown
-         */
         handleClickAway() {
             if (!this.justOpened) this.closeDropdown();
         },
 
         /**
-         * Call Livewire method on main component
+         * LIVEWIRE v3 CALLER
+         * Dipanggil dari tombol aksi (Edit, Start, Continue, Takeover, dll)
          */
         callLivewireMethod(method, sampleId) {
             try {
-                // Find the main SampleRawmatSubmission component by ID
-                const mainComponent = document.querySelector('#sample-rawmat-submission-component[wire\\:id]');
+                // Mencari div dengan ID sesuai modul
+                const mainComponent = document.querySelector('div[id^="sample-"][id$="-submission-component"]');
 
                 if (mainComponent) {
                     const wireId = mainComponent.getAttribute('wire:id');
-                    const livewireComponent = window.Livewire.find(wireId);
 
-                    if (livewireComponent && typeof livewireComponent[method] === 'function') {
+                    // Livewire v3 → HARUS pakai getById()
+                    const livewireComponent = Livewire.getById(wireId);
+
+                    if (livewireComponent) {
                         livewireComponent.call(method, sampleId);
                     } else {
-                        console.error(`Method ${method} not found on component`, {
-                            method,
-                            availableMethods: Object.keys(livewireComponent).filter(k => typeof livewireComponent[k] === 'function')
-                        });
+                        console.error(`Livewire component object not found for wire:id ${wireId}`);
                     }
                 } else {
-                    console.error('Main Livewire component not found');
+                    console.error('Parent Livewire component not found. Check ID in Blade.');
+                    alert('Error: Could not find the main component on this page.');
                 }
             } catch (error) {
-                console.error('Error calling Livewire method:', error);
+                console.error('Error executing Livewire v3 action:', error);
             }
 
             this.closeDropdown();
-        },
-
-        /**
-         * Initialize global dropdown instance
-         */
-        initGlobalDropdown() {
-            window.globalDropdown = {
-                open: (sampleId, data) => this.openDropdown(sampleId, data),
-                close: () => this.closeDropdown()
-            };
         }
-    };
-};
+    }))
+});

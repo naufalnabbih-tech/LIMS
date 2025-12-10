@@ -51,6 +51,7 @@ class ResultsReviewPage extends Component
             'secondaryAnalyst',
             'reviewedBy',
             'approvedBy',
+            'rejectedBy',
             'testResults.specification',
             'testResults.testedBy',
             'statusRelation'
@@ -68,6 +69,12 @@ class ResultsReviewPage extends Component
     public $approvalAction = ''; // 'approve' or 'reject'
     public $canReview = false;
     public $canApprove = false;
+    public $canEdit = false;
+
+    // Edit functionality
+    public $showEditForm = false;
+    public $editingParameter = '';
+    public $editingTestResults = [];
 
     public function mount($sampleId)
     {
@@ -103,14 +110,21 @@ class ResultsReviewPage extends Component
                 $operator = $firstResult->spec_operator ?? $spec->pivot->operator;
                 $minValue = $firstResult->spec_min_value ?? $spec->pivot->value;
                 $maxValue = $firstResult->spec_max_value ?? $spec->pivot->max_value;
+                $textValue = $spec->pivot->text_value ?? null;
 
                 // Build specification display text from snapshot
                 $specText = '';
-                if ($operator && $minValue !== null) {
-                    if ($operator === '-') {
+                if ($operator) {
+                    if ($operator === '-' && $minValue !== null) {
+                        // Range operator
                         $specText = $minValue . ' - ' . $maxValue;
-                    } else {
-                        $specText = $operator . ' ' . $minValue;
+                    } elseif ($operator === 'should_be' && $textValue !== null) {
+                        // Should_be operator: display as "= text_value"
+                        $specText = '= ' . $textValue;
+                    } elseif ($minValue !== null) {
+                        // Other operators: replace == with = for display
+                        $displayOperator = $operator === '==' ? '=' : $operator;
+                        $specText = $displayOperator . ' ' . $minValue;
                     }
                 }
 
@@ -129,16 +143,30 @@ class ResultsReviewPage extends Component
                 // Process each test result for this specification
                 if ($testResults->count() > 0) {
                     foreach ($testResults as $testResult) {
+                        // Determine target value based on operator
+                        $evalOperator = $testResult->spec_operator ?? $operator;
+                        $evalTargetValue = $testResult->spec_min_value ?? $minValue;
+
+                        // For should_be operator, use text_value from pivot
+                        if ($evalOperator === 'should_be') {
+                            $evalTargetValue = $textValue;
+                        }
+
                         // Use snapshot values from test result for evaluation
                         $passes = $testResult->evaluateAgainstSpecification(
-                            $testResult->spec_min_value ?? $minValue,
-                            $testResult->spec_operator ?? $operator,
+                            $evalTargetValue,
+                            $evalOperator,
                             $testResult->spec_max_value ?? $maxValue
                         );
 
+                        // Use test_value_text for should_be operator, otherwise use test_value
+                        $displayValue = ($testResult->spec_operator === 'should_be' || $operator === 'should_be')
+                            ? $testResult->test_value_text
+                            : $testResult->test_value;
+
                         $this->analysisResults[$specKey]['test_results'][] = [
                             'id' => $testResult->id,
-                            'value' => $testResult->test_value,
+                            'value' => $displayValue,
                             'reading_number' => $testResult->reading_number,
                             'tested_at' => $testResult->tested_at,
                             'tested_by' => $testResult->testedBy->name ?? 'Unknown',
@@ -264,9 +292,9 @@ class ResultsReviewPage extends Component
             if (!$lastEntry || $lastEntry['status'] !== 'Rejected') {
                 $statusHistory[] = [
                     'id' => $counter++,
-                    'time_in' => $this->sample->updated_at,
+                    'time_in' => $this->sample->rejected_at ?? $this->sample->updated_at,
                     'status' => 'Rejected',
-                    'analyst' => 'QC Manager',
+                    'analyst' => $this->sample->rejectedBy->name ?? 'Unknown',
                     'previous_time' => $lastEntry ? $lastEntry['time_in'] : null,
                 ];
             }
@@ -287,6 +315,9 @@ class ResultsReviewPage extends Component
             $user && $user->id !== $this->sample->primary_analyst_id;
 
         $this->canApprove = in_array($statusName, ['review', 'reviewed', 'analysis_completed']) && $user;
+
+        // Edit permission: user must have explicit `edit_analysis` permission AND status must be 'reviewed'
+        $this->canEdit = $user && method_exists($user, 'hasPermission') && $user->hasPermission('edit_analysis') && $statusName === 'reviewed';
     }
 
     public function openApprovalForm($action)
@@ -320,7 +351,7 @@ class ResultsReviewPage extends Component
             'status_id' => $status === 'approved' ?
                 ($approvedStatus ? $approvedStatus->id : null) : ($rejectedStatus ? $rejectedStatus->id : null),
             'status' => $status,
-            'notes' => $this->sample->notes . "\n\nReview Notes: " . $this->reviewNotes
+            'review_notes' => $this->reviewNotes,
         ];
 
         if ($status === 'approved') {
@@ -445,9 +476,109 @@ class ResultsReviewPage extends Component
         }
     }
 
+    public function openEditForm($parameter)
+    {
+        // Permission check: ensure user can edit analysis (status=reviewed + has permission)
+        if (!$this->canEdit) {
+            session()->flash('error', 'You do not have permission to edit analysis results.');
+            return;
+        }
+
+        $this->editingParameter = $parameter;
+
+        // Load test results for this parameter
+        $specData = $this->analysisResults[$parameter] ?? null;
+        if ($specData) {
+            $this->editingTestResults = $specData['test_results'];
+        }
+
+        $this->showEditForm = true;
+    }
+
+    public function closeEditForm()
+    {
+        $this->showEditForm = false;
+        $this->editingParameter = '';
+        $this->editingTestResults = [];
+    }
+
+    public function saveEditedResults()
+    {
+        // Permission check: ensure user can edit analysis
+        if (!$this->canEdit) {
+            session()->flash('error', 'You do not have permission to save edited analysis results.');
+            return;
+        }
+
+        // Validate
+        $this->validate([
+            'editingTestResults.*.value' => 'required'
+        ]);
+
+        foreach ($this->editingTestResults as $result) {
+            $testResult = TestResult::find($result['id']);
+            if ($testResult) {
+                // Get the operator to determine if text or numeric
+                $operator = $testResult->spec_operator;
+
+                if ($operator === 'should_be') {
+                    // Text value
+                    $testResult->update([
+                        'test_value_text' => $result['value'],
+                        'test_value' => null,
+                        'notes' => $result['notes'] ?? null,
+                        'edited_by' => auth()->id(),
+                        'edited_at' => Carbon::now('Asia/Jakarta'),
+                    ]);
+                } else {
+                    // Numeric value
+                    $testResult->update([
+                        'test_value' => $result['value'],
+                        'test_value_text' => null,
+                        'notes' => $result['notes'] ?? null,
+                        'edited_by' => auth()->id(),
+                        'edited_at' => Carbon::now('Asia/Jakarta'),
+                    ]);
+                }
+
+                // Re-evaluate status
+                // For should_be operator, we need to get the text_value from specification
+                $targetValue = $testResult->spec_min_value;
+
+                if ($testResult->spec_operator === 'should_be') {
+                    // Fetch text_value from specification pivot table
+                    $spec = $testResult->specification;
+                    $reference = $this->sample->reference;
+
+                    if ($spec && $reference) {
+                        $pivotData = \DB::table('reference_specification')
+                            ->where('reference_id', $reference->id)
+                            ->where('specification_id', $spec->id)
+                            ->first();
+
+                        $targetValue = $pivotData ? $pivotData->text_value : null;
+                    }
+                }
+
+                $passes = $testResult->evaluateAgainstSpecification(
+                    $targetValue,
+                    $testResult->spec_operator,
+                    $testResult->spec_max_value
+                );
+                $testResult->update(['status' => $passes ? 'pass' : 'fail']);
+            }
+        }
+
+        session()->flash('message', 'Test results updated successfully.');
+        $this->closeEditForm();
+
+        // Reload data
+        $this->mount($this->sampleId);
+    }
+
     public function render()
     {
-        return view('livewire.results-review-page')
+        return view('livewire.analysis.results-review-page')
             ->layout('layouts.app')
             ->title('Results Review - Sample #' . $this->sample->id);
     }

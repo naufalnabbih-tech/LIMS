@@ -46,7 +46,7 @@ class SolderSpecification extends Component
             ->withCount('solderReferenceManytoMany')
             ->paginate(10);
 
-        return view('livewire.solder-specification', [
+        return view('livewire.sample-solder-submission.components.specification', [
             'specifications' => $specifications,
         ])->layout('layouts.app')->title('Solder Specifications');
     }

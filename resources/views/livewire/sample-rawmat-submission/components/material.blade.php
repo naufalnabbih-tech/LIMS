@@ -4,8 +4,8 @@
         <div class="bg-white shadow-sm rounded-lg border border-gray-200 mb-4">
             <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                 <div>
-                    <h2 class="text-xl font-semibold text-gray-900">Solders</h2>
-                    <p class="text-sm text-gray-600 mt-1">Manage solder categories and items</p>
+                    <h2 class="text-xl font-semibold text-gray-900">Raw Materials</h2>
+                    <p class="text-sm text-gray-600 mt-1">Manage raw material categories and items</p>
                 </div>
                 <div>
                     <button wire:click="openAddModal()"
@@ -16,36 +16,11 @@
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                         </svg>
-                        Add Solder
+                        Add Raw Material
                     </button>
                 </div>
             </div>
         </div>
-
-        <!-- Success/Error Messages -->
-        @if (session()->has('success'))
-            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4" 
-                 x-data="{ show: true }" 
-                 x-show="show" 
-                 x-init="setTimeout(() => show = false, 2000)"
-                 x-transition:leave="transition ease-in duration-300"
-                 x-transition:leave-start="opacity-100"
-                 x-transition:leave-end="opacity-0">
-                {{ session('success') }}
-            </div>
-        @endif
-
-        @if (session()->has('error'))
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4"
-                 x-data="{ show: true }" 
-                 x-show="show" 
-                 x-init="setTimeout(() => show = false, 2000)"
-                 x-transition:leave="transition ease-in duration-300"
-                 x-transition:leave-start="opacity-100"
-                 x-transition:leave-end="opacity-0">
-                {{ session('error') }}
-            </div>
-        @endif
 
     <!-- Table Section -->
     <div class="bg-white shadow-sm rounded-lg border border-gray-200">
@@ -63,7 +38,7 @@
                     </div>
                     <div class="ml-3">
                         <p class="text-sm">
-                            Tidak ada kategori yang tersedia. Silakan tambahkan kategori solder terlebih dahulu
+                            Tidak ada kategori yang tersedia. Silakan tambahkan kategori raw material terlebih dahulu
                             sebelum menambah data.
                         </p>
                     </div>
@@ -79,26 +54,35 @@
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
                             NO
                         </th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Solder Name</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Raw
+                            Material Name</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Category Name</th>
+                            Internal Code</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Category
+                            Name</th>
                         <th
                             class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                             Action</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                    @forelse ($solders as $index => $solder)
+                    @forelse ($rawmat as $index => $rm)
                         <tr class="hover:bg-gray-50 transition-colors duration-150">
                             <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                                {{ $solders->firstItem() + $index }}
+                                {{ $rawmat->firstItem() + $index }}
                             </td>
-                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{{ $solder->name }}</td>
-                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{{ $solder->category->name }}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{{ $rm->name }}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                                    {{ $rm->code }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{{ $rm->category->name }}</td>
                             <td class="px-4 py-3 whitespace-nowrap text-right text-sm">
                                 <div class="flex justify-end space-x-2">
                                     <button
-                                        wire:click="openEditModal({{ $solder->id }}, '{{ $solder->name }}', '{{ $solder->category_id }}')"
+                                        wire:click="openEditModal({{ $rm->id }}, '{{ addslashes($rm->name) }}', '{{ addslashes($rm->code) }}', {{ $rm->category_id }})"
                                         class="inline-flex items-center px-3 py-1 bg-amber-100 hover:bg-amber-200 text-amber-700 text-xs font-medium rounded-md transition-colors duration-150 cursor-pointer">
                                         <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor"
                                             viewBox="0 0 24 24">
@@ -107,8 +91,8 @@
                                         </svg>
                                         Edit
                                     </button>
-                                    <button wire:click="delete({{ $solder->id }})"
-                                        wire:confirm="Are you sure you want to delete this solder?"
+                                    <button wire:click="delete({{ $rm->id }})"
+                                        wire:confirm="Are you sure you want to delete this raw material?"
                                         class="inline-flex items-center px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs font-medium rounded-md transition-colors duration-150 cursor-pointer">
                                         <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor"
                                             viewBox="0 0 24 24">
@@ -129,15 +113,15 @@
                                         <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor"
                                             viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M13 10V3L4 14h7v7l9-11h-7z">
+                                                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m8-8v4m0 0V9m0 0h4m-4 0H8">
                                             </path>
                                         </svg>
                                     </div>
-                                    <h3 class="text-lg font-medium text-gray-900 mb-2">No solders found</h3>
-                                    <p class="text-sm text-gray-500 mb-4">Get started by adding your first solder
+                                    <h3 class="text-lg font-medium text-gray-900 mb-2">No raw materials found</h3>
+                                    <p class="text-sm text-gray-500 mb-4">Get started by adding your first raw material
                                     </p>
                                     <button wire:click="openAddModal()"
-                                        class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200
+                                        class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 cursor-pointer
                                                        {{ $categories->isEmpty() ? 'opacity-50 cursor-not-allowed' : '' }}"
                                         {{ $categories->isEmpty() ? 'disabled' : '' }}>
                                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
@@ -145,7 +129,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M12 4v16m8-8H4" />
                                         </svg>
-                                        Add Solder
+                                        Add Raw Material
                                     </button>
                                 </div>
                             </td>
@@ -156,29 +140,29 @@
         </div>
 
         <!-- Pagination Footer -->
-        @if ($solders->hasPages())
+        @if ($rawmat->hasPages())
             <div class="bg-white px-4 py-3 border-t border-gray-200 rounded-b-xl">
                 <div class="flex items-center justify-between">
                     <!-- Desktop Results Info -->
                     <div class="hidden sm:block">
                         <p class="text-sm text-gray-700">
-                            Showing <span class="font-medium">{{ $solders->firstItem() ?? 0 }}</span>-<span
-                                class="font-medium">{{ $solders->lastItem() ?? 0 }}</span> of <span
-                                class="font-medium">{{ $solders->total() }}</span> solders
+                            Showing <span class="font-medium">{{ $rawmat->firstItem() ?? 0 }}</span>-<span
+                                class="font-medium">{{ $rawmat->lastItem() ?? 0 }}</span> of <span
+                                class="font-medium">{{ $rawmat->total() }}</span> raw materials
                         </p>
                     </div>
 
                     <!-- Mobile Results Info -->
                     <div class="sm:hidden">
                         <p class="text-sm text-gray-700">
-                            Page {{ $solders->currentPage() }} of {{ $solders->lastPage() }}
+                            Page {{ $rawmat->currentPage() }} of {{ $rawmat->lastPage() }}
                         </p>
                     </div>
 
                     <!-- Pagination Links -->
                     <div class="flex items-center space-x-2">
                         {{-- Previous Page Link --}}
-                        @if ($solders->onFirstPage())
+                        @if ($rawmat->onFirstPage())
                             <span
                                 class="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 cursor-not-allowed rounded-md">
                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -201,8 +185,8 @@
                         {{-- Page Numbers (Desktop Only) --}}
                         <div class="hidden sm:flex items-center space-x-1">
                             @php
-                                $currentPage = $solders->currentPage();
-                                $lastPage = $solders->lastPage();
+                                $currentPage = $rawmat->currentPage();
+                                $lastPage = $rawmat->lastPage();
                                 $startPage = max(1, $currentPage - 2);
                                 $endPage = min($lastPage, $currentPage + 2);
                             @endphp
@@ -243,7 +227,7 @@
                         </div>
 
                         {{-- Next Page Link --}}
-                        @if ($solders->hasMorePages())
+                        @if ($rawmat->hasMorePages())
                             <button wire:click="nextPage"
                                 class="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 cursor-pointer">
                                 <span class="hidden sm:inline">Next</span>
@@ -273,7 +257,7 @@
         <div class="fixed inset-0 bg-gray-900/75 p-4 flex items-center justify-center z-50">
             <div class="relative w-full max-w-md bg-white rounded-2xl shadow-2xl p-8">
                 <div class="flex justify-between items-center pb-4 border-b">
-                    <h3 class="text-2xl font-bold">Add New Solder</h3>
+                    <h3 class="text-2xl font-bold">Add New Raw Material</h3>
                     <button wire:click="closeAddModal()" class="p-2 rounded-full hover:bg-gray-100 cursor-pointer">
                         <svg class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -295,7 +279,7 @@
 
                     <form wire:submit="store">
                         <div class="mb-5">
-                            <label for="add-name" class="block text-sm font-bold mb-2">Solder Name</label>
+                            <label for="add-name" class="block text-sm font-bold mb-2">Raw Material Name</label>
                             <input type="text" id="add-name" wire:model="name"
                                 class="shadow-sm border @error('name') border-red-500 @else border-gray-300 @enderror rounded-lg w-full py-3 px-4"
                                 required>
@@ -304,8 +288,20 @@
                             @enderror
                         </div>
 
+                        <div class="mb-5">
+                            <label for="add-code" class="block text-sm font-bold mb-2">Internal Code</label>
+                            <input type="text" id="add-code" wire:model="code"
+                                placeholder="e.g., RM-001, RM-COPPER-01"
+                                class="shadow-sm border @error('code') border-red-500 @else border-gray-300 @enderror rounded-lg w-full py-3 px-4"
+                                required>
+                            @error('code')
+                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
                         <div class="mb-5 cursor-pointer relative">
-                            <label for="add-category" class="block text-sm font-bold mb-2">Solder Category</label>
+                            <label for="add-category" class="block text-sm font-bold mb-2">Raw Material
+                                Category</label>
                             <div class="relative">
                                 <select id="add-category" wire:model="category_id"
                                     class="shadow-sm border @error('category_id') border-red-500 @else border-gray-300 @enderror rounded-lg w-full py-3 px-4 pr-10 cursor-pointer appearance-none
@@ -314,7 +310,7 @@
                                     @if ($categories->isEmpty())
                                         <option value="">Tidak ada kategori tersedia</option>
                                     @else
-                                        <option value="">Select Category</option>
+                                        <option value="" hidden>Select Category</option>
                                         @foreach ($categories as $category)
                                             <option value="{{ $category->id }}">{{ $category->name }}</option>
                                         @endforeach
@@ -342,11 +338,14 @@
                                 class="px-6 py-2 rounded-lg text-white bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer
                                    {{ $categories->isEmpty() ? 'opacity-50 cursor-not-allowed' : '' }}"
                                 {{ $categories->isEmpty() ? 'disabled' : '' }}>
-                                <span wire:loading.remove wire:target="store">Save Solder</span>
+                                <span wire:loading.remove wire:target="store">Save Raw Material</span>
                                 <span wire:loading wire:target="store">Saving...</span>
                             </button>
                         </div>
                     </form>
+
+
+
                 </div>
             </div>
         </div>
@@ -357,7 +356,7 @@
         <div class="fixed inset-0 bg-gray-900/75 p-4 flex items-center justify-center z-50">
             <div class="relative w-full max-w-md bg-white rounded-2xl shadow-2xl p-8">
                 <div class="flex justify-between items-center pb-4 border-b">
-                    <h3 class="text-2xl font-bold">Edit Solder</h3>
+                    <h3 class="text-2xl font-bold">Edit Raw Material</h3>
                     <button wire:click="closeEditModal()" class="p-2 rounded-full hover:bg-gray-100 cursor-pointer">
                         <svg class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -379,22 +378,35 @@
 
                     <form wire:submit="update">
                         <div class="mb-5">
-                            <label for="edit-name" class="block text-sm font-bold mb-2">Solder Name</label>
+                            <label for="edit-name" class="block text-sm font-bold mb-2">Raw Material Name</label>
                             <input type="text" id="edit-name" wire:model="name"
-                                class="shadow-sm border @error('name') border-red-500 @else border-gray-300 @enderror rounded-lg w-full py-3 px-4 cursor-pointer"
+                                class="shadow-sm border @error('name') border-red-500 @else border-gray-300 @enderror rounded-lg w-full py-3 px-4 cursor-text"
                                 required>
                             @error('name')
                                 <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                             @enderror
                         </div>
 
+                        <!-- Internal Code -->
+                        <div class="mb-5">
+                            <label for="edit-code" class="block text-sm font-bold mb-2">Internal Code</label>
+                            <input type="text" id="edit-code" wire:model="code"
+                                placeholder="e.g., RM-001, RM-COPPER-01"
+                                class="shadow-sm border @error('code') border-red-500 @else border-gray-300 @enderror rounded-lg w-full py-3 px-4 cursor-text"
+                                required>
+                            @error('code')
+                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
                         <div class="mb-5 cursor-pointer relative">
-                            <label for="edit-category" class="block text-sm font-bold mb-2">Solder Category</label>
+                            <label for="edit-category" class="block text-sm font-bold mb-2">Raw Material
+                                Category</label>
                             <div class="relative">
                                 <select id="edit-category" wire:model="category_id"
                                     class="shadow-sm border @error('category_id') border-red-500 @else border-gray-300 @enderror rounded-lg w-full py-3 px-4 pr-10 cursor-pointer appearance-none"
                                     required>
-                                    <option value="">Select Category</option>
+                                    <option value="" {{ $category_id ? 'disabled hidden' : '' }} >Select Category</option>
                                     @foreach ($categories as $category)
                                         <option value="{{ $category->id }}">{{ $category->name }}</option>
                                     @endforeach
@@ -419,7 +431,7 @@
                             </button>
                             <button type="submit" wire:loading.attr="disabled" wire:target="update"
                                 class="px-6 py-2 rounded-lg text-white bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
-                                <span wire:loading.remove wire:target="update">Update Solder</span>
+                                <span wire:loading.remove wire:target="update">Update Raw Material</span>
                                 <span wire:loading wire:target="update">Updating...</span>
                             </button>
                         </div>

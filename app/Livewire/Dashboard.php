@@ -20,7 +20,8 @@ class Dashboard extends Component
 
     // Chart data
     public $monthlySubmissions = [];
-    public $statusDistribution = [];
+    public $approvalData = []; // Data per sample type (solder, rawmat, chemical)
+    public $chartPeriod = 'month'; // week, month, year
 
     public function mount()
     {
@@ -120,34 +121,161 @@ class Dashboard extends Component
 
     public function loadChartData()
     {
-        // Monthly submissions for the last 6 months
-        $monthlyData = [];
-        for ($i = 5; $i >= 0; $i--) {
+        $submissionsData = [];
+        $now = Carbon::now();
+
+        switch ($this->chartPeriod) {
+            case 'week':
+                // LOGIKA: Membagi bulan ini menjadi 4 minggu (Week 1, 2, 3, 4)
+                $startOfMonth = $now->copy()->startOfMonth();
+
+                for ($i = 1; $i <= 4; $i++) {
+                    $weekLabel = 'Week ' . $i;
+
+                    // Tentukan start date untuk minggu ini
+                    if ($i == 1) {
+                        $weekStart = $startOfMonth->copy();
+                        $weekEnd = $startOfMonth->copy()->addDays(6)->endOfDay(); // Hari 1-7
+                    } elseif ($i == 2) {
+                        $weekStart = $startOfMonth->copy()->addDays(7);
+                        $weekEnd = $startOfMonth->copy()->addDays(13)->endOfDay(); // Hari 8-14
+                    } elseif ($i == 3) {
+                        $weekStart = $startOfMonth->copy()->addDays(14);
+                        $weekEnd = $startOfMonth->copy()->addDays(20)->endOfDay(); // Hari 15-21
+                    } else {
+                        // Week 4 mengambil sisa hari sampai akhir bulan
+                        $weekStart = $startOfMonth->copy()->addDays(21);
+                        $weekEnd = $now->copy()->endOfMonth(); // Hari 22-End
+                    }
+
+                    $count = Sample::whereBetween('created_at', [$weekStart, $weekEnd])->count();
+
+                    $submissionsData[] = [
+                        'month' => $weekLabel,
+                        'count' => $count
+                    ];
+                }
+                break;
+
+            case 'month':
+                // LOGIKA: Menampilkan Januari s/d Desember untuk TAHUN INI
+                $currentYear = $now->year;
+
+                for ($m = 1; $m <= 12; $m++) {
+                    // Membuat tanggal awal dan akhir bulan untuk bulan $m di tahun ini
+                    $date = Carbon::createFromDate($currentYear, $m, 1);
+                    $startOfMonth = $date->copy()->startOfMonth();
+                    $endOfMonth = $date->copy()->endOfMonth();
+
+                    $count = Sample::whereBetween('created_at', [$startOfMonth, $endOfMonth])->count();
+
+                    $submissionsData[] = [
+                        'month' => $date->format('F'), // Akan menghasilkan "January", "February", dst
+                        'count' => $count
+                    ];
+                }
+                break;
+
+            case 'year':
+            default:
+                // LOGIKA: 5 Tahun Terakhir (termasuk tahun ini)
+                for ($i = 4; $i >= 0; $i--) {
+                    $year = $now->copy()->subYears($i)->year;
+                    $startOfYear = Carbon::create($year, 1, 1)->startOfDay();
+                    $endOfYear = Carbon::create($year, 12, 31)->endOfDay();
+
+                    $count = Sample::whereBetween('created_at', [$startOfYear, $endOfYear])->count();
+
+                    $submissionsData[] = [
+                        'month' => (string) $year, // Convert ke string agar chart.js membacanya sebagai label
+                        'count' => $count
+                    ];
+                }
+                break;
+        }
+
+        $this->monthlySubmissions = $submissionsData;
+
+        // Load approval data per sample type (Solder, Rawmat, Chemical)
+        $this->loadApprovalData();
+    }
+
+    public function loadApprovalData()
+    {
+        // Get approved status
+        $approvedStatus = Status::where('name', 'approved')->first();
+
+        if (!$approvedStatus) {
+            $this->approvalData = [];
+            return;
+        }
+
+        // Get data for last 12 months by sample type
+        $labels = [];
+        $solderData = [];
+        $rawmatData = [];
+        $chemicalData = [];
+
+        for ($i = 11; $i >= 0; $i--) {
             $date = Carbon::now()->subMonths($i);
-            $count = Sample::whereYear('created_at', $date->year)
-                ->whereMonth('created_at', $date->month)
+            $startOfMonth = $date->copy()->startOfMonth();
+            $endOfMonth = $date->copy()->endOfMonth();
+
+            $labels[] = $date->format('M');
+
+            // Count approved samples by type for this month
+            $solderCount = Sample::where('sample_type', 'solder')
+                ->where('status_id', $approvedStatus->id)
+                ->whereBetween('approved_at', [$startOfMonth, $endOfMonth])
                 ->count();
 
-            $monthlyData[] = [
-                'month' => $date->format('M Y'),
-                'count' => $count
-            ];
-        }
-        $this->monthlySubmissions = $monthlyData;
+            $rawmatCount = Sample::where('sample_type', 'raw_material')
+                ->where('status_id', $approvedStatus->id)
+                ->whereBetween('approved_at', [$startOfMonth, $endOfMonth])
+                ->count();
 
-        // Status distribution
-        $statuses = Status::withCount('samples as samples_count')->get();
-        $statusData = [];
-        foreach ($statuses as $status) {
-            if ($status->samples_count > 0) {
-                $statusData[] = [
-                    'label' => $status->display_name ?? ucfirst($status->name),
-                    'count' => $status->samples_count,
-                    'color' => $this->getStatusColor($status->name)
-                ];
-            }
+            $chemicalCount = Sample::where('sample_type', 'chemical')
+                ->where('status_id', $approvedStatus->id)
+                ->whereBetween('approved_at', [$startOfMonth, $endOfMonth])
+                ->count();
+
+            $solderData[] = $solderCount;
+            $rawmatData[] = $rawmatCount;
+            $chemicalData[] = $chemicalCount;
         }
-        $this->statusDistribution = $statusData;
+
+        $this->approvalData = [
+            'labels' => $labels,
+            'datasets' => [
+                [
+                    'label' => 'Data Solder',
+                    'data' => $solderData,
+                    'backgroundColor' => '#22c55e', // green
+                ],
+                [
+                    'label' => 'Data Rawmat',
+                    'data' => $rawmatData,
+                    'backgroundColor' => '#3b82f6', // blue
+                ],
+                [
+                    'label' => 'Data Chemical',
+                    'data' => $chemicalData,
+                    'backgroundColor' => '#f97316', // orange
+                ],
+            ]
+        ];
+    }
+
+    public function updateChartPeriod($period)
+    {
+        $this->chartPeriod = $period;
+        $this->loadChartData();
+
+        // Dispatch event to update chart in JavaScript
+        $this->dispatch('chartDataUpdated', [
+            'monthlySubmissions' => $this->monthlySubmissions,
+            'approvalData' => $this->approvalData
+        ]);
     }
 
     private function getStatusColor($statusName)

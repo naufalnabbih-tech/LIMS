@@ -1,5 +1,4 @@
 <div x-data="{
-    showConfirmation: false,
     scrollToError() {
         this.$nextTick(() => {
             const errorElement = this.$el.querySelector('.border-red-500, .ring-red-500, [aria-invalid=true]');
@@ -9,7 +8,8 @@
             }
         });
     }
-}" @scroll-to-error.window="scrollToError()">
+}"
+@scroll-to-error.window="scrollToError()">
     <!-- Submission Form Modal -->
     @if ($showForm)
         <div class="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-50" x-data="{ show: true }"
@@ -115,12 +115,37 @@
                                             </span>
                                         </label>
                                         <select wire:model.live="category_id" id="category_id"
-                                            class="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all duration-200 @error('category_id') border-red-500 ring-red-200 @enderror">
+                                            class="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all duration-200 @error('category_id') border-red-500 ring-red-200 @enderror @if ($categories->isEmpty()) bg-gray-100 cursor-not-allowed @endif"
+                                            {{ $categories->isEmpty() ? 'disabled' : '' }}>
                                             <option value="" hidden>Choose material category</option>
                                             @foreach ($categories as $category)
                                                 <option value="{{ $category->id }}">{{ $category->name }}</option>
                                             @endforeach
                                         </select>
+
+                                        {{-- Alert --}}
+                                        @if ($categories->isEmpty())
+                                            <div x-data="{ show: true }" x-show="show"
+                                                x-transition:enter="transition ease-out duration-300"
+                                                x-transition:enter-start="opacity-0 transform -translate-y-2"
+                                                x-transition:enter-end="opacity-100 transform translate-y-0"
+                                                class="mt-2 flex items-center p-4 text-sm text-yellow-800 rounded-lg bg-gradient-to-r from-yellow-50 to-yellow-100 border border-yellow-300 shadow-sm"
+                                                role="alert">
+                                                <svg class="flex-shrink-0 inline w-5 h-5 me-3 text-yellow-600"
+                                                    aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                                    fill="currentColor" viewBox="0 0 20 20">
+                                                    <path
+                                                        d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z" />
+                                                </svg>
+                                                <div class="flex-1">
+                                                    <span class="font-semibold">Tidak ada kategori chemical yang
+                                                        tersedia!</span>
+                                                    <p class="mt-1 text-xs">Silakan tambahkan kategori chemical
+                                                        terlebih dahulu sebelum membuat sampel.</p>
+                                                </div>
+                                            </div>
+                                        @endif
+
                                         @error('category_id')
                                             <p class="text-red-500 text-xs mt-1 flex items-center space-x-1">
                                                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
@@ -188,26 +213,50 @@
                                                 <span>{{ $message }}</span>
                                             </p>
                                         @enderror
-
                                     </div>
+                                </div>
 
+                                <!-- Testing Reference and Batch/Lot in separate row -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                                     <!-- Reference Selection -->
-                                    <div class="space-y-2 md:col-span-2">
+                                    <div class="space-y-2">
                                         <label for="reference_id" class="block text-sm font-semibold text-gray-700">
                                             <span class="flex items-center space-x-1">
                                                 <span>Testing Reference</span>
                                                 <span class="text-red-500">*</span>
                                             </span>
                                         </label>
-                                        <select wire:model="reference_id" id="reference_id"
-                                            class="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all duration-200 @error('reference_id') border-red-500 ring-red-200 @enderror @if (empty($material_id)) bg-gray-100 cursor-not-allowed @endif"
-                                            @if (empty($material_id)) disabled @endif>
+                                        <select wire:model.live="reference_id" id="reference_id"
+                                            class="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all duration-200 @error('reference_id') border-red-500 ring-red-200 @enderror @if (empty($material_id) || $references->isEmpty()) bg-gray-100 cursor-not-allowed @endif"
+                                            {{ empty($material_id) || $references->isEmpty() ? 'disabled' : '' }}>
                                             <option value="">Choose testing reference</option>
                                             @foreach ($references as $reference)
                                                 <option value="{{ $reference->id }}">{{ $reference->name }}
                                                 </option>
                                             @endforeach
                                         </select>
+
+                                        {{-- Alert --}}
+                                        @if (!empty($material_id) && $references->isEmpty())
+                                            <div x-data="{ show: true }" x-show="show"
+                                                x-transition:enter="transition ease-out duration-300"
+                                                x-transition:enter-start="opacity-0 transform -translate-y-2"
+                                                x-transition:enter-end="opacity-100 transform translate-y-0"
+                                                class="mt-2 flex items-center p-4 mb-4 text-sm text-yellow-800 rounded-lg bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-300 shadow-sm"
+                                                role="alert">
+                                                <svg class="flex-shrink-0 inline w-5 h-5 me-3 text-yellow-600"
+                                                    aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                                    fill="currentColor" viewBox="0 0 20 20">
+                                                    <path
+                                                        d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z" />
+                                                </svg>
+                                                <span class="sr-only">Info</span>
+                                                <div>
+                                                    <span class="font-semibold">Maaf!</span> Tidak ada referensi
+                                                    pengujian yang tersedia untuk material ini.
+                                                </div>
+                                            </div>
+                                        @endif
                                         @error('reference_id')
                                             <p class="text-red-500 text-xs mt-1 flex items-center space-x-1">
                                                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
@@ -219,71 +268,14 @@
                                             </p>
                                         @enderror
                                     </div>
-                                </div>
-                            </div>
 
-                            <!-- Supplier Information Section -->
-                            <div class="mb-8">
-                                <div class="flex items-center space-x-2 mb-6">
-                                    <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                                        <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m0 0h2M7 21V3a2 2 0 012-2h6a2 2 0 012 2v18M7 21h10" />
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <h4 class="text-lg font-semibold text-gray-900">Supplier Information</h4>
-                                        <p class="text-sm text-gray-500">Details about the material source and
-                                            batch</p>
-                                    </div>
-                                </div>
-
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <!-- Supplier -->
-                                    <div class="space-y-2">
-                                        <label for="supplier" class="block text-sm font-semibold text-gray-700">
-                                            <span class="flex items-center space-x-1">
-                                                <span>Supplier Name</span>
-                                                <span class="text-red-500">*</span>
-                                            </span>
-                                        </label>
-                                        <div class="relative">
-                                            <input type="text" wire:model.live="supplier" id="supplier"
-                                                class="w-full px-4 py-3 pl-10 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all duration-200 @error('supplier') border-red-500 ring-red-200 @enderror"
-                                                placeholder="Enter supplier company name">
-                                            <div
-                                                class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                                <svg class="w-4 h-4 text-gray-400" fill="none"
-                                                    stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                                </svg>
-                                            </div>
-                                        </div>
-                                        @error('supplier')
-                                            <p class="text-red-500 text-xs mt-1 flex items-center space-x-1">
-                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd"
-                                                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                                                        clip-rule="evenodd" />
-                                                </svg>
-                                                <span>{{ $message }}</span>
-                                            </p>
-                                        @enderror
-                                    </div>
-
-                                    <!-- Batch Lot -->
+                                    <!-- Batch/Lot Number -->
                                     <div class="space-y-2">
                                         <label for="batch_lot" class="block text-sm font-semibold text-gray-700">
-                                            <span class="flex items-center space-x-1">
-                                                <span>Batch/Lot Number</span>
-                                                <span class="text-red-500">*</span>
-                                            </span>
+                                            Batch/Lot Number
                                         </label>
                                         <div class="relative">
-                                            <input type="text" wire:model.live="batch_lot" id="batch_lot"
+                                            <input type="text" wire:model="batch_lot" id="batch_lot"
                                                 class="w-full px-4 py-3 pl-10 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all duration-200 @error('batch_lot') border-red-500 ring-red-200 @enderror"
                                                 placeholder="Enter batch or lot number">
                                             <div
@@ -292,47 +284,11 @@
                                                     stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                         stroke-width="2"
-                                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                                                 </svg>
                                             </div>
                                         </div>
                                         @error('batch_lot')
-                                            <p class="text-red-500 text-xs mt-1 flex items-center space-x-1">
-                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd"
-                                                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                                                        clip-rule="evenodd" />
-                                                </svg>
-                                                <span>{{ $message }}</span>
-                                            </p>
-                                        @enderror
-                                    </div>
-
-                                    <!-- Vehicle/Container Number -->
-                                    <div class="space-y-2 md:col-span-2">
-                                        <label for="vehicle_container_number"
-                                            class="block text-sm font-semibold text-gray-700">
-                                            <span class="flex items-center space-x-1">
-                                                <span>Vehicle/Container Number</span>
-                                                <span class="text-red-500">*</span>
-                                            </span>
-                                        </label>
-                                        <div class="relative">
-                                            <input type="text" wire:model.live="vehicle_container_number"
-                                                id="vehicle_container_number"
-                                                class="w-full px-4 py-3 pl-10 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all duration-200 @error('vehicle_container_number') border-red-500 ring-red-200 @enderror"
-                                                placeholder="Enter vehicle or container identification number">
-                                            <div
-                                                class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                                <svg class="w-4 h-4 text-gray-400" fill="none"
-                                                    stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
-                                                </svg>
-                                            </div>
-                                        </div>
-                                        @error('vehicle_container_number')
                                             <p class="text-red-500 text-xs mt-1 flex items-center space-x-1">
                                                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                                     <path fill-rule="evenodd"
@@ -364,25 +320,6 @@
                                 </div>
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <!-- CoA Checkbox -->
-                                    <div class="space-y-2 md:col-span-2">
-                                        <div
-                                            class="flex items-center p-4 bg-blue-50 rounded-xl border border-blue-200">
-                                            <div class="flex items-center h-5">
-                                                <input type="checkbox" wire:model.live="has_coa" id="has_coa"
-                                                    class="w-5 h-5 text-blue-600 bg-white border-2 border-blue-300 rounded focus:ring-blue-500 focus:ring-2 transition-all duration-200">
-                                            </div>
-                                            <div class="ml-3">
-                                                <label for="has_coa"
-                                                    class="text-sm font-semibold text-blue-900 cursor-pointer">
-                                                    Certificate of Analysis (CoA) Available
-                                                </label>
-                                                <p class="text-xs text-blue-700 mt-1">Check this if you have a CoA
-                                                    document to upload</p>
-                                            </div>
-                                        </div>
-                                    </div>
-
                                     <!-- Submission Date -->
                                     <div class="space-y-2">
                                         <label for="submission_date"
@@ -449,73 +386,6 @@
                                 </div>
                             </div>
 
-                            <!-- CoA File Upload Section (shows when has_coa is checked) -->
-                            @if ($has_coa)
-                                <div class="mb-8">
-                                    <div class="flex items-center space-x-2 mb-6">
-                                        <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
-                                            <svg class="w-4 h-4 text-orange-600" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <h4 class="text-lg font-semibold text-gray-900">Certificate of Analysis
-                                            </h4>
-                                            <p class="text-sm text-gray-500">Upload your CoA document</p>
-                                        </div>
-                                    </div>
-
-                                    <div class="space-y-2">
-                                        <label for="coa_file" class="block text-sm font-semibold text-gray-700">
-                                            <span class="flex items-center space-x-1">
-                                                <span>Upload CoA File</span>
-                                                <span class="text-red-500">*</span>
-                                            </span>
-                                            <span class="text-xs text-gray-500 font-normal block mt-1">(PDF, DOC,
-                                                DOCX, JPG, JPEG, PNG - Max 10MB)</span>
-                                        </label>
-                                        <div class="relative">
-                                            <input type="file" wire:model="coa_file" id="coa_file"
-                                                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                                                class="w-full px-4 py-3 bg-white border-2 border-dashed border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('coa_file') border-red-500 @enderror
-                                                   file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-all duration-200">
-                                        </div>
-                                        @error('coa_file')
-                                            <p class="text-red-500 text-xs mt-1 flex items-center space-x-1">
-                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd"
-                                                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                                                        clip-rule="evenodd" />
-                                                </svg>
-                                                <span>{{ $message }}</span>
-                                            </p>
-                                        @enderror
-                                        @if ($coa_file)
-                                            <div class="mt-3 p-4 bg-green-50 border border-green-200 rounded-xl">
-                                                <div class="flex items-center text-sm text-green-700">
-                                                    <div
-                                                        class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
-                                                        <svg class="w-4 h-4 text-green-600" fill="currentColor"
-                                                            viewBox="0 0 20 20">
-                                                            <path fill-rule="evenodd"
-                                                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                                                clip-rule="evenodd" />
-                                                        </svg>
-                                                    </div>
-                                                    <div>
-                                                        <p class="font-medium">File selected successfully</p>
-                                                        <p class="text-xs text-green-600">
-                                                            {{ $coa_file->getClientOriginalName() }}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        @endif
-                                    </div>
-                                </div>
-                            @endif
-
                             <!-- Notes Section -->
                             <div class="mb-8">
                                 <div class="flex items-center space-x-2 mb-6">
@@ -535,7 +405,7 @@
 
                                 <div class="space-y-2">
                                     <label for="notes" class="block text-sm font-semibold text-gray-700">
-                                        Notes (Optional)
+                                        Notes
                                     </label>
                                     <textarea wire:model="notes" id="notes" rows="4"
                                         class="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all duration-200 @error('notes') border-red-500 ring-red-200 @enderror resize-none"
@@ -563,20 +433,20 @@
                                     </svg>
                                     <span>Cancel</span>
                                 </button>
-                                <button type="button" @click="showConfirmation = true" wire:loading.attr="disabled"
+                                <button type="button" wire:click="validateBeforeConfirm" wire:loading.attr="disabled"
                                     class="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-medium rounded-xl hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 flex items-center space-x-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                        wire:loading.remove>
+                                        wire:loading.remove wire:target="validateBeforeConfirm">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                     </svg>
                                     <svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24" wire:loading>
+                                        viewBox="0 0 24 24" wire:loading wire:target="validateBeforeConfirm">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.49 8.49l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.49-8.49l2.83-2.83" />
                                     </svg>
-                                    <span wire:loading.remove>Submit Sample</span>
-                                    <span wire:loading>Submitting...</span>
+                                    <span wire:loading.remove wire:target="validateBeforeConfirm">Submit Sample</span>
+                                    <span wire:loading wire:target="validateBeforeConfirm">Validating...</span>
                                 </button>
                             </div>
                         </form>
@@ -586,13 +456,14 @@
         </div>
 
         <!-- Confirmation Modal -->
-        <div x-show="showConfirmation" x-transition:enter="transition ease-out duration-300"
+        @if($showConfirmation)
+        <div x-show="true" x-transition:enter="transition ease-out duration-300"
             x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
             x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
-            x-transition:leave-end="opacity-0" class="fixed inset-0 z-[9999] overflow-y-auto" style="display: none;">
+            x-transition:leave-end="opacity-0" class="fixed inset-0 z-[9999] overflow-y-auto" x-cloak>
 
             <!-- Background overlay -->
-            <div class="fixed inset-0 transition-opacity" @click="showConfirmation = false" aria-hidden="true">
+            <div class="fixed inset-0 transition-opacity" wire:click="$set('showConfirmation', false)" aria-hidden="true">
                 <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
             </div>
 
@@ -656,24 +527,6 @@
                                                     @endforeach
                                                 </span>
                                             </div>
-
-
-                                            <div class="flex justify-between">
-                                                <span class="text-gray-600 font-medium">Supplier:</span>
-                                                <span class="text-gray-900">{{ $supplier ?: '-' }}</span>
-                                            </div>
-
-                                            <div class="flex justify-between">
-                                                <span class="text-gray-600 font-medium">Batch/Lot:</span>
-                                                <span class="text-gray-900">{{ $batch_lot ?: '-' }}</span>
-                                            </div>
-
-                                            @if ($has_coa)
-                                                <div class="flex justify-between">
-                                                    <span class="text-gray-600 font-medium">CoA:</span>
-                                                    <span class="text-green-600 font-medium">✓ Included</span>
-                                                </div>
-                                            @endif
                                         </div>
                                     </div>
                                 </div>
@@ -682,14 +535,12 @@
                     </div>
 
                     <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                        <button wire:click="submit"
-                            @click="showConfirmation = false"
-                            wire:loading.attr="disabled"
+                        <button wire:click="submit" wire:loading.attr="disabled"
                             class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                             <span wire:loading.remove>Submit Sample</span>
                             <span wire:loading>Submitting...</span>
                         </button>
-                        <button @click="showConfirmation = false"
+                        <button wire:click="$set('showConfirmation', false)"
                             class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm cursor-pointer">
                             Cancel
                         </button>
@@ -697,5 +548,6 @@
                 </div>
             </div>
         </div>
+        @endif
     @endif
 </div>

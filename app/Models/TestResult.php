@@ -12,12 +12,14 @@ class TestResult extends Model
         'specification_id',
         'parameter_name',
         'test_value',
+        'test_value_text',
         'reading_number',
         'tested_at',
         'tested_by',
+        'edited_at',
+        'edited_by',
         'notes',
         'status',
-        // Snapshot specification values at time of testing
         'spec_operator',
         'spec_min_value',
         'spec_max_value',
@@ -27,6 +29,7 @@ class TestResult extends Model
     protected $casts = [
         'test_value' => 'decimal:4',
         'tested_at' => 'datetime',
+        'edited_at' => 'datetime',
         'reading_number' => 'integer',
         'spec_min_value' => 'float',
         'spec_max_value' => 'float'
@@ -47,8 +50,21 @@ class TestResult extends Model
         return $this->belongsTo(User::class, 'tested_by');
     }
 
+    public function editedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'edited_by');
+    }
+
     public function evaluateAgainstSpecification($targetValue, $operator, $maxValue = null): bool
     {
+        // Handle text-based should_be operator
+        if ($operator === 'should_be') {
+            $testTextValue = trim($this->test_value_text ?? '');
+            $targetTextValue = trim($targetValue ?? '');
+            return strcasecmp($testTextValue, $targetTextValue) === 0;
+        }
+
+        // Handle numeric operators
         $testValue = floatval($this->test_value);
         $target = floatval($targetValue);
 

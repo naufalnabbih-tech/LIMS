@@ -1,4 +1,4 @@
-<div x-data="{ showConfirmation: false }">
+<div>
     <!-- Analysis Form Modal -->
     @if ($showAnalysisForm)
         <div class="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-50"
@@ -56,12 +56,6 @@
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
                                         <div class="text-base font-medium text-gray-900">
                                             {{ $selectedAnalysisSample->category->name ?? 'N/A' }}
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Batch/Lot</label>
-                                        <div class="text-base font-medium text-gray-900">
-                                            {{ $selectedAnalysisSample->batch_lot }}
                                         </div>
                                     </div>
                                     <div>
@@ -191,10 +185,10 @@
                             class="px-6 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-colors duration-200 cursor-pointer">
                             Cancel
                         </button>
-                        <button type="button" @click="showConfirmation = true" wire:loading.attr="disabled"
+                        <button type="button" wire:click="validateBeforeConfirm" wire:loading.attr="disabled"
                             class="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
-                            <span wire:loading.remove>Start Analysis</span>
-                            <span wire:loading>Starting...</span>
+                            <span wire:loading.remove wire:target="validateBeforeConfirm">Start Analysis</span>
+                            <span wire:loading wire:target="validateBeforeConfirm">Validating...</span>
                         </button>
                     </div>
                 </div>
@@ -202,13 +196,14 @@
         </div>
 
         <!-- Confirmation Modal -->
-        <div x-show="showConfirmation" x-transition:enter="transition ease-out duration-200"
+        @if($showConfirmation)
+        <div x-show="true" x-transition:enter="transition ease-out duration-200"
             x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
             x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
-            x-transition:leave-end="opacity-0" class="fixed inset-0 z-[9999] overflow-y-auto" style="display: none;">
+            x-transition:leave-end="opacity-0" class="fixed inset-0 z-[9999] overflow-y-auto" x-cloak>
 
             <!-- Background overlay -->
-            <div class="fixed inset-0 transition-opacity" @click="showConfirmation = false" aria-hidden="true">
+            <div class="fixed inset-0 transition-opacity" wire:click="$set('showConfirmation', false)" aria-hidden="true">
                 <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
             </div>
 
@@ -273,13 +268,12 @@
                     </div>
 
                     <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                        <button wire:click="startAnalysisProcess" @click="showConfirmation = false"
-                            wire:loading.attr="disabled"
+                        <button wire:click="startAnalysisProcess" wire:loading.attr="disabled"
                             class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:ml-3 sm:w-auto sm:text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-                            <span wire:loading.remove>Start Analysis</span>
-                            <span wire:loading>Starting...</span>
+                            <span wire:loading.remove wire:target="startAnalysisProcess">Start Analysis</span>
+                            <span wire:loading wire:target="startAnalysisProcess">Starting...</span>
                         </button>
-                        <button @click="showConfirmation = false"
+                        <button wire:click="$set('showConfirmation', false)"
                             class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm cursor-pointer">
                             Cancel
                         </button>
@@ -287,5 +281,6 @@
                 </div>
             </div>
         </div>
+        @endif
     @endif
 </div>

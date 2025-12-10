@@ -45,6 +45,7 @@ class Sample extends Model
         //results & notes
         'analysis_results',
         'notes',
+        'review_notes'
     ];
 
     protected $casts = [
@@ -179,7 +180,7 @@ class Sample extends Model
             return 'bg-gray-100 text-gray-800';
         }
 
-        // Map hex colors to Tailwind classes
+
         $colorMap = [
             '#6B7280' => 'bg-gray-100 text-gray-800',       // Gray - Pending
             '#3B82F6' => 'bg-blue-100 text-blue-800',       // Blue - In Progress
@@ -191,5 +192,9 @@ class Sample extends Model
         ];
 
         return $colorMap[$this->status->color] ?? 'bg-gray-100 text-gray-800';
+    }
+
+    public function coas(){
+        return $this->hasMany(CoA::class);
     }
 }

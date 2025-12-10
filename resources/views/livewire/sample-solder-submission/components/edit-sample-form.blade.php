@@ -2,7 +2,7 @@
 use Illuminate\Support\Facades\Storage;
 @endphp
 
-<div>
+<div x-data="{ showConfirmation: false }">
     @if ($show && $sample)
         <div class="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-50"
             x-data="{ show: true }" x-show="show" x-transition:enter="ease-out duration-300"
@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Storage;
             x-transition:leave-end="opacity-0 transform scale-95">
 
             <!-- Modal Header -->
-            <div class="bg-gradient-to-r from-amber-600 to-orange-600 px-6 py-5 flex-shrink-0">
+            <div class="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-5 flex-shrink-0">
                 <div class="flex justify-between items-center">
                     <div class="flex items-center space-x-3">
                         <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
@@ -29,7 +29,7 @@ use Illuminate\Support\Facades\Storage;
                         </div>
                         <div>
                             <h3 class="text-xl font-semibold text-white">Edit Sample</h3>
-                            <p class="text-amber-100 text-sm">Modify sample information </p>
+                            <p class="text-purple-100 text-sm">Modify sample information </p>
                         </div>
                     </div>
                     <button type="button" wire:click="close"
@@ -92,7 +92,7 @@ use Illuminate\Support\Facades\Storage;
                                         </span>
                                     </label>
                                     <select wire:model.live="edit_category_id" id="edit_category_id"
-                                        class="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent shadow-sm transition-all duration-200 @error('edit_category_id') border-red-500 ring-red-200 @enderror">
+                                        class="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent shadow-sm transition-all duration-200 @error('edit_category_id') border-red-500 ring-red-200 @enderror">
                                         <option value="" hidden>Choose material category</option>
                                         @foreach ($categories as $category)
                                             <option value="{{ $category->id }}">{{ $category->name }}</option>
@@ -149,7 +149,7 @@ use Illuminate\Support\Facades\Storage;
                                         </span>
                                     </label>
                                     <select wire:model="edit_reference_id" id="edit_reference_id"
-                                        class="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent shadow-sm transition-all duration-200 @error('edit_reference_id') border-red-500 ring-red-200 @enderror">
+                                        class="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent shadow-sm transition-all duration-200 @error('edit_reference_id') border-red-500 ring-red-200 @enderror\">
                                         <option value="" hidden>Choose testing reference</option>
                                         @foreach ($editReferences as $reference)
                                             <option value="{{ $reference->id }}">{{ $reference->name }}</option>
@@ -169,240 +169,6 @@ use Illuminate\Support\Facades\Storage;
                             </div>
                         </div>
 
-                        <!-- Supplier Information Section -->
-                        <div class="mb-8">
-                            <div class="flex items-center space-x-2 mb-6">
-                                <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                                    <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m0 0h2M7 21V3a2 2 0 012-2h6a2 2 0 012 2v18M7 21h10" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h4 class="text-lg font-semibold text-gray-900">Supplier Information</h4>
-                                    <p class="text-sm text-gray-500">Update supplier and batch details</p>
-                                </div>
-                            </div>
-
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <!-- Supplier -->
-                                <div class="space-y-2">
-                                    <label for="edit_supplier"
-                                        class="block text-sm font-semibold text-gray-700">
-                                        <span class="flex items-center space-x-1">
-                                            <span>Supplier Name</span>
-                                            <span class="text-red-500">*</span>
-                                        </span>
-                                    </label>
-                                    <div class="relative">
-                                        <input type="text" wire:model="edit_supplier" id="edit_supplier"
-
-                                            class="w-full px-4 py-3 pl-10 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent shadow-sm transition-all duration-200 @error('edit_supplier') border-red-500 ring-red-200 @enderror"
-                                            placeholder="Enter supplier company name">
-                                        <div
-                                            class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                            <svg class="w-4 h-4 text-gray-400" fill="none"
-                                                stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                    stroke-width="2"
-                                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                            </svg>
-                                        </div>
-                                    </div>
-                                    @error('edit_supplier')
-                                        <p class="text-red-500 text-xs mt-1 flex items-center space-x-1">
-                                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd"
-                                                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                                                    clip-rule="evenodd" />
-                                            </svg>
-                                            <span>{{ $message }}</span>
-                                        </p>
-                                    @enderror
-                                </div>
-
-                                <!-- Batch Lot -->
-                                <div class="space-y-2">
-                                    <label for="edit_batch_lot"
-                                        class="block text-sm font-semibold text-gray-700">
-                                        <span class="flex items-center space-x-1">
-                                            <span>Batch/Lot Number</span>
-                                            <span class="text-red-500">*</span>
-                                        </span>
-                                    </label>
-                                    <div class="relative">
-                                        <input type="text" wire:model="edit_batch_lot" id="edit_batch_lot"
-
-                                            class="w-full px-4 py-3 pl-10 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent shadow-sm transition-all duration-200 @error('edit_batch_lot') border-red-500 ring-red-200 @enderror"
-                                            placeholder="Enter batch or lot number">
-                                        <div
-                                            class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                            <svg class="w-4 h-4 text-gray-400" fill="none"
-                                                stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                    stroke-width="2"
-                                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                            </svg>
-                                        </div>
-                                    </div>
-                                    @error('edit_batch_lot')
-                                        <p class="text-red-500 text-xs mt-1 flex items-center space-x-1">
-                                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd"
-                                                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                                                    clip-rule="evenodd" />
-                                            </svg>
-                                            <span>{{ $message }}</span>
-                                        </p>
-                                    @enderror
-                                </div>
-
-                                <!-- Vehicle/Container Number -->
-                                <div class="space-y-2 md:col-span-2">
-                                    <label for="edit_vehicle_container_number"
-                                        class="block text-sm font-semibold text-gray-700">
-                                        <span class="flex items-center space-x-1">
-                                            <span>Vehicle/Container Number</span>
-                                            <span class="text-red-500">*</span>
-                                        </span>
-                                    </label>
-                                    <div class="relative">
-                                        <input type="text" wire:model="edit_vehicle_container_number"
-                                            id="edit_vehicle_container_number"
-                                            class="w-full px-4 py-3 pl-10 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent shadow-sm transition-all duration-200 @error('edit_vehicle_container_number') border-red-500 ring-red-200 @enderror"
-                                            placeholder="Enter vehicle or container identification number">
-                                        <div
-                                            class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                            <svg class="w-4 h-4 text-gray-400" fill="none"
-                                                stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                    stroke-width="2"
-                                                    d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
-                                            </svg>
-                                        </div>
-                                    </div>
-                                    @error('edit_vehicle_container_number')
-                                        <p class="text-red-500 text-xs mt-1 flex items-center space-x-1">
-                                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd"
-                                                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                                                    clip-rule="evenodd" />
-                                            </svg>
-                                            <span>{{ $message }}</span>
-                                        </p>
-                                    @enderror
-                                </div>
-
-                                <!-- CoA Checkbox -->
-                                <div class="space-y-2 md:col-span-2">
-                                    <div class="flex items-center p-4 bg-blue-50 rounded-xl border border-blue-200">
-                                        <div class="flex items-center h-5">
-                                            <input type="checkbox" wire:model.live="edit_has_coa" id="edit_has_coa"
-                                                class="w-5 h-5 text-blue-600 bg-white border-2 border-blue-300 rounded focus:ring-blue-500 focus:ring-2 transition-all duration-200">
-                                        </div>
-                                        <div class="ml-3">
-                                            <label for="edit_has_coa"
-                                                class="text-sm font-semibold text-blue-900 cursor-pointer">
-                                                Certificate of Analysis (CoA) Available
-                                            </label>
-                                            <p class="text-xs text-blue-700 mt-1">Check this if you have a CoA document to upload</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- CoA File Upload Section (shows when edit_has_coa is checked) -->
-                        @if ($edit_has_coa)
-                            <div class="mb-8">
-                                <div class="flex items-center space-x-2 mb-6">
-                                    <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
-                                        <svg class="w-4 h-4 text-orange-600" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <h4 class="text-lg font-semibold text-gray-900">Certificate of Analysis</h4>
-                                        <p class="text-sm text-gray-500">Update your CoA document</p>
-                                    </div>
-                                </div>
-
-                                <!-- Display current CoA file if exists -->
-                                @if ($sample && $sample->coa_file_path)
-                                    <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                                        <div class="flex items-center justify-between">
-                                            <div class="flex items-center space-x-3">
-                                                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                                                    <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd"
-                                                            d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"
-                                                            clip-rule="evenodd" />
-                                                    </svg>
-                                                </div>
-                                                <div>
-                                                    <p class="text-sm font-medium text-blue-900">Current CoA File</p>
-                                                    <p class="text-xs text-blue-700">{{ basename($sample->coa_file_path) }}</p>
-                                                </div>
-                                            </div>
-                                            <a href="{{ Storage::url($sample->coa_file_path) }}" target="_blank"
-                                                class="px-3 py-1.5 text-xs font-medium text-blue-700 bg-white border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors">
-                                                View File
-                                            </a>
-                                        </div>
-                                    </div>
-                                @endif
-
-                                <div class="space-y-2">
-                                    <label for="edit_coa_file" class="block text-sm font-semibold text-gray-700">
-                                        <span class="flex items-center space-x-1">
-                                            <span>Upload New CoA File {{ $sample && $sample->coa_file_path ? '(Optional - Leave empty to keep current file)' : '' }}</span>
-                                            @if (!$sample || !$sample->coa_file_path)
-                                                <span class="text-red-500">*</span>
-                                            @endif
-                                        </span>
-                                        <span class="text-xs text-gray-500 font-normal block mt-1">(PDF, DOC, DOCX, JPG, JPEG, PNG - Max 10MB)</span>
-                                    </label>
-                                    <div class="relative">
-                                        <input type="file" wire:model="edit_coa_file" id="edit_coa_file"
-                                            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                                            class="w-full px-4 py-3 bg-white border-2 border-dashed border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 @error('edit_coa_file') border-red-500 @enderror
-                                               file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100 transition-all duration-200">
-                                    </div>
-                                    @error('edit_coa_file')
-                                        <p class="text-red-500 text-xs mt-1 flex items-center space-x-1">
-                                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd"
-                                                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                                                    clip-rule="evenodd" />
-                                            </svg>
-                                            <span>{{ $message }}</span>
-                                        </p>
-                                    @enderror
-                                    @if ($edit_coa_file)
-                                        <div class="mt-3 p-4 bg-green-50 border border-green-200 rounded-xl">
-                                            <div class="flex items-center text-sm text-green-700">
-                                                <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
-                                                    <svg class="w-4 h-4 text-green-600" fill="currentColor"
-                                                        viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd"
-                                                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                                            clip-rule="evenodd" />
-                                                    </svg>
-                                                </div>
-                                                <div>
-                                                    <p class="font-medium">New file selected successfully</p>
-                                                    <p class="text-xs text-green-600">
-                                                        {{ $edit_coa_file->getClientOriginalName() }}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    @endif
-                                </div>
-                            </div>
-                        @endif
 
                         <!-- Notes Section -->
                         <div class="mb-8">
@@ -425,7 +191,7 @@ use Illuminate\Support\Facades\Storage;
                                     Notes (Optional)
                                 </label>
                                 <textarea wire:model="edit_notes" id="edit_notes" rows="4"
-                                    class="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent shadow-sm transition-all duration-200 @error('edit_notes') border-red-500 ring-red-200 @enderror resize-none"
+                                    class="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent shadow-sm transition-all duration-200 @error('edit_notes') border-red-500 ring-red-200 @enderror resize-none\"
                                     placeholder="Enter any additional notes, observations, or special handling instructions..."></textarea>
                                 @error('edit_notes')
                                     <p class="text-red-500 text-xs mt-1 flex items-center space-x-1">
@@ -451,8 +217,8 @@ use Illuminate\Support\Facades\Storage;
                                 </svg>
                                 <span>Cancel</span>
                             </button>
-                            <button type="submit" wire:loading.attr="disabled"
-                                class="px-8 py-3 bg-gradient-to-r from-amber-600 to-amber-700 text-white text-sm font-medium rounded-xl hover:from-amber-700 hover:to-amber-800 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-all duration-200 flex items-center space-x-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
+                            <button type="button" @click="showConfirmation = true" wire:loading.attr="disabled"
+                                class="px-8 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white text-sm font-medium rounded-xl hover:from-purple-700 hover:to-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all duration-200 flex items-center space-x-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24" wire:loading.remove>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -471,6 +237,77 @@ use Illuminate\Support\Facades\Storage;
                 </div>
             </div>
         </div>
+        </div>
+
+        <!-- Confirmation Modal -->
+        <div x-show="showConfirmation" x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+            x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0" class="fixed inset-0 z-[9999] overflow-y-auto" style="display: none;">
+
+            <!-- Background overlay -->
+            <div class="fixed inset-0 transition-opacity" @click="showConfirmation = false" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+
+            <!-- Modal container - centered -->
+            <div class="flex items-center justify-center min-h-screen p-4">
+                <!-- Modal panel -->
+                <div class="relative bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all max-w-lg w-full mx-auto">
+                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 sm:mx-0 sm:h-10 sm:w-10">
+                                <svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                            </div>
+                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900">
+                                    Konfirmasi Update Sample
+                                </h3>
+                                <div class="mt-2">
+                                    <p class="text-sm text-gray-500 mb-3">
+                                        Apakah Anda yakin ingin memperbarui informasi sample ini? Perubahan akan tersimpan dan tidak dapat diubah untuk sample yang sudah disetujui.
+                                    </p>
+
+                                    <!-- Sample Details -->
+                                    <div class="bg-gray-50 rounded-lg p-3 text-sm">
+                                        <div class="space-y-2">
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-600 font-medium">Material:</span>
+                                                <span class="text-gray-900">{{ $sample->material?->name ?? 'N/A' }}</span>
+                                            </div>
+
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-600 font-medium">Batch/Lot:</span>
+                                                <span class="text-gray-900">{{ $sample->batch_lot ?? 'N/A' }}</span>
+                                            </div>
+
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-600 font-medium">Status:</span>
+                                                <span class="text-gray-900">{{ $sample->status?->display_name ?? 'N/A' }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button wire:click="submit" @click="showConfirmation = false" wire:loading.attr="disabled"
+                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-purple-600 text-base font-medium text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:ml-3 sm:w-auto sm:text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span wire:loading.remove>Update Sample</span>
+                            <span wire:loading>Updating...</span>
+                        </button>
+                        <button @click="showConfirmation = false"
+                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm cursor-pointer">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     @endif
 </div>

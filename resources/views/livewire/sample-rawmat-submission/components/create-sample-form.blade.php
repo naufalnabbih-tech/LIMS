@@ -115,12 +115,35 @@
                                             </span>
                                         </label>
                                         <select wire:model.live="category_id" id="category_id"
-                                            class="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all duration-200 @error('category_id') border-red-500 ring-red-200 @enderror">
+                                            class=" cursor-pointer w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all duration-200 @error('category_id') border-red-500 ring-red-200  @enderror @if ($categories->isEmpty()) bg-gray-100 cursor-not-allowed @endif"
+                                            {{ $categories->isEmpty() ? 'disabled' : '' }}>
                                             <option value="" hidden>Choose material category</option>
                                             @foreach ($categories as $category)
                                                 <option value="{{ $category->id }}">{{ $category->name }}</option>
                                             @endforeach
                                         </select>
+
+                                        {{-- Alert --}}
+                                        @if ($categories->isEmpty())
+                                            <div x-data="{ show: true }" x-show="show"
+                                                x-transition:enter="transition ease-out duration-300"
+                                                x-transition:enter-start="opacity-0 transform -translate-y-2"
+                                                x-transition:enter-end="opacity-100 transform translate-y-0"
+                                                class="mt-2 flex items-center p-4 text-sm text-yellow-800 rounded-lg bg-gradient-to-r from-yellow-50 to-yellow-100 border border-yellow-300 shadow-sm"
+                                                role="alert">
+                                                <svg class="flex-shrink-0 inline w-5 h-5 me-3 text-yellow-600"
+                                                    aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                                    fill="currentColor" viewBox="0 0 20 20">
+                                                    <path
+                                                        d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z" />
+                                                </svg>
+                                                <div class="flex-1">
+                                                    <span class="font-semibold">Tidak ada kategori raw material yang tersedia!</span>
+                                                    <p class="mt-1 text-xs">Silakan tambahkan kategori raw material terlebih dahulu sebelum membuat sampel.</p>
+                                                </div>
+                                            </div>
+                                        @endif
+
                                         @error('category_id')
                                             <p class="text-red-500 text-xs mt-1 flex items-center space-x-1">
                                                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
@@ -146,12 +169,12 @@
 
                                         {{-- Select Raw Material --}}
                                         <select wire:model.live="material_id" id="material_id"
-                                            class="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all duration-200 @error('material_id') border-red-500 ring-red-200 @enderror @if (empty($category_id)) bg-gray-100 cursor-not-allowed @endif"
+                                            class="cursor-pointer w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all duration-200 @error('material_id') border-red-500 ring-red-200 @enderror @if (empty($category_id)) bg-gray-100 cursor-not-allowed @endif"
                                             {{ empty($category_id) ? 'disabled' : '' }}>
                                             <option value="" disabled hidden>Choose raw material</option>
 
                                             @foreach ($materials as $material)
-                                                <option value="{{ $material->id }}">{{ $material->name }}</option>
+                                                <option value="{{ $material->id }}" class="cursor-pointer">{{ $material->name }}</option>
                                             @endforeach
                                         </select>
 
@@ -200,14 +223,36 @@
                                             </span>
                                         </label>
                                         <select wire:model="reference_id" id="reference_id"
-                                            class="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all duration-200 @error('reference_id') border-red-500 ring-red-200 @enderror @if (empty($material_id)) bg-gray-100 cursor-not-allowed @endif"
-                                            @if (empty($material_id)) disabled @endif>
-                                            <option value="">Choose testing reference</option>
+                                            class="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all duration-200 @error('reference_id') border-red-500 ring-red-200 @enderror @if (empty($material_id) || $references->isEmpty()) bg-gray-100 cursor-not-allowed @endif"
+                                            {{ empty($material_id) || $references->isEmpty() ? 'disabled' : '' }}>
+                                            <option value="" hidden>Choose testing reference</option>
                                             @foreach ($references as $reference)
                                                 <option value="{{ $reference->id }}">{{ $reference->name }}
                                                 </option>
                                             @endforeach
                                         </select>
+
+                                        @if (!empty($material_id) && $references->isEmpty())
+                                            <div x-data="{ show: true }" x-show="show"
+                                                x-transition:enter="transition ease-out duration-300"
+                                                x-transition:enter-start="opacity-0 transform -translate-y-2"
+                                                x-transition:enter-end="opacity-100 transform translate-y-0"
+                                                class="mt-2 flex items-center p-4 mb-4 text-sm text-yellow-800 rounded-lg bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-300 shadow-sm"
+                                                role="alert">
+                                                <svg class="flex-shrink-0 inline w-5 h-5 me-3 text-yellow-600"
+                                                    aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                                    fill="currentColor" viewBox="0 0 20 20">
+                                                    <path
+                                                        d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z" />
+                                                </svg>
+                                                <span class="sr-only">Info</span>
+                                                <div>
+                                                    <span class="font-semibold">Maaf!</span> Tidak ada referensi
+                                                    pengujian yang tersedia untuk material ini.
+                                                </div>
+                                            </div>
+                                        @endif
+
                                         @error('reference_id')
                                             <p class="text-red-500 text-xs mt-1 flex items-center space-x-1">
                                                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
@@ -494,21 +539,35 @@
                                         @enderror
                                         @if ($coa_file)
                                             <div class="mt-3 p-4 bg-green-50 border border-green-200 rounded-xl">
-                                                <div class="flex items-center text-sm text-green-700">
-                                                    <div
-                                                        class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
-                                                        <svg class="w-4 h-4 text-green-600" fill="currentColor"
-                                                            viewBox="0 0 20 20">
-                                                            <path fill-rule="evenodd"
-                                                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                                                clip-rule="evenodd" />
+                                                <div class="flex items-center justify-between text-sm text-green-700">
+                                                    <div class="flex items-center">
+                                                        <div
+                                                            class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                                                            <svg class="w-4 h-4 text-green-600" fill="currentColor"
+                                                                viewBox="0 0 20 20">
+                                                                <path fill-rule="evenodd"
+                                                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                                                    clip-rule="evenodd" />
+                                                            </svg>
+                                                        </div>
+                                                        <div>
+                                                            <p class="font-medium">File selected successfully</p>
+                                                            <p class="text-xs text-green-600">
+                                                                {{ $coa_file->getClientOriginalName() }}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Tombol Remove -->
+                                                    <button type="button" wire:click="removeCOAFile"
+                                                        class="ml-4 p-1.5 text-red-600 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
+                                                        title="Remove file">
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                                         </svg>
-                                                    </div>
-                                                    <div>
-                                                        <p class="font-medium">File selected successfully</p>
-                                                        <p class="text-xs text-green-600">
-                                                            {{ $coa_file->getClientOriginalName() }}</p>
-                                                    </div>
+                                                    </button>
                                                 </div>
                                             </div>
                                         @endif
@@ -535,7 +594,8 @@
 
                                 <div class="space-y-2">
                                     <label for="notes" class="block text-sm font-semibold text-gray-700">
-                                        Notes (Optional)
+                                        Notes
+                                        <span class="text-red-500">*</span>
                                     </label>
                                     <textarea wire:model="notes" id="notes" rows="4"
                                         class="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all duration-200 @error('notes') border-red-500 ring-red-200 @enderror resize-none"
@@ -682,9 +742,7 @@
                     </div>
 
                     <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                        <button wire:click="submit"
-                            @click="showConfirmation = false"
-                            wire:loading.attr="disabled"
+                        <button wire:click="submit" @click="showConfirmation = false" wire:loading.attr="disabled"
                             class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                             <span wire:loading.remove>Submit Sample</span>
                             <span wire:loading>Submitting...</span>

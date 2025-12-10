@@ -20,7 +20,7 @@ class SolderReference extends Model
     public function specificationsManytoMany()
     {
         return $this->belongsToMany(Specification::class, 'solder_reference_specification', 'solder_reference_id', 'specification_id')
-                    ->withPivot('value', 'operator', 'max_value')
+                    ->withPivot('value', 'operator', 'max_value', 'text_value', 'unit')
                     ->withTimestamps();
     }
 

@@ -24,9 +24,9 @@
 
         <!-- Success/Error Messages -->
         @if (session()->has('success'))
-            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4" 
-                 x-data="{ show: true }" 
-                 x-show="show" 
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4"
+                 x-data="{ show: true }"
+                 x-show="show"
                  x-init="setTimeout(() => show = false, 2000)"
                  x-transition:leave="transition ease-in duration-300"
                  x-transition:leave-start="opacity-100"
@@ -37,8 +37,8 @@
 
         @if (session()->has('error'))
             <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4"
-                 x-data="{ show: true }" 
-                 x-show="show" 
+                 x-data="{ show: true }"
+                 x-show="show"
                  x-init="setTimeout(() => show = false, 2000)"
                  x-transition:leave="transition ease-in duration-300"
                  x-transition:leave-start="opacity-100"
@@ -81,6 +81,8 @@
                         </th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Chemical Name</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Internal Code</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Category Name</th>
                         <th
                             class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
@@ -94,11 +96,16 @@
                                 {{ $chemicals->firstItem() + $index }}
                             </td>
                             <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{{ $chemical->name }}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                                    {{ $chemical->code }}
+                                </span>
+                            </td>
                             <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{{ $chemical->category->name }}</td>
                             <td class="px-4 py-3 whitespace-nowrap text-right text-sm">
                                 <div class="flex justify-end space-x-2">
                                     <button
-                                        wire:click="openEditModal({{ $chemical->id }}, '{{ $chemical->name }}', '{{ $chemical->category_id }}')"
+                                        wire:click="openEditModal({{ $chemical->id }}, '{{ addslashes($chemical->name) }}', '{{ addslashes($chemical->code) }}', '{{ $chemical->category_id }}')"
                                         class="inline-flex items-center px-3 py-1 bg-amber-100 hover:bg-amber-200 text-amber-700 text-xs font-medium rounded-md transition-colors duration-150 cursor-pointer">
                                         <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor"
                                             viewBox="0 0 24 24">
@@ -137,7 +144,7 @@
                                     <p class="text-sm text-gray-500 mb-4">Get started by adding your first chemical
                                     </p>
                                     <button wire:click="openAddModal()"
-                                        class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200
+                                        class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 cursor-pointer
                                                        {{ $categories->isEmpty() ? 'opacity-50 cursor-not-allowed' : '' }}"
                                         {{ $categories->isEmpty() ? 'disabled' : '' }}>
                                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
@@ -304,6 +311,17 @@
                             @enderror
                         </div>
 
+                        <div class="mb-5">
+                            <label for="add-code" class="block text-sm font-bold mb-2">Internal Code</label>
+                            <input type="text" id="add-code" wire:model="code"
+                                placeholder="e.g., CH-001, CH-ACID-01"
+                                class="shadow-sm border @error('code') border-red-500 @else border-gray-300 @enderror rounded-lg w-full py-3 px-4"
+                                required>
+                            @error('code')
+                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
                         <div class="mb-5 cursor-pointer relative">
                             <label for="add-category" class="block text-sm font-bold mb-2">Chemical Category</label>
                             <div class="relative">
@@ -314,7 +332,7 @@
                                     @if ($categories->isEmpty())
                                         <option value="">Tidak ada kategori tersedia</option>
                                     @else
-                                        <option value="">Select Category</option>
+                                        <option value="" hidden>Select Category</option>
                                         @foreach ($categories as $category)
                                             <option value="{{ $category->id }}">{{ $category->name }}</option>
                                         @endforeach
@@ -388,13 +406,24 @@
                             @enderror
                         </div>
 
+                        <div class="mb-5">
+                            <label for="edit-code" class="block text-sm font-bold mb-2">Internal Code</label>
+                            <input type="text" id="edit-code" wire:model="code"
+                                placeholder="e.g., CH-001, CH-ACID-01"
+                                class="shadow-sm border @error('code') border-red-500 @else border-gray-300 @enderror rounded-lg w-full py-3 px-4 cursor-text"
+                                required>
+                            @error('code')
+                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
                         <div class="mb-5 cursor-pointer relative">
                             <label for="edit-category" class="block text-sm font-bold mb-2">Chemical Category</label>
                             <div class="relative">
                                 <select id="edit-category" wire:model="category_id"
                                     class="shadow-sm border @error('category_id') border-red-500 @else border-gray-300 @enderror rounded-lg w-full py-3 px-4 pr-10 cursor-pointer appearance-none"
                                     required>
-                                    <option value="">Select Category</option>
+                                    <option value="" hidden>Select Category</option>
                                     @foreach ($categories as $category)
                                         <option value="{{ $category->id }}">{{ $category->name }}</option>
                                     @endforeach

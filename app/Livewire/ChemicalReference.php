@@ -37,6 +37,8 @@ class ChemicalReference extends Component
     public $specificationMaxValues = [];
     public $specificationRanges = [];
     public $specificationOperators = [];
+    public $specificationTextValues = [];
+    public $specificationUnits = [];
     public $editingId = null;
 
     public $isAddModalOpen = false;
@@ -50,8 +52,7 @@ class ChemicalReference extends Component
     {
         $rules = [
             'material_id' => 'required|exists:materials,id',
-            'selectedSpecifications' => 'array',
-            'selectedSpecifications.*' => 'exists:specifications,id',
+            'selectedSpecifications' => 'required|array|exists:specifications,id',
             'specificationValues' => 'array',
             'specificationOperators' => 'array',
         ];
@@ -73,53 +74,49 @@ class ChemicalReference extends Component
 
         foreach ($this->selectedSpecifications as $specId) {
             $rules["specificationOperators.{$specId}"] = 'required|in:>=,<=,==,-,should_be,range';
+            $rules["specificationUnits.{$specId}"] = 'required|string';
+
 
             $operator = $this->specificationOperators[$specId] ?? '==';
 
             if ($operator === '-') {
                 $rules["specificationRanges.{$specId}"] = 'required|array|min:1';
                 $rules["specificationRanges.{$specId}.*.min"] = 'required|numeric';
-                $rules["specificationRanges.{$specId}.*.max"] = 'required|numeric';
+                $rules["specificationRanges.{$specId}.*.max"] = [
+                    'required',
+                    'numeric',
+                    function ($attribute, $value, $fail) use ($specId) {
+                        // Extract index from attribute: specificationRanges.{specId}.{index}.max
+                        preg_match('/specificationRanges\.\d+\.(\d+)\.max/', $attribute, $matches);
+                        $index = $matches[1] ?? 0;
+
+                        $minValue = $this->specificationRanges[$specId][$index]['min'] ?? null;
+
+                        if ($minValue !== null && $minValue !== '' && $value !== null && $value !== '') {
+                            $min = (float) $minValue;
+                            $max = (float) $value;
+
+                            if ($max <= $min) {
+                                $fail('Nilai maksimum harus lebih besar dari nilai minimum.');
+                            }
+                        }
+                    }
+                ];
+            } elseif ($operator === 'should_be') {
+                $rules["specificationTextValues.{$specId}"] = 'required|string';
             } else {
-                if (in_array($operator, ['>=', '<=', '=='])) {
-                    $rules["specificationValues.{$specId}"] = 'required|numeric';
-                } else {
-                    $rules["specificationValues.{$specId}"] = 'required|string';
-                }
+                $rules["specificationValues.{$specId}"] = 'required|numeric';
             }
         }
 
         return $rules;
     }
 
-    public function withValidator($validator)
-    {
-        $validator->after(function ($validator) {
-            foreach ($this->selectedSpecifications as $specId) {
-                if (isset($this->specificationOperators[$specId]) && $this->specificationOperators[$specId] === '-') {
-                    if (isset($this->specificationRanges[$specId])) {
-                        foreach ($this->specificationRanges[$specId] as $index => $range) {
-                            if (isset($range['min']) && isset($range['max'])) {
-                                $min = (float) $range['min'];
-                                $max = (float) $range['max'];
-                                if ($max <= $min) {
-                                    $validator->errors()->add(
-                                        "specificationRanges.{$specId}.{$index}.max",
-                                        'Max value must be greater than min value.'
-                                    );
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    }
-
     protected $messages = [
         'name.required' => 'Nama reference wajib diisi.',
         'material_id.required' => 'Solder wajib dipilih.',
         'material_id.exists' => 'Solder yang dipilih tidak valid.',
+        'selectedSpecifications.required' => 'Spesifikasi wajib dipilih.',
         'selectedSpecifications.*.exists' => 'Spesifikasi yang dipilih tidak valid.',
         'specificationValues.*.required' => 'Nilai spesifikasi wajib diisi.',
         'specificationValues.*.numeric' => 'Nilai spesifikasi harus berupa angka.',
@@ -131,6 +128,7 @@ class ChemicalReference extends Component
         'specificationRanges.*.*.min.numeric' => 'Nilai minimum harus berupa angka.',
         'specificationRanges.*.*.max.required' => 'Nilai maksimum wajib diisi.',
         'specificationRanges.*.*.max.numeric' => 'Nilai maksimum harus berupa angka.',
+        'specificationUnits.*.required' => 'Satuan spesifikasi wajib diisi.',
     ];
 
     public function render()
@@ -154,7 +152,7 @@ class ChemicalReference extends Component
             $groupedReferences->get($chemicalName)->push($reference);
         }
 
-        return view('livewire.chemical-reference', [
+        return view('livewire.sample-chemical-submission.components.reference', [
             'references' => $references,
             'groupedReferences' => $groupedReferences,
         ])->layout('layouts.app')->title('Solder References');
@@ -191,10 +189,18 @@ class ChemicalReference extends Component
 
         foreach ($reference->specificationsManytoMany as $spec) {
             $this->specificationOperators[$spec->id] = $spec->pivot->operator ?? '==';
+            $this->specificationUnits[$spec->id] = $spec->pivot->unit ?? '';
 
             if ($spec->pivot->operator === '-') {
-                $rangeData = json_decode($spec->pivot->value, true);
-                $this->specificationRanges[$spec->id] = $rangeData ?: [['min' => '', 'max' => '']];
+                // Load single range from value and max_value columns
+                $this->specificationRanges[$spec->id] = [
+                    [
+                        'min' => $spec->pivot->value ?? '',
+                        'max' => $spec->pivot->max_value ?? ''
+                    ]
+                ];
+            } elseif ($spec->pivot->operator === 'should_be') {
+                $this->specificationTextValues[$spec->id] = $spec->pivot->text_value ?? '';
             } else {
                 $this->specificationValues[$spec->id] = $spec->pivot->value ?? '';
             }
@@ -220,6 +226,8 @@ class ChemicalReference extends Component
         $this->specificationMaxValues = [];
         $this->specificationRanges = [];
         $this->specificationOperators = [];
+        $this->specificationTextValues = [];
+        $this->specificationUnits = [];
         $this->editingId = null;
         $this->isSubmitting = false;
         $this->resetErrorBag();
@@ -253,31 +261,32 @@ class ChemicalReference extends Component
                     $operator = $this->specificationOperators[$specId] ?? '==';
 
                     if ($operator === '-') {
+                        // Get only the first range pair (single range support)
                         $ranges = $this->specificationRanges[$specId] ?? [];
-                        $cleanRanges = [];
-
-                        foreach ($ranges as $range) {
-                            if (
-                                isset($range['min']) && isset($range['max']) &&
-                                $range['min'] !== '' && $range['max'] !== ''
-                            ) {
-                                $cleanRanges[] = [
-                                    'min' => (string) $range['min'],
-                                    'max' => (string) $range['max']
-                                ];
-                            }
-                        }
+                        $range = $ranges[0] ?? ['min' => '', 'max' => ''];
 
                         $syncData[$specId] = [
-                            'value' => json_encode($cleanRanges),
+                            'value' => $range['min'] !== '' ? (float) $range['min'] : null,
+                            'max_value' => $range['max'] !== '' ? (float) $range['max'] : null,
+                            'text_value' => null,
+                            'operator' => $operator,
+                            'unit' => $this->specificationUnits[$specId] ?? null
+                        ];
+                    } elseif ($operator === 'should_be') {
+                        $syncData[$specId] = [
+                            'value' => null,
                             'max_value' => null,
-                            'operator' => $operator
+                            'text_value' => $this->specificationTextValues[$specId] ?? null,
+                            'operator' => $operator,
+                            'unit' => $this->specificationUnits[$specId] ?? null
                         ];
                     } else {
                         $syncData[$specId] = [
-                            'value' => $this->specificationValues[$specId] ?? '',
+                            'value' => $this->specificationValues[$specId] ?? null,
                             'max_value' => null,
-                            'operator' => $operator
+                            'text_value' => null,
+                            'operator' => $operator,
+                            'unit' => $this->specificationUnits[$specId] ?? null
                         ];
                     }
                 }
@@ -322,31 +331,32 @@ class ChemicalReference extends Component
                 $operator = $this->specificationOperators[$specId] ?? '==';
 
                 if ($operator === '-') {
+                    // Get only the first range pair (single range support)
                     $ranges = $this->specificationRanges[$specId] ?? [];
-                    $cleanRanges = [];
-
-                    foreach ($ranges as $range) {
-                        if (
-                            isset($range['min']) && isset($range['max']) &&
-                            $range['min'] !== '' && $range['max'] !== ''
-                        ) {
-                            $cleanRanges[] = [
-                                'min' => (string) $range['min'],
-                                'max' => (string) $range['max']
-                            ];
-                        }
-                    }
+                    $range = $ranges[0] ?? ['min' => '', 'max' => ''];
 
                     $syncData[$specId] = [
-                        'value' => json_encode($cleanRanges),
+                        'value' => $range['min'] !== '' ? (float) $range['min'] : null,
+                        'max_value' => $range['max'] !== '' ? (float) $range['max'] : null,
+                        'text_value' => null,
+                        'operator' => $operator,
+                        'unit' => $this->specificationUnits[$specId] ?? null
+                    ];
+                } elseif ($operator === 'should_be') {
+                    $syncData[$specId] = [
+                        'value' => null,
                         'max_value' => null,
-                        'operator' => $operator
+                        'text_value' => $this->specificationTextValues[$specId] ?? null,
+                        'operator' => $operator,
+                        'unit' => $this->specificationUnits[$specId] ?? null
                     ];
                 } else {
                     $syncData[$specId] = [
-                        'value' => $this->specificationValues[$specId] ?? '',
+                        'value' => $this->specificationValues[$specId] ?? null,
                         'max_value' => null,
-                        'operator' => $operator
+                        'text_value' => null,
+                        'operator' => $operator,
+                        'unit' => $this->specificationUnits[$specId] ?? null
                     ];
                 }
             }
@@ -383,12 +393,15 @@ class ChemicalReference extends Component
             unset($this->specificationMaxValues[$specificationId]);
             unset($this->specificationRanges[$specificationId]);
             unset($this->specificationOperators[$specificationId]);
+            unset($this->specificationTextValues[$specificationId]);
+            unset($this->specificationUnits[$specificationId]);
         } else {
             $this->selectedSpecifications[] = $specificationId;
             $this->specificationValues[$specificationId] = '';
             $this->specificationMaxValues[$specificationId] = '';
             $this->specificationRanges[$specificationId] = [['min' => '', 'max' => '']];
             $this->specificationOperators[$specificationId] = '==';
+            $this->specificationUnits[$specificationId] = '';
         }
     }
 
@@ -399,8 +412,16 @@ class ChemicalReference extends Component
                 $this->specificationRanges[$key] = [['min' => '', 'max' => '']];
             }
             unset($this->specificationValues[$key]);
+            unset($this->specificationTextValues[$key]);
+        } elseif ($value === 'should_be') {
+            unset($this->specificationRanges[$key]);
+            unset($this->specificationValues[$key]);
+            if (!isset($this->specificationTextValues[$key])) {
+                $this->specificationTextValues[$key] = '';
+            }
         } else {
             unset($this->specificationRanges[$key]);
+            unset($this->specificationTextValues[$key]);
             if (!isset($this->specificationValues[$key])) {
                 $this->specificationValues[$key] = '';
             }

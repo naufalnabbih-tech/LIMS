@@ -130,16 +130,43 @@
 
     <!-- Charts Section -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        <!-- Monthly Submissions Chart -->
+        <!-- Submissions Chart -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Monthly Submissions</h3>
-            <canvas id="monthlyChart" height="200"></canvas>
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">Submissions Chart</h3>
+                <div class="flex space-x-2">
+                    <button wire:click="updateChartPeriod('week')"
+                        class="px-3 py-1 text-sm rounded-lg transition-colors cursor-pointer {{ $chartPeriod === 'week' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200' }}">
+                        Week
+                    </button>
+                    <button wire:click="updateChartPeriod('month')"
+                        class="px-3 py-1 text-sm rounded-lg transition-colors cursor-pointer {{ $chartPeriod === 'month' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200' }}">
+                        Month
+                    </button>
+                    <button wire:click="updateChartPeriod('year')"
+                        class="px-3 py-1 text-sm rounded-lg transition-colors cursor-pointer {{ $chartPeriod === 'year' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200' }}">
+                        Year
+                    </button>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between mb-4">
+                </div>
+
+                <div wire:ignore>
+                    <canvas id="monthlyChart" height="200"></canvas>
+                </div>
+            </div>
         </div>
 
         <!-- Status Distribution Chart -->
+        <!-- Approval Data Chart -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Status Distribution</h3>
-            <canvas id="statusChart" height="200"></canvas>
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Grafik Data Approve Keseluruhan</h3>
+            <p class="text-sm text-gray-600 mb-4">Jumlah Pengajuan per Bulan untuk Tahun {{ date('Y') }}</p>
+            <div wire:ignore>
+                <canvas id="approvalChart" height="200"></canvas>
+            </div>
         </div>
     </div>
 
@@ -288,81 +315,24 @@
             </div>
         </div>
     </div>
-</div>
 
-@push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Monthly Submissions Chart
-            const monthlyCtx = document.getElementById('monthlyChart');
-            if (monthlyCtx) {
-                const monthlyData = @json($monthlySubmissions);
-                new Chart(monthlyCtx, {
-                    type: 'line',
-                    data: {
-                        labels: monthlyData.map(d => d.month),
-                        datasets: [{
-                            label: 'Submissions',
-                            data: monthlyData.map(d => d.count),
-                            borderColor: '#3b82f6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            tension: 0.4,
-                            fill: true
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: false
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    precision: 0
-                                }
-                            }
-                        }
-                    }
-                });
-            }
 
-            // Status Distribution Chart
-            const statusCtx = document.getElementById('statusChart');
-            if (statusCtx) {
-                const statusData = @json($statusDistribution);
-                new Chart(statusCtx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: statusData.map(d => d.label),
-                        datasets: [{
-                            data: statusData.map(d => d.count),
-                            backgroundColor: statusData.map(d => d.color),
-                            borderWidth: 2,
-                            borderColor: '#ffffff'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    padding: 15,
-                                    font: {
-                                        size: 11
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
+    <!-- Load dashboard charts script FIRST -->
+    @vite('resources/js/dashboard-charts.js')
+
+    <!-- Pass PHP data to JavaScript and initialize -->
+    <script>
+        window.dashboardData = {
+            monthlySubmissions: @json($monthlySubmissions),
+            approvalData: @json($approvalData)
+        };
+
+        // Force initialization after a short delay to ensure everything is loaded
+        setTimeout(function() {
+            if (typeof window.initCharts === 'function') {
+                window.initCharts();
             }
-        });
+        }, 200);
     </script>
-@endpush
+</div>

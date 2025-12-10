@@ -3,81 +3,6 @@
         <!-- Flash Messages Component -->
         <livewire:components.flash-messages />
 
-        <!-- Pending Handovers Alert (Orange) -->
-        @if($pendingHandovers && $pendingHandovers->count() > 0)
-        <div class="bg-orange-50 border-l-4 border-orange-400 p-4 mb-4 rounded-lg">
-            <div class="flex items-start">
-                <div class="flex-shrink-0">
-                    <svg class="h-5 w-5 text-orange-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                    </svg>
-                </div>
-                <div class="ml-3 flex-1">
-                    <h3 class="text-sm font-medium text-orange-800">
-                        Sample Handover Menunggu Anda ({{ $pendingHandovers->count() }})
-                    </h3>
-                    <div class="mt-2 text-sm text-orange-700">
-                        <ul class="list-disc pl-5 space-y-2">
-                            @foreach($pendingHandovers as $handover)
-                            <li class="py-1">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <span class="font-semibold">{{ $handover->sample->material->name ?? 'N/A' }}</span>
-                                        - Batch: {{ $handover->sample->batch_lot }}
-                                        <br>
-                                        <span class="text-xs">Dari: {{ $handover->fromAnalyst->name ?? 'N/A' }} |
-                                        Waktu: {{ $handover->submitted_at->format('d M Y, H:i') }}</span>
-                                        @if($handover->reason)
-                                        <br>
-                                        <span class="text-xs italic">Alasan: {{ $handover->reason }}</span>
-                                        @endif
-                                    </div>
-                                    <button wire:click="takeSample({{ $handover->id }})"
-                                            class="ml-4 px-3 py-1 bg-orange-600 hover:bg-orange-700 text-white text-xs font-medium rounded transition-colors">
-                                        Ambil Sample
-                                    </button>
-                                </div>
-                            </li>
-                            @endforeach
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-        @endif
-
-        <!-- My Handovers Info (Blue) -->
-        @if($myHandovers && $myHandovers->count() > 0)
-        <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4 rounded-lg">
-            <div class="flex items-start">
-                <div class="flex-shrink-0">
-                    <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                    </svg>
-                </div>
-                <div class="ml-3 flex-1">
-                    <h3 class="text-sm font-medium text-blue-800">
-                        Sample yang Anda Hand Over ({{ $myHandovers->count() }})
-                    </h3>
-                    <div class="mt-2 text-sm text-blue-700">
-                        <ul class="list-disc pl-5 space-y-1">
-                            @foreach($myHandovers as $handover)
-                            <li>
-                                <span class="font-semibold">{{ $handover->sample->material->name ?? 'N/A' }}</span>
-                                - Batch: {{ $handover->sample->batch_lot }}
-                                <br>
-                                <span class="text-xs">Diberikan ke: {{ $handover->toAnalyst->name ?? 'N/A' }} pada {{ $handover->submitted_at->format('d M Y, H:i') }}</span>
-                                <br>
-                                <span class="text-xs italic">⏳ Menunggu diambil...</span>
-                            </li>
-                            @endforeach
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-        @endif
-
         <!-- Header Section -->
         <div class="bg-white shadow-sm rounded-lg border border-gray-200 mb-4">
             <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
@@ -85,21 +10,48 @@
                     <h2 class="text-xl font-semibold text-gray-900">Chemical Sample Submission</h2>
                     <p class="text-sm text-gray-600 mt-1">Submit and manage chemical samples for testing</p>
                 </div>
-                <div>
-                    <button wire:click="$dispatch('openCreateForm')"
-                        class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer">
-                        {{-- <x-icon name="plus" class="w-4 h-4 mr-2"></x-icon> --}}
-                        Submit Sample
-                    </button>
-                </div>
+                @permission('manage_samples')
+                    <div>
+                        <button wire:click="$dispatch('openCreateForm')"
+                            class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer">
+                            {{-- <x-icon name="plus" class="w-4 h-4 mr-2"></x-icon> --}}
+                            Submit Sample
+                        </button>
+                    </div>
+                @endpermission
             </div>
         </div>
 
         <!-- Samples List -->
         <div class="bg-white shadow-sm rounded-lg border border-gray-200" style="overflow: visible;">
             <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-900">Submitted Samples</h3>
-                <p class="text-sm text-gray-600 mt-1">Track the status of submitted chemical samples</p>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">Submitted Samples</h3>
+                        <p class="text-sm text-gray-600 mt-1">Track the status of submitted chemical samples</p>
+                    </div>
+                    <div class="w-64">
+                        <div class="relative">
+                            <input type="text"
+                                wire:model.live.debounce.300ms="searchBatchLot"
+                                placeholder="Search by Batch/Lot..."
+                                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                </svg>
+                            </div>
+                            @if($searchBatchLot)
+                                <button wire:click="$set('searchBatchLot', '')"
+                                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            @endif
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="overflow-x-auto" style="overflow-y: visible; overflow-x: auto;">
@@ -109,13 +61,53 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Sample Details</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Supplier Info</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Submission</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Status</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                CoA</th>
+                                Batch / Lot </th>
+                            <th wire:click="sortByColumn('submission_time')"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors">
+                                <div class="flex items-center gap-1">
+                                    <span>Submission</span>
+                                    @if ($sortBy === 'submission_time')
+                                        @if ($sortDirection === 'asc')
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path
+                                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                                            </svg>
+                                        @else
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path
+                                                    d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" />
+                                            </svg>
+                                        @endif
+                                    @else
+                                        <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M5 10a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1z" />
+                                        </svg>
+                                    @endif
+                                </div>
+                            </th>
+                            <th wire:click="sortByColumn('status')"
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors">
+                                <div class="flex items-center gap-1">
+                                    <span>Status</span>
+                                    @if ($sortBy === 'status')
+                                        @if ($sortDirection === 'asc')
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path
+                                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                                            </svg>
+                                        @else
+                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                <path
+                                                    d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" />
+                                            </svg>
+                                        @endif
+                                    @else
+                                        <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M5 10a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1z" />
+                                        </svg>
+                                    @endif
+                                </div>
+                            </th>
                             <th
                                 class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                                 Actions</th>
@@ -123,17 +115,15 @@
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         @forelse ($samples as $sample)
-                            @include('livewire.sample-chemical-submission.components.sample-table-row', ['sample' => $sample])
+                            @include('livewire.sample-chemical-submission.components.sample-table-row', [
+                                'sample' => $sample,
+                            ])
                         @empty
                             <tr>
                                 <td colspan="6" class="px-6 py-12 text-center">
-                                    <livewire:components.empty-state
-                                        title="No samples submitted"
+                                    <livewire:components.empty-state title="No samples submitted"
                                         description="Start by submitting your first chemical sample"
-                                        buttonText="Submit Sample"
-                                        buttonEvent="openCreateForm"
-                                        icon="document"
-                                    />
+                                        buttonText="Submit Sample" buttonEvent="openCreateForm" icon="document" />
                                 </td>
                             </tr>
                         @endforelse
@@ -160,20 +150,10 @@
     <livewire:sample-chemical-submission.components.edit-sample-form />
     <livewire:sample-chemical-submission.components.hand-over-form />
     <livewire:sample-chemical-submission.components.take-over-form />
+    @include('livewire.sample-chemical-submission.components.coa-form')
 
 </div>
 
 @push('scripts')
-<script src="{{ asset('js/sample-label-printer.js') }}"></script>
-<script>
-// Ensure globalDropdown is available even if component hasn't initialized yet
-document.addEventListener('DOMContentLoaded', function() {
-    // Wait a bit for Livewire components to initialize
-    setTimeout(() => {
-        if (!window.globalDropdown) {
-            console.warn('Global dropdown not initialized. Waiting for component...');
-        }
-    }, 100);
-});
-</script>
+    <script src="{{ asset('js/sample-label-printer.js') }}"></script>
 @endpush

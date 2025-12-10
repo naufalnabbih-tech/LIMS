@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-gray-50 py-6" x-data="{ showApproveModal: false, showRejectModal: false }">
+<div class="min-h-screen bg-gray-50 py-6" x-data="{ showApproveModal: false, showRejectModal: false, show: false }">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <!-- Header Section -->
         <div class="mb-8">
@@ -44,7 +44,8 @@
 
         <!-- Alert Messages -->
         @if (session()->has('message'))
-            <div class="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
+            <div x-data="{ show: true }" x-show="show" x-transition.duration.500ms x-init="setTimeout(() => show = false, 3000)"
+                class="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
                 <div class="flex">
                     <svg class="w-5 h-5 text-green-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd"
@@ -145,11 +146,12 @@
                         </div>
 
                         <!-- Sample Notes -->
-                        @if ($sample->notes)
+                        @if ($sample->review_notes)
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Sample Notes</label>
                                 <div class="p-3 bg-gray-50 rounded-md border border-gray-200">
-                                    <p class="text-sm text-gray-900 whitespace-pre-line">{{ $sample->notes }}</p>
+                                    <p class="text-sm text-gray-900 whitespace-pre-line">{{ $sample->review_notes }}
+                                    </p>
                                 </div>
                             </div>
                         @endif
@@ -333,6 +335,19 @@
                                                             Not Tested
                                                         </span>
                                                     @endif
+
+                                                @if ($canEdit && !empty($data['test_results']))
+                                                        <button wire:click="openEditForm('{{ $parameter }}')"
+                                                            class="inline-flex items-center px-3 py-1 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer">
+                                                            <svg class="w-4 h-4 mr-1" fill="none"
+                                                                stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2"
+                                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                            </svg>
+                                                            Edit
+                                                        </button>
+                                                    @endif
                                                 </div>
                                             </div>
                                         </div>
@@ -355,8 +370,13 @@
                                                                 </span>
                                                             </div>
                                                             <div class="flex items-baseline space-x-2 mb-2">
-                                                                <span
-                                                                    class="text-2xl font-bold text-gray-900">{{ rtrim(rtrim(number_format($result['value'], 4, '.', ''), '0'), '.') }}</span>
+                                                                <span class="text-2xl font-bold text-gray-900">
+                                                                    @if (is_numeric($result['value']))
+                                                                        {{ rtrim(rtrim(number_format($result['value'], 4, '.', ''), '0'), '.') }}
+                                                                    @else
+                                                                        {{ $result['value'] }}
+                                                                    @endif
+                                                                </span>
                                                             </div>
                                                             <div class="text-xs text-gray-500 space-y-1">
                                                                 <div>Tested:
@@ -710,5 +730,91 @@
             </div>
         </div>
     </div>
+
+    <!-- Edit Test Results Modal -->
+    @if ($showEditForm)
+        <div class="fixed inset-0 overflow-y-auto z-50" aria-labelledby="modal-title" role="dialog"
+            aria-modal="true">
+            <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 bg-gray-500/75 transition-opacity" aria-hidden="true"
+                    wire:click="closeEditForm"></div>
+
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                <div
+                    class="relative z-10 inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="w-full">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">
+                                    Edit Test Results - {{ ucwords(str_replace('_', ' ', $editingParameter)) }}
+                                </h3>
+
+                                <div class="space-y-4">
+                                    @foreach ($editingTestResults as $index => $result)
+                                        <div class="border border-gray-200 rounded-lg p-4">
+                                            <div class="flex items-center justify-between mb-2">
+                                                <label class="text-sm font-medium text-gray-700">
+                                                    Reading #{{ $result['reading_number'] }}
+                                                </label>
+                                                <span class="text-xs text-gray-500">
+                                                    Tested:
+                                                    {{ \Carbon\Carbon::parse($result['tested_at'])->format('M d, Y H:i') }}
+                                                </span>
+                                            </div>
+
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label
+                                                        class="block text-sm font-medium text-gray-700 mb-1">Value</label>
+                                                    @php
+                                                        $specData = $analysisResults[$editingParameter] ?? [];
+                                                        $operator = $specData['operator'] ?? null;
+                                                    @endphp
+
+                                                    @if ($operator === 'should_be')
+                                                        <input type="text"
+                                                            wire:model="editingTestResults.{{ $index }}.value"
+                                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                                    @else
+                                                        <input type="number" step="0.0001"
+                                                            wire:model="editingTestResults.{{ $index }}.value"
+                                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                                    @endif
+                                                </div>
+
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-1">Notes
+                                                        (Optional)</label>
+                                                    <input type="text"
+                                                        wire:model="editingTestResults.{{ $index }}.notes"
+                                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                                </div>
+                                            </div>
+
+                                            <div class="mt-2 text-xs text-gray-500">
+                                                Tested by: {{ $result['tested_by'] }}
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button wire:click="saveEditedResults" wire:loading.attr="disabled"
+                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm cursor-pointer disabled:opacity-50">
+                            <span wire:loading.remove>Save Changes</span>
+                            <span wire:loading>Saving...</span>
+                        </button>
+                        <button wire:click="closeEditForm"
+                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm cursor-pointer">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 
 </div>

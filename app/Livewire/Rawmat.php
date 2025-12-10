@@ -24,6 +24,7 @@ class Rawmat extends Component
 
     // Form data
     public $name = '';
+    public $code = '';
     public $category_id = '';
 
     public $editingId = null;
@@ -40,13 +41,16 @@ class Rawmat extends Component
     protected function rules()
     {
         $rules = [
-            'name' => 'required|string|max:255|unique:materials,name',
             'category_id' => 'required|exists:categories,id',
         ];
 
         // For edit, exclude current record from unique validation
         if ($this->editingId) {
-            $rules['name'] = Rule::unique('materials', 'name')->ignore($this->editingId);
+            $rules['name'] = ['required', 'string', 'max:255', Rule::unique('materials', 'name')->ignore($this->editingId)];
+            $rules['code'] = ['required', 'string', 'max:50', Rule::unique('materials', 'code')->ignore($this->editingId)];
+        } else {
+            $rules['name'] = 'required|string|max:255|unique:materials,name';
+            $rules['code'] = 'required|string|max:50|unique:materials,code';
         }
 
         return $rules;
@@ -54,14 +58,16 @@ class Rawmat extends Component
 
     protected $messages = [
         'name.required' => 'Nama material wajib diisi.',
+        'name.unique' => 'Nama material ini sudah ada.',
+        'code.required' => 'Internal code wajib diisi.',
+        'code.unique' => 'Internal code ini sudah digunakan.',
         'category_id.required' => 'Kategori material wajib diisi.',
         'category_id.exists' => 'Kategori yang dipilih tidak valid.',
-        'name.unique' => 'Nama material ini sudah ada.',
     ];
 
     public function render()
     {
-        return view('livewire.rawmat', [
+        return view('livewire.sample-rawmat-submission.components.material', [
             'rawmat' => Material::with('category')
                 ->whereHas('category', function($q) {
                     $q->where('type', 'raw_material');
@@ -88,10 +94,11 @@ class Rawmat extends Component
         $this->resetForm();
     }
 
-    public function openEditModal($id, $name, $category_id)
+    public function openEditModal($id, $name, $code, $category_id)
     {
         $this->editingId = $id;
         $this->name = $name;
+        $this->code = $code;
         $this->category_id = (string) $category_id; // Ensure it's a string to match option values
         $this->isSubmitting = false;
         $this->resetErrorBag();
@@ -111,6 +118,7 @@ class Rawmat extends Component
     public function resetForm()
     {
         $this->name = '';
+        $this->code = '';
         $this->category_id = '';
         $this->editingId = null;
         $this->isSubmitting = false;
@@ -127,6 +135,7 @@ class Rawmat extends Component
         try {
             Material::create([
                 'name' => $this->name,
+                'code' => $this->code,
                 'category_id' => $this->category_id,
             ]);
 
@@ -147,6 +156,7 @@ class Rawmat extends Component
             $material = Material::find($this->editingId);
             $material->update([
                 'name' => $this->name,
+                'code' => $this->code,
                 'category_id' => $this->category_id,
             ]);
 

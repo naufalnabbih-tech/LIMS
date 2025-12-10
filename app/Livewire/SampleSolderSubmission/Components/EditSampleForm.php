@@ -21,11 +21,7 @@ class EditSampleForm extends Component
     public $edit_category_id = '';
     public $edit_material_id = '';
     public $edit_reference_id = '';
-    public $edit_supplier = '';
     public $edit_batch_lot = '';
-    public $edit_vehicle_container_number = '';
-    public $edit_has_coa = false;
-    public $edit_coa_file = null;
     public $edit_submission_date = '';
     public $edit_submission_time = '';
     public $edit_notes = '';
@@ -43,14 +39,10 @@ class EditSampleForm extends Component
         'edit_category_id' => 'required|exists:categories,id',
         'edit_material_id' => 'required|exists:materials,id',
         'edit_reference_id' => 'required|exists:references,id',
-        'edit_supplier' => 'required|string|max:255',
         'edit_batch_lot' => 'required|string|max:255',
-        'edit_vehicle_container_number' => 'required|string|max:255',
-        'edit_has_coa' => 'boolean',
-        'edit_coa_file' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240',
         'edit_submission_date' => 'required|date',
         'edit_submission_time' => 'required',
-        'edit_notes' => 'nullable|string|max:1000',
+        'edit_notes' => 'required|string|max:1000',
     ];
 
     protected $messages = [
@@ -69,10 +61,6 @@ class EditSampleForm extends Component
         'edit_vehicle_container_number.required' => 'Nomor kendaraan/kontainer wajib diisi.',
         'edit_vehicle_container_number.string' => 'Nomor kendaraan/kontainer harus berupa teks.',
         'edit_vehicle_container_number.max' => 'Nomor kendaraan/kontainer maksimal 255 karakter.',
-        'edit_has_coa.boolean' => 'Status COA tidak valid.',
-        'edit_coa_file.file' => 'COA harus berupa file.',
-        'edit_coa_file.mimes' => 'COA harus berformat: pdf, doc, docx, jpg, jpeg, atau png.',
-        'edit_coa_file.max' => 'Ukuran file COA maksimal 10MB.',
         'edit_submission_date.required' => 'Tanggal submission wajib diisi.',
         'edit_submission_date.date' => 'Tanggal submission tidak valid.',
         'edit_submission_time.required' => 'Waktu submission wajib diisi.',
@@ -124,7 +112,6 @@ class EditSampleForm extends Component
         $this->edit_supplier = $this->sample->supplier;
         $this->edit_batch_lot = $this->sample->batch_lot;
         $this->edit_vehicle_container_number = $this->sample->vehicle_container_number;
-        $this->edit_has_coa = $this->sample->has_coa;
         $this->edit_submission_date = $this->sample->submission_time->format('Y-m-d');
         $this->edit_submission_time = $this->sample->submission_time->format('H:i');
         $this->edit_notes = $this->sample->notes;
@@ -192,8 +179,6 @@ class EditSampleForm extends Component
             'edit_supplier',
             'edit_batch_lot',
             'edit_vehicle_container_number',
-            'edit_has_coa',
-            'edit_coa_file',
             'edit_submission_date',
             'edit_submission_time',
             'edit_notes',
@@ -222,29 +207,11 @@ class EditSampleForm extends Component
                 'supplier' => $this->edit_supplier,
                 'batch_lot' => $this->edit_batch_lot,
                 'vehicle_container_number' => $this->edit_vehicle_container_number,
-                'has_coa' => $this->edit_has_coa,
                 'submission_time' => $submissionDateTime,
                 'notes' => $this->edit_notes,
             ]);
 
-            // Handle CoA file upload
-            if ($this->edit_has_coa) {
-                if ($this->edit_coa_file) {
-                    // Delete old file if exists
-                    if ($this->sample->coa_file_path) {
-                        Storage::disk('public')->delete($this->sample->coa_file_path);
-                    }
-                    // Store new file
-                    $path = $this->edit_coa_file->store('coa-files', 'public');
-                    $this->sample->update(['coa_file_path' => $path]);
-                }
-            } else {
-                // If CoA was unchecked, delete the existing file
-                if ($this->sample->coa_file_path) {
-                    Storage::disk('public')->delete($this->sample->coa_file_path);
-                    $this->sample->update(['coa_file_path' => null]);
-                }
-            }
+
 
             session()->flash('message', 'Sample updated successfully.');
 

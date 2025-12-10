@@ -95,7 +95,8 @@
                 </div>
 
                 <!-- Process Actions -->
-                <div class="p-3" x-show="sampleData.canStartAnalysis || sampleData.canContinueAnalysis || sampleData.canHandOver || sampleData.canTakeOver">
+                <div class="p-3"
+                    x-show="sampleData.canStartAnalysis || sampleData.canContinueAnalysis || sampleData.canHandOver || sampleData.canTakeOver">
                     <div class="px-2 py-1.5">
                         <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Process Management
                         </h4>
@@ -175,15 +176,19 @@
                 </div>
 
                 <!-- Divider -->
-                <div class="border-t border-gray-100" x-show="sampleData.canStartAnalysis || sampleData.canContinueAnalysis || sampleData.canHandOver || sampleData.canTakeOver"></div>
+                <div class="border-t border-gray-100"
+                    x-show="sampleData.canStartAnalysis || sampleData.canContinueAnalysis || sampleData.canHandOver || sampleData.canTakeOver">
+                </div>
 
                 <!-- Review & Approval Actions -->
                 <div class="p-3">
-                    <div class="px-2 py-1.5" x-show="['analysis_completed', 'review', 'reviewed', 'approved'].includes(sampleData.status)">
+                    <div class="px-2 py-1.5"
+                        x-show="['analysis_completed', 'review', 'reviewed', 'approved'].includes(sampleData.status)">
                         <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Review & Approval</h4>
                     </div>
                     <div class="space-y-1">
-                        <button x-show="['analysis_completed', 'review', 'reviewed', 'approved'].includes(sampleData.status)"
+                        <button
+                            x-show="['analysis_completed', 'review', 'reviewed', 'approved'].includes(sampleData.status)"
                             @click="
                                 callLivewireMethod('reviewResults', sampleData.sampleId);
                                 setTimeout(() => {
@@ -232,8 +237,38 @@
                 <!-- Divider -->
                 <div class="border-t border-gray-100"></div>
 
+                <!-- CoA Actions -->
+                <div class="p-3"
+                    x-show="['approved', 'completed'].includes(sampleData.status) && sampleData.canCreateCoA">
+                    <div class="px-2 py-1.5">
+                        <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Certificate of
+                            Analysis</h4>
+                    </div>
+                    <div class="space-y-1">
+                        <button @click="callLivewireMethod('openCoAForm', sampleData.sampleId)"
+                            class="flex items-center w-full px-3 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700 rounded-lg transition-colors duration-150 group cursor-pointer">
+                            <div
+                                class="flex-shrink-0 w-9 h-9 bg-orange-100 group-hover:bg-orange-200 rounded-lg flex items-center justify-center mr-3 transition-colors">
+                                <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </div>
+                            <div class="flex-1 text-left">
+                                <span class="font-medium block">Create CoA</span>
+                                <span class="text-xs text-gray-500">Generate Certificate of Analysis</span>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Divider -->
+                <div class="border-t border-gray-100"
+                    x-show="['approved', 'completed'].includes(sampleData.status) && sampleData.canCreateCoA"></div>
+
                 <!-- Delete Actions -->
-                <div class="p-3" >
+                <div class="p-3">
                     <div class="px-2 py-1.5">
                         <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Danger Zone</h4>
                     </div>
@@ -302,6 +337,7 @@
                         canCompleteAnalysis: ['in_progress', 'analysis_started'].includes(data.status),
                         canReview: ['analysis_completed', 'pending_review'].includes(data.status),
                         canApprove: ['reviewed'].includes(data.status),
+                        canCreateCoA: ['approved', 'completed'].includes(data.status),
                         canDelete: !['approved', 'completed'].includes(data.status)
                     };
 
@@ -370,19 +406,20 @@
 
                 callLivewireMethod(method, sampleId) {
                     try {
-                        // Find the main SampleChemicalSubmission component by ID
-                        const mainComponent = document.querySelector('#sample-chemical-submission-component[wire\\:id]');
+                        // Find the main SampleChemicalSubmission component
+                        const mainComponent = document.querySelector('[wire\\:id][id*="sample"]');
 
                         if (mainComponent) {
                             const wireId = mainComponent.getAttribute('wire:id');
                             const livewireComponent = window.Livewire.find(wireId);
 
                             if (livewireComponent && typeof livewireComponent[method] === 'function') {
-                                livewireComponent.call(method, sampleId);
+                                livewireComponent[method](sampleId);
                             } else {
                                 console.error(`Method ${method} not found on component`, {
                                     method,
-                                    availableMethods: Object.keys(livewireComponent).filter(k => typeof livewireComponent[k] === 'function')
+                                    availableMethods: livewireComponent ? Object.keys(livewireComponent).filter(k =>
+                                        typeof livewireComponent[k] === 'function') : 'Component not found'
                                 });
                             }
                         } else {
@@ -396,10 +433,12 @@
                 },
 
                 initGlobalDropdown() {
+                    // Override the placeholder with actual implementation
                     window.globalDropdown = {
                         open: (sampleId, data) => this.openDropdown(sampleId, data),
                         close: () => this.closeDropdown()
                     };
+                    console.log('Global dropdown implementation loaded');
                 }
             };
         }

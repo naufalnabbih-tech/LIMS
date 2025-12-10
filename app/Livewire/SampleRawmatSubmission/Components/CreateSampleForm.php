@@ -51,7 +51,7 @@ class CreateSampleForm extends Component
         'coa_file' => 'nullable|required_if:has_coa,true|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240',
         'submission_date' => 'required|date',
         'submission_time' => 'required',
-        'notes' => 'nullable|string|max:1000',
+        'notes' => 'required|string|max:1000',
     ];
 
     protected $messages = [
@@ -78,6 +78,7 @@ class CreateSampleForm extends Component
         'submission_date.required' => 'Tanggal submission wajib diisi.',
         'submission_date.date' => 'Tanggal submission tidak valid.',
         'submission_time.required' => 'Waktu submission wajib diisi.',
+        'notes.required' => 'Catatan wajib diisi.',
         'notes.string' => 'Catatan harus berupa teks.',
         'notes.max' => 'Catatan maksimal 1000 karakter.',
     ];
@@ -141,6 +142,11 @@ class CreateSampleForm extends Component
         $this->materials = collect();
         $this->references = collect();
         $this->resetErrorBag();
+    }
+
+    public function removeCOAFile()
+    {
+        $this->coa_file = null;
     }
 
     public function submit()

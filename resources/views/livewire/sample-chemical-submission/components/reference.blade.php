@@ -3,15 +3,15 @@
     <div class="bg-white shadow-sm rounded-lg border border-gray-200 mb-4">
         <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
             <div>
-                <h2 class="text-xl font-semibold text-gray-900">Solder Reference</h2>
-                <p class="text-sm text-gray-600 mt-1">Manage reference specifications for solders</p>
+                <h2 class="text-xl font-semibold text-gray-900">Chemical Reference</h2>
+                <p class="text-sm text-gray-600 mt-1">Manage reference specifications for chemicals</p>
             </div>
             <div>
                 <button wire:click="openAddModal()"
                     class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer
-                           {{ $solders->isEmpty() ? 'opacity-50 cursor-not-allowed' : '' }}"
-                    {{ $solders->isEmpty() ? 'disabled' : '' }}
-                    title="{{ $solders->isEmpty() ? 'Tambahkan solder terlebih dahulu' : 'Tambah Data Baru' }}">
+                           {{ $chemicals->isEmpty() || $specifications->isEmpty() ? 'opacity-50 cursor-not-allowed' : '' }}"
+                    {{ $chemicals->isEmpty() || $specifications->isEmpty() ? 'disabled' : '' }}
+                    title="{{ $chemicals->isEmpty() ? 'Tambahkan chemical terlebih dahulu' : ($specifications->isEmpty() ? 'Tambahkan specification terlebih dahulu' : 'Tambah Data Baru') }}">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                     </svg>
@@ -24,26 +24,25 @@
     <!-- Content Section - Full Height -->
     <div class="flex-1 bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden flex flex-col">
 
-        <!-- Solders warning -->
-        @if ($solders->isEmpty())
-            <div class="bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 p-4 m-4 rounded-r-lg">
-                <div class="flex">
-                    <div class="flex-shrink-0">
-                        <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd"
-                                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                                clip-rule="evenodd" />
-                        </svg>
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-sm">
-                            Tidak ada solder yang tersedia. Silakan tambahkan solder terlebih dahulu sebelum
-                            menambah reference.
-                        </p>
-                    </div>
-                </div>
+        <!-- Warnings -->
+        @if ($chemicals->isEmpty() || $specifications->isEmpty())
+            <div
+                class="bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 p-4 m-4 rounded-r-lg space-y-4 divide-y divide-yellow-400/50">
+
+                @if ($chemicals->isEmpty())
+                    <x-warning-item class="pb-[1%]"
+                        message="Tidak ada chemical yang tersedia. Silakan tambahkan chemical terlebih dahulu sebelum menambah reference." />
+                @endif
+
+                @if ($specifications->isEmpty())
+                    <x-warning-item
+                        message="Tidak ada specification yang tersedia! Silakan tambahkan specification terlebih dahulu sebelum menambah reference." />
+                @endif
+
             </div>
         @endif
+
+
 
         <!-- Content Container - Scrollable -->
         <div class="flex-1 overflow-hidden">
@@ -61,9 +60,9 @@
                         <h3 class="text-lg font-medium text-gray-900 mb-2">No references found</h3>
                         <p class="text-sm text-gray-500 mb-4">Get started by adding your first reference</p>
                         <button wire:click="openAddModal()"
-                            class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200
-                                       {{ $solders->isEmpty() ? 'opacity-50 cursor-not-allowed' : '' }}"
-                            {{ $solders->isEmpty() ? 'disabled' : '' }}>
+                            class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 cursor-pointer
+                                       {{ $chemicals->isEmpty() || $specifications->isEmpty() ? 'opacity-50 cursor-not-allowed' : '' }}"
+                            {{ $chemicals->isEmpty() || $specifications->isEmpty() ? 'disabled' : '' }}>
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M12 4v16m8-8H4" />
@@ -72,15 +71,15 @@
                         </button>
                     </div>
                 @else
-                    @foreach ($groupedReferences as $solderName => $referencesInGroup)
+                    @foreach ($groupedReferences as $chemicalName => $referencesInGroup)
                         <div class="mb-8">
-                            <!-- Solder Header -->
+                            <!-- Chemical Header -->
                             <div class="mb-4 sticky top-0 bg-white z-10 border-b border-gray-200 pb-2">
                                 <h2 class="text-xl font-bold text-gray-800 border-b-2 border-blue-500 pb-2">
-                                    {{ $solderName }}</h2>
+                                    {{ $chemicalName }}</h2>
                             </div>
 
-                            <!-- References for this Solder -->
+                            <!-- References for this Chemical -->
                             @foreach ($referencesInGroup as $reference)
                                 <div class="mb-6 ml-4">
                                     <div class="mb-3 flex items-center justify-between">
@@ -122,6 +121,9 @@
                                                     <th
                                                         class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500 tracking-wider">
                                                         Value</th>
+                                                    <th
+                                                        class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500 tracking-wider">
+                                                        Unit</th>
                                                 </tr>
                                             </thead>
                                             <tbody class="divide-y divide-gray-200">
@@ -131,38 +133,35 @@
                                                             <td class="px-6 py-4 text-sm">
                                                                 <div class="flex flex-wrap gap-1">
                                                                     <span
-                                                                        class="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
+                                                                        class="inline-flex items-center rounded-md bg-sky-50 text-sky-700 border border-sky-200 px-2.5 py-0.5 text-xs font-medium">
                                                                         {{ $spec->name }}
                                                                     </span>
                                                                 </div>
                                                             </td>
-                                                            <td
-                                                                class="whitespace-nowrap px-6 py-4 text-sm font-medium">
+                                                            <td class="whitespace-nowrap px-6 py-4 text-sm font-medium">
                                                                 <span
-                                                                    class="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
+                                                                    class="inline-flex items-center rounded-md bg-violet-50 text-violet-700 border border-violet-200 px-2 py-1 text-xs font-medium">
                                                                     {{ $spec->pivot->operator ?? '==' }}
                                                                 </span>
                                                             </td>
-                                                            <td
-                                                                class="whitespace-nowrap px-6 py-4 text-sm font-medium">
+                                                            <td class="whitespace-nowrap px-6 py-4 text-sm font-medium">
                                                                 @if ($spec->pivot->operator === '-')
-                                                                    @php
-                                                                        $ranges =
-                                                                            json_decode($spec->pivot->value, true) ?:
-                                                                            [];
-                                                                    @endphp
-                                                                    <div class="flex flex-wrap gap-1">
-                                                                        @foreach ($ranges as $range)
-                                                                            <span
-                                                                                class="inline-flex items-center rounded-md bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
-                                                                                {{ $range['min'] ?? 'N/A' }} -
-                                                                                {{ $range['max'] ?? 'N/A' }}
-                                                                            </span>
-                                                                        @endforeach
-                                                                    </div>
+                                                                    <span
+                                                                        class="inline-flex items-center rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-1 text-xs font-medium">
+                                                                        {{ $spec->pivot->value ?? 'N/A' }} -
+                                                                        {{ $spec->pivot->max_value ?? 'N/A' }}
+                                                                    </span>
+                                                                @elseif ($spec->pivot->operator === 'should_be')
+                                                                    <span
+                                                                        class="inline-flex items-center rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-1 text-xs font-medium">{{ $spec->pivot->text_value ?? 'N/A' }}</span>
                                                                 @else
-                                                                    <span>{{ $spec->pivot->value ?? 'N/A' }}</span>
+                                                                    <span
+                                                                        class="inline-flex items-center rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-1 text-xs font-medium">{{ $spec->pivot->value ?? 'N/A' }}</span>
                                                                 @endif
+                                                            </td>
+                                                            <td class="whitespace-nowrap px-6 py-4 text-sm font-medium">
+                                                                <span
+                                                                    class="inline-flex items-center rounded-md bg-amber-50 text-amber-700 border border-amber-200 px-2 py-1 text-xs font-medium">{{ $spec->pivot->unit ?? '-' }}</span>
                                                             </td>
                                                         </tr>
                                                     @endforeach
@@ -218,7 +217,7 @@
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/75 p-4">
             <div class="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-8 shadow-2xl">
                 <div class="flex items-center justify-between border-b pb-4">
-                    <h3 class="text-2xl font-bold">Add New Solder Reference</h3>
+                    <h3 class="text-2xl font-bold">Add New Chemical Reference</h3>
                     <button wire:click="closeAddModal()" class="cursor-pointer rounded-full p-2 hover:bg-gray-100">
                         <svg class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -242,18 +241,17 @@
                         <div class="mb-5">
                             <label for="add-name" class="mb-2 block text-sm font-bold">Reference Name</label>
                             <input type="text" id="add-name" wire:model="name"
-                                class="@error('name') border-red-500 @else border-gray-300 @enderror w-full rounded-lg border px-4 py-3 shadow-sm"
-                                required>
+                                class="@error('name') border-red-500 @else border-gray-300 @enderror w-full rounded-lg border px-4 py-3 shadow-sm">
                             @error('name')
                                 <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                             @enderror
                         </div>
 
                         <div class="relative mb-5">
-                            <label for="add-solder" class="mb-2 block text-sm font-bold">Solder</label>
+                            <label for="add-chemical" class="mb-2 block text-sm font-bold">Chemical</label>
                             <div class="relative">
-                                <input type="text" wire:model.live.debounce.1000ms="solderSearch"
-                                    wire:click="openSolderDropdown" placeholder="Search solder..."
+                                <input type="text" wire:model.live.debounce.1000ms="chemicalSearch"
+                                    wire:click="openChemicalDropdown" placeholder="Search chemical..."
                                     class="@error('material_id') border-red-500 @else border-gray-300 @enderror w-full rounded-lg border px-4 py-3 pr-10 shadow-sm"
                                     autocomplete="off">
 
@@ -267,30 +265,30 @@
                                 </div>
 
                                 <!-- Dropdown List -->
-                                @if ($showSolderDropdown && count($this->filteredSolders) > 0)
+                                @if ($showChemicalDropdown && count($this->filteredChemicals) > 0)
                                     <div
                                         class="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                                        @foreach ($this->filteredSolders as $solder)
-                                            <div wire:click="selectSolder({{ $solder->id }}, '{{ $solder->name }}')"
+                                        @foreach ($this->filteredChemicals as $chemical)
+                                            <div wire:click="selectChemical({{ $chemical->id }}, '{{ $chemical->name }}')"
                                                 class="px-4 py-3 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0">
-                                                {{ $solder->name }}
+                                                {{ $chemical->name }}
                                             </div>
                                         @endforeach
                                     </div>
-                                @elseif($showSolderDropdown && empty($this->solderSearch))
+                                @elseif($showChemicalDropdown && empty($this->chemicalSearch))
                                     <div
                                         class="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                                        @foreach ($solders as $solder)
-                                            <div wire:click="selectSolder({{ $solder->id }}, '{{ $solder->name }}')"
+                                        @foreach ($chemicals as $chemical)
+                                            <div wire:click="selectChemical({{ $chemical->id }}, '{{ $chemical->name }}')"
                                                 class="px-4 py-3 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0">
-                                                {{ $solder->name }}
+                                                {{ $chemical->name }}
                                             </div>
                                         @endforeach
                                     </div>
-                                @elseif($showSolderDropdown)
+                                @elseif($showChemicalDropdown)
                                     <div
                                         class="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg">
-                                        <div class="px-4 py-3 text-gray-500">No solders found</div>
+                                        <div class="px-4 py-3 text-gray-500">No chemicals found</div>
                                     </div>
                                 @endif
                             </div>
@@ -300,7 +298,7 @@
                         </div>
 
                         <div class="mb-5">
-                            <label class="mb-2 block text-sm font-bold">Specifications (Optional)</label>
+                            <label class="mb-2 block text-sm font-bold">Specifications</label>
                             @if ($specifications->isEmpty())
                                 <p class="text-sm text-gray-500">No specifications available</p>
                             @else
@@ -383,13 +381,13 @@
                                                                             </button>
                                                                         @endif
                                                                     </div>
-                                                                    @error('specificationRanges.' . $specId . '.' . $index .
-                                                                        '.min')
+                                                                    @error('specificationRanges.' . $specId . '.' .
+                                                                        $index . '.min')
                                                                         <p class="mt-1 text-xs text-red-500">
                                                                             {{ $message }}</p>
                                                                     @enderror
-                                                                    @error('specificationRanges.' . $specId . '.' . $index .
-                                                                        '.max')
+                                                                    @error('specificationRanges.' . $specId . '.' .
+                                                                        $index . '.max')
                                                                         <p class="mt-1 text-xs text-red-500">
                                                                             {{ $message }}</p>
                                                                     @enderror
@@ -401,9 +399,9 @@
                                                     <div class="flex-1">
                                                         @if (isset($specificationOperators[$specId]) && in_array($specificationOperators[$specId], ['should_be']))
                                                             <input type="text"
-                                                                wire:model="specificationValues.{{ $specId }}"
+                                                                wire:model="specificationTextValues.{{ $specId }}"
                                                                 placeholder="Enter {{ $specificationOperators[$specId] === 'should_be' ? 'expected values (comma-separated)' : 'text to contain' }} for {{ $spec->name }}"
-                                                                class="@error('specificationValues.' . $specId) border-red-500 @else border-gray-300 @enderror w-full rounded-lg border px-3 py-2 text-sm shadow-sm">
+                                                                class="@error('specificationTextValues.' . $specId) border-red-500 @else border-gray-300 @enderror w-full rounded-lg border px-3 py-2 text-sm shadow-sm">
                                                         @else
                                                             <input type="number" step="any"
                                                                 wire:model="specificationValues.{{ $specId }}"
@@ -416,7 +414,19 @@
                                                 @error('specificationValues.' . $specId)
                                                     <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                                                 @enderror
+                                                @error('specificationTextValues.' . $specId)
+                                                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                                                @enderror
                                                 @error('specificationRanges.' . $specId)
+                                                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                                                @enderror
+
+                                                <input type="text"
+                                                    wire:model="specificationUnits.{{ $specId }}"
+                                                    placeholder="e.g., %, ppm, mg/L"
+                                                    class="w-full sm:w-48 rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm">
+
+                                                @error('specificationUnits.' . $specId)
                                                     <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                                                 @enderror
                                             </div>
@@ -432,8 +442,8 @@
                                 Cancel
                             </button>
                             <button type="submit" wire:loading.attr="disabled" wire:target="store"
-                                class="{{ $solders->isEmpty() ? 'opacity-50 cursor-not-allowed' : '' }} cursor-pointer rounded-lg bg-blue-500 px-6 py-2 text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
-                                {{ $solders->isEmpty() ? 'disabled' : '' }}>
+                                class="{{ $chemicals->isEmpty() || $specifications->isEmpty() ? 'opacity-50 cursor-not-allowed' : '' }} cursor-pointer rounded-lg bg-blue-500 px-6 py-2 text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
+                                {{ $chemicals->isEmpty() || $specifications->isEmpty() ? 'disabled' : '' }}>
                                 <span wire:loading.remove wire:target="store">Save Reference</span>
                                 <span wire:loading wire:target="store">Saving...</span>
                             </button>
@@ -449,7 +459,7 @@
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/75 p-4">
             <div class="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-8 shadow-2xl">
                 <div class="flex items-center justify-between border-b pb-4">
-                    <h3 class="text-2xl font-bold">Edit Solder Reference</h3>
+                    <h3 class="text-2xl font-bold">Edit Chemical Reference</h3>
                     <button wire:click="closeEditModal()" class="cursor-pointer rounded-full p-2 hover:bg-gray-100">
                         <svg class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -473,18 +483,17 @@
                         <div class="mb-5">
                             <label for="edit-name" class="mb-2 block text-sm font-bold">Reference Name</label>
                             <input type="text" id="edit-name" wire:model="name"
-                                class="@error('name') border-red-500 @else border-gray-300 @enderror w-full rounded-lg border px-4 py-3 shadow-sm"
-                                required>
+                                class="@error('name') border-red-500 @else border-gray-300 @enderror w-full rounded-lg border px-4 py-3 shadow-sm">
                             @error('name')
                                 <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                             @enderror
                         </div>
 
                         <div class="relative mb-5">
-                            <label for="edit-solder" class="mb-2 block text-sm font-bold">Solder</label>
+                            <label for="edit-chemical" class="mb-2 block text-sm font-bold">Chemical</label>
                             <div class="relative">
-                                <input type="text" wire:model.live.debounce.1000ms="solderSearch"
-                                    wire:click="openSolderDropdown" placeholder="Search solder..."
+                                <input type="text" wire:model.live.debounce.1000ms="chemicalSearch"
+                                    wire:click="openChemicalDropdown" placeholder="Search chemical..."
                                     class="@error('material_id') border-red-500 @else border-gray-300 @enderror w-full rounded-lg border px-4 py-3 pr-10 shadow-sm"
                                     autocomplete="off">
 
@@ -498,30 +507,30 @@
                                 </div>
 
                                 <!-- Dropdown List -->
-                                @if ($showSolderDropdown && count($this->filteredSolders) > 0)
+                                @if ($showChemicalDropdown && count($this->filteredChemicals) > 0)
                                     <div
                                         class="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                                        @foreach ($this->filteredSolders as $solder)
-                                            <div wire:click="selectSolder({{ $solder->id }}, '{{ $solder->name }}')"
+                                        @foreach ($this->filteredChemicals as $chemical)
+                                            <div wire:click="selectChemical({{ $chemical->id }}, '{{ $chemical->name }}')"
                                                 class="px-4 py-3 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0">
-                                                {{ $solder->name }}
+                                                {{ $chemical->name }}
                                             </div>
                                         @endforeach
                                     </div>
-                                @elseif($showSolderDropdown && empty($this->solderSearch))
+                                @elseif($showChemicalDropdown && empty($this->chemicalSearch))
                                     <div
                                         class="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                                        @foreach ($solders as $solder)
-                                            <div wire:click="selectSolder({{ $solder->id }}, '{{ $solder->name }}')"
+                                        @foreach ($chemicals as $chemical)
+                                            <div wire:click="selectChemical({{ $chemical->id }}, '{{ $chemical->name }}')"
                                                 class="px-4 py-3 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0">
-                                                {{ $solder->name }}
+                                                {{ $chemical->name }}
                                             </div>
                                         @endforeach
                                     </div>
-                                @elseif($showSolderDropdown)
+                                @elseif($showChemicalDropdown)
                                     <div
                                         class="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg">
-                                        <div class="px-4 py-3 text-gray-500">No solders found</div>
+                                        <div class="px-4 py-3 text-gray-500">No chemicals found</div>
                                     </div>
                                 @endif
                             </div>
@@ -612,13 +621,13 @@
                                                                             </button>
                                                                         @endif
                                                                     </div>
-                                                                    @error('specificationRanges.' . $specId . '.' . $index .
-                                                                        '.min')
+                                                                    @error('specificationRanges.' . $specId . '.' .
+                                                                        $index . '.min')
                                                                         <p class="mt-1 text-xs text-red-500">
                                                                             {{ $message }}</p>
                                                                     @enderror
-                                                                    @error('specificationRanges.' . $specId . '.' . $index .
-                                                                        '.max')
+                                                                    @error('specificationRanges.' . $specId . '.' .
+                                                                        $index . '.max')
                                                                         <p class="mt-1 text-xs text-red-500">
                                                                             {{ $message }}</p>
                                                                     @enderror
@@ -630,9 +639,9 @@
                                                     <div class="flex-1">
                                                         @if (isset($specificationOperators[$specId]) && in_array($specificationOperators[$specId], ['should_be']))
                                                             <input type="text"
-                                                                wire:model="specificationValues.{{ $specId }}"
+                                                                wire:model="specificationTextValues.{{ $specId }}"
                                                                 placeholder="Enter {{ $specificationOperators[$specId] === 'should_be' ? 'expected values (comma-separated)' : 'text to contain' }} for {{ $spec->name }}"
-                                                                class="@error('specificationValues.' . $specId) border-red-500 @else border-gray-300 @enderror w-full rounded-lg border px-3 py-2 text-sm shadow-sm">
+                                                                class="@error('specificationTextValues.' . $specId) border-red-500 @else border-gray-300 @enderror w-full rounded-lg border px-3 py-2 text-sm shadow-sm">
                                                         @else
                                                             <input type="number" step="any"
                                                                 wire:model="specificationValues.{{ $specId }}"
@@ -642,12 +651,10 @@
                                                     </div>
                                                 @endif
 
-                                                @error('specificationValues.' . $specId)
-                                                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                                                @enderror
-                                                @error('specificationRanges.' . $specId)
-                                                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                                                @enderror
+                                                <input type="text"
+                                                    wire:model="specificationUnits.{{ $specId }}"
+                                                    placeholder="e.g., %, ppm, mg/L"
+                                                    class="@error('specificationUnits.' . $specId) border-red-500 @else border-gray-300 @enderror sm:w-48 rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm">
                                             </div>
                                         </div>
                                     @endif

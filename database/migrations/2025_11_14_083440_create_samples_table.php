@@ -20,9 +20,9 @@ return new class extends Migration {
             $table->foreignId('reference_id')->nullable()->constrained('references')->onDelete('set null');
 
             // Sample details
-            $table->string('supplier');
-            $table->string('batch_lot');
-            $table->string('vehicle_container_number');
+            $table->string('supplier')->nullable();
+            $table->string('batch_lot')->nullable();
+            $table->string('vehicle_container_number')->nullable();
             $table->boolean('has_coa')->default(false);
             $table->string('coa_file_path')->nullable();
 
@@ -54,6 +54,7 @@ return new class extends Migration {
             // Results & Notes
             $table->json('analysis_results')->nullable();
             $table->text('notes')->nullable();
+            $table->text('review_notes')->nullable();
 
             $table->timestamps();
 

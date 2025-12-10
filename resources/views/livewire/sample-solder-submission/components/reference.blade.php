@@ -3,15 +3,15 @@
     <div class="bg-white shadow-sm rounded-lg border border-gray-200 mb-4">
         <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
             <div>
-                <h2 class="text-xl font-semibold text-gray-900">Reference</h2>
-                <p class="text-sm text-gray-600 mt-1">Manage reference specifications for raw materials</p>
+                <h2 class="text-xl font-semibold text-gray-900">Solder Reference</h2>
+                <p class="text-sm text-gray-600 mt-1">Manage reference specifications for solders</p>
             </div>
             <div>
                 <button wire:click="openAddModal()"
                     class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer
-                           {{ $materials->isEmpty() ? 'opacity-50 cursor-not-allowed' : '' }}"
-                    {{ $materials->isEmpty() ? 'disabled' : '' }}
-                    title="{{ $materials->isEmpty() ? 'Tambahkan raw material terlebih dahulu' : 'Tambah Data Baru' }}">
+                           {{ $solders->isEmpty() || $specifications->isEmpty() ? 'opacity-50 cursor-not-allowed' : '' }}"
+                    {{ $solders->isEmpty() || $specifications->isEmpty() ? 'disabled' : '' }}
+                    title="{{ $solders->isEmpty() ? 'Tambahkan solder terlebih dahulu' : ($specifications->isEmpty() ? 'Tambahkan specification terlebih dahulu' : 'Tambah Data Baru') }}">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                     </svg>
@@ -24,9 +24,8 @@
     <!-- Content Section - Full Height -->
     <div class="flex-1 bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden flex flex-col">
 
-
-        <!-- Raw Materials warning -->
-        @if ($materials->isEmpty())
+        <!-- Warnings -->
+        @if ($solders->isEmpty())
             <div class="bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 p-4 m-4 rounded-r-lg">
                 <div class="flex">
                     <div class="flex-shrink-0">
@@ -38,8 +37,30 @@
                     </div>
                     <div class="ml-3">
                         <p class="text-sm">
-                            Tidak ada raw material yang tersedia. Silakan tambahkan raw material terlebih dahulu sebelum
+                            Tidak ada solder yang tersedia. Silakan tambahkan solder terlebih dahulu sebelum
                             menambah reference.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        @if ($specifications->isEmpty())
+            <div class="bg-red-50 border-l-4 border-red-400 text-red-700 p-4 m-4 rounded-r-lg">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium">
+                            Tidak ada specification yang tersedia!
+                        </p>
+                        <p class="text-sm mt-1">
+                            Silakan tambahkan specification terlebih dahulu sebelum menambah reference.
                         </p>
                     </div>
                 </div>
@@ -63,8 +84,8 @@
                         <p class="text-sm text-gray-500 mb-4">Get started by adding your first reference</p>
                         <button wire:click="openAddModal()"
                             class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 cursor-pointer
-                                       {{ $materials->isEmpty() ? 'opacity-50 cursor-not-allowed' : '' }}"
-                            {{ $materials->isEmpty() ? 'disabled' : '' }}>
+                                       {{ $solders->isEmpty() || $specifications->isEmpty() ? 'opacity-50 cursor-not-allowed' : '' }}"
+                            {{ $solders->isEmpty() || $specifications->isEmpty() ? 'disabled' : '' }}>
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M12 4v16m8-8H4" />
@@ -73,15 +94,15 @@
                         </button>
                     </div>
                 @else
-                    @foreach ($groupedReferences as $materialName => $referencesInGroup)
+                    @foreach ($groupedReferences as $solderName => $referencesInGroup)
                         <div class="mb-8">
-                            <!-- Raw Material Header -->
+                            <!-- Solder Header -->
                             <div class="mb-4 sticky top-0 bg-white z-10 border-b border-gray-200 pb-2">
                                 <h2 class="text-xl font-bold text-gray-800 border-b-2 border-blue-500 pb-2">
-                                    {{ $materialName }}</h2>
+                                    {{ $solderName }}</h2>
                             </div>
 
-                            <!-- References for this Raw Material -->
+                            <!-- References for this Solder -->
                             @foreach ($referencesInGroup as $reference)
                                 <div class="mb-6 ml-4">
                                     <div class="mb-3 flex items-center justify-between">
@@ -123,6 +144,9 @@
                                                     <th
                                                         class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500 tracking-wider">
                                                         Value</th>
+                                                    <th
+                                                        class="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500 tracking-wider">
+                                                        Unit</th>
                                                 </tr>
                                             </thead>
                                             <tbody class="divide-y divide-gray-200">
@@ -132,32 +156,36 @@
                                                             <td class="px-6 py-4 text-sm">
                                                                 <div class="flex flex-wrap gap-1">
                                                                     <span
-                                                                        class="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
+                                                                        class="inline-flex items-center rounded-md bg-sky-50 text-sky-700 border border-sky-200 px-2.5 py-0.5 text-xs font-medium">
                                                                         {{ $spec->name }}
                                                                     </span>
                                                                 </div>
                                                             </td>
                                                             <td class="whitespace-nowrap px-6 py-4 text-sm font-medium">
                                                                 <span
-                                                                    class="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
+                                                                    class="inline-flex items-center rounded-md bg-violet-50 text-violet-700 border border-violet-200 px-2 py-1 text-xs font-medium">
                                                                     {{ $spec->pivot->operator ?? '==' }}
                                                                 </span>
                                                             </td>
                                                             <td class="whitespace-nowrap px-6 py-4 text-sm font-medium">
                                                                 @if ($spec->pivot->operator === '-')
                                                                     <span
-                                                                        class="inline-flex items-center rounded-md bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
+                                                                        class="inline-flex items-center rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-1 text-xs font-medium">
                                                                         {{ $spec->pivot->value ?? 'N/A' }} -
                                                                         {{ $spec->pivot->max_value ?? 'N/A' }}
                                                                     </span>
                                                                 @elseif ($spec->pivot->operator === 'should_be')
                                                                     <span
-                                                                        class="inline-flex items-center rounded-md bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
-                                                                        {{ $spec->pivot->text_value ?? 'N/A' }}
-                                                                    </span>
+                                                                        class="inline-flex items-center rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-1 text-xs font-medium">{{ $spec->pivot->text_value ?? 'N/A' }}</span>
                                                                 @else
-                                                                    <span>{{ $spec->pivot->value ?? 'N/A' }}</span>
+                                                                    <span
+                                                                        class="inline-flex items-center rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-1 text-xs font-medium">{{ $spec->pivot->value ?? 'N/A' }}</span>
                                                                 @endif
+                                                            </td>
+                                                            <td
+                                                                class="whitespace-nowrap px-6 py-4 text-sm font-medium">
+                                                                <span
+                                                                    class="inline-flex items-center rounded-md bg-amber-50 text-amber-700 border border-amber-200 px-2 py-1 text-xs font-medium">{{ $spec->pivot->unit ?? '-' }}</span>
                                                             </td>
                                                         </tr>
                                                     @endforeach
@@ -213,7 +241,7 @@
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/75 p-4">
             <div class="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-8 shadow-2xl">
                 <div class="flex items-center justify-between border-b pb-4">
-                    <h3 class="text-2xl font-bold">Add New Reference</h3>
+                    <h3 class="text-2xl font-bold">Add New Solder Reference</h3>
                     <button wire:click="closeAddModal()" class="cursor-pointer rounded-full p-2 hover:bg-gray-100">
                         <svg class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -237,17 +265,18 @@
                         <div class="mb-5">
                             <label for="add-name" class="mb-2 block text-sm font-bold">Reference Name</label>
                             <input type="text" id="add-name" wire:model="name"
-                                class="@error('name') border-red-500 @else border-gray-300 @enderror w-full rounded-lg border px-4 py-3 shadow-sm">
+                                class="@error('name') border-red-500 @else border-gray-300 @enderror w-full rounded-lg border px-4 py-3 shadow-sm"
+                                required>
                             @error('name')
                                 <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                             @enderror
                         </div>
 
                         <div class="relative mb-5">
-                            <label for="add-material" class="mb-2 block text-sm font-bold">Raw Material</label>
+                            <label for="add-solder" class="mb-2 block text-sm font-bold">Solder</label>
                             <div class="relative">
-                                <input type="text" wire:model.live.debounce.1000ms="materialSearch"
-                                    wire:click="openMaterialDropdown" placeholder="Search raw material..."
+                                <input type="text" wire:model.live.debounce.1000ms="solderSearch"
+                                    wire:click="openSolderDropdown" placeholder="Search solder..."
                                     class="@error('material_id') border-red-500 @else border-gray-300 @enderror w-full rounded-lg border px-4 py-3 pr-10 shadow-sm"
                                     autocomplete="off">
 
@@ -261,30 +290,30 @@
                                 </div>
 
                                 <!-- Dropdown List -->
-                                @if ($showMaterialDropdown && count($this->filteredMaterials) > 0)
+                                @if ($showSolderDropdown && count($this->filteredSolders) > 0)
                                     <div
                                         class="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                                        @foreach ($this->filteredMaterials as $material)
-                                            <div wire:click="selectMaterial({{ $material->id }}, '{{ $material->name }}')"
+                                        @foreach ($this->filteredSolders as $solder)
+                                            <div wire:click="selectSolder({{ $solder->id }}, '{{ $solder->name }}')"
                                                 class="px-4 py-3 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0">
-                                                {{ $material->name }}
+                                                {{ $solder->name }}
                                             </div>
                                         @endforeach
                                     </div>
-                                @elseif($showMaterialDropdown && empty($this->materialSearch))
+                                @elseif($showSolderDropdown && empty($this->solderSearch))
                                     <div
                                         class="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                                        @foreach ($materials as $material)
-                                            <div wire:click="selectMaterial({{ $material->id }}, '{{ $material->name }}')"
+                                        @foreach ($solders as $solder)
+                                            <div wire:click="selectSolder({{ $solder->id }}, '{{ $solder->name }}')"
                                                 class="px-4 py-3 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0">
-                                                {{ $material->name }}
+                                                {{ $solder->name }}
                                             </div>
                                         @endforeach
                                     </div>
-                                @elseif($showMaterialDropdown)
+                                @elseif($showSolderDropdown)
                                     <div
                                         class="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg">
-                                        <div class="px-4 py-3 text-gray-500">No raw materials found</div>
+                                        <div class="px-4 py-3 text-gray-500">No solders found</div>
                                     </div>
                                 @endif
                             </div>
@@ -332,77 +361,100 @@
                                                     {{ $spec->name }}
                                                 </div>
 
-                                                <div class="w-20 relative">
+                                                <div class="w-20">
                                                     <select
                                                         wire:model.live="specificationOperators.{{ $specId }}"
-                                                        class="@error('specificationOperators.' . $specId) border-red-500 @else border-gray-300 @enderror w-full cursor-pointer appearance-none rounded-lg border px-2 py-2 pr-7 text-sm shadow-sm">
+                                                        class="@error('specificationOperators.' . $specId) border-red-500 @else border-gray-300 @enderror w-full cursor-pointer appearance-none rounded-lg border px-2 py-2 text-sm shadow-sm">
                                                         <option value=">=">&gt;=</option>
                                                         <option value="<=">&lt;=</option>
                                                         <option value="==">==</option>
                                                         <option value="-">Range</option>
                                                         <option value="should_be">Should be</option>
                                                     </select>
-                                                    <div
-                                                        class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                                        <svg class="w-4 h-4 text-gray-400" fill="none"
-                                                            stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                                stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                                        </svg>
-                                                    </div>
                                                     @error('specificationOperators.' . $specId)
                                                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                                                     @enderror
                                                 </div>
 
                                                 @if (isset($specificationOperators[$specId]) && $specificationOperators[$specId] === '-')
-                                                    <div class="flex-1">
-                                                        <div class="flex items-center space-x-2">
-                                                            <input type="number" step="any"
-                                                                wire:model="specificationRanges.{{ $specId }}.0.min"
-                                                                placeholder="Min"
-                                                                class="@error('specificationRanges.' . $specId . '.0.min') border-red-500 @else border-gray-300 @enderror w-24 rounded-lg border px-2 py-2 text-sm shadow-sm">
-                                                            <span class="text-gray-500">-</span>
-                                                            <input type="number" step="any"
-                                                                wire:model="specificationRanges.{{ $specId }}.0.max"
-                                                                placeholder="Max"
-                                                                class="@error('specificationRanges.' . $specId . '.0.max') border-red-500 @else border-gray-300 @enderror w-24 rounded-lg border px-2 py-2 text-sm shadow-sm">
-                                                        </div>
-                                                        @error('specificationRanges.' . $specId . '.0.min')
-                                                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                                                        @enderror
-                                                        @error('specificationRanges.' . $specId . '.0.max')
-                                                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                                                        @enderror
+                                                    <div class="space-y-2 flex-1">
+                                                        @if (isset($specificationRanges[$specId]))
+                                                            @foreach ($specificationRanges[$specId] as $index => $range)
+                                                                <div>
+                                                                    <div class="flex items-center space-x-2">
+                                                                        <input type="number" step="any"
+                                                                            wire:model="specificationRanges.{{ $specId }}.{{ $index }}.min"
+                                                                            placeholder="Min"
+                                                                            class="@error('specificationRanges.' . $specId . '.' . $index . '.min') border-red-500 @else border-gray-300 @enderror w-24 rounded-lg border px-2 py-2 text-sm shadow-sm">
+                                                                        <span class="text-gray-500">-</span>
+                                                                        <input type="number" step="any"
+                                                                            wire:model="specificationRanges.{{ $specId }}.{{ $index }}.max"
+                                                                            placeholder="Max"
+                                                                            class="@error('specificationRanges.' . $specId . '.' . $index . '.max') border-red-500 @else border-gray-300 @enderror w-24 rounded-lg border px-2 py-2 text-sm shadow-sm">
+                                                                        @if ($index > 0)
+                                                                            <button type="button"
+                                                                                wire:click="removeRangeRow({{ $specId }}, {{ $index }})"
+                                                                                class="text-red-500 hover:text-red-700">
+                                                                                <svg class="h-4 w-4" fill="none"
+                                                                                    stroke="currentColor"
+                                                                                    viewBox="0 0 24 24">
+                                                                                    <path stroke-linecap="round"
+                                                                                        stroke-linejoin="round"
+                                                                                        stroke-width="2"
+                                                                                        d="M6 18L18 6M6 6l12 12"></path>
+                                                                                </svg>
+                                                                            </button>
+                                                                        @endif
+                                                                    </div>
+                                                                    @error('specificationRanges.' . $specId . '.' .
+                                                                        $index . '.min')
+                                                                        <p class="mt-1 text-xs text-red-500">
+                                                                            {{ $message }}</p>
+                                                                    @enderror
+                                                                    @error('specificationRanges.' . $specId . '.' .
+                                                                        $index . '.max')
+                                                                        <p class="mt-1 text-xs text-red-500">
+                                                                            {{ $message }}</p>
+                                                                    @enderror
+                                                                </div>
+                                                            @endforeach
+                                                        @endif
                                                     </div>
                                                 @else
                                                     <div class="flex-1">
-                                                        @if (isset($specificationOperators[$specId]) && $specificationOperators[$specId] === 'should_be')
+                                                        @if (isset($specificationOperators[$specId]) && in_array($specificationOperators[$specId], ['should_be']))
                                                             <input type="text"
                                                                 wire:model="specificationTextValues.{{ $specId }}"
-                                                                placeholder="Enter text value for {{ $spec->name }}"
+                                                                placeholder="Enter {{ $specificationOperators[$specId] === 'should_be' ? 'expected values (comma-separated)' : 'text to contain' }} for {{ $spec->name }}"
                                                                 class="@error('specificationTextValues.' . $specId) border-red-500 @else border-gray-300 @enderror w-full rounded-lg border px-3 py-2 text-sm shadow-sm">
-                                                            @error('specificationTextValues.' . $specId)
-                                                                <p class="mt-1 text-xs text-red-500">{{ $message }}
-                                                                </p>
-                                                            @enderror
                                                         @else
                                                             <input type="number" step="any"
                                                                 wire:model="specificationValues.{{ $specId }}"
                                                                 placeholder="Enter numeric value for {{ $spec->name }}"
                                                                 class="@error('specificationValues.' . $specId) border-red-500 @else border-gray-300 @enderror w-full rounded-lg border px-3 py-2 text-sm shadow-sm">
-                                                            @error('specificationValues.' . $specId)
-                                                                <p class="mt-1 text-xs text-red-500">{{ $message }}
-                                                                </p>
-                                                            @enderror
                                                         @endif
                                                     </div>
                                                 @endif
 
-                                                @error('specificationRanges.' . $specId)
+                                                {{-- @error('specificationValues.' . $specId)
                                                     <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                                                 @enderror
+                                                @error('specificationTextValues.' . $specId)
+                                                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                                                @enderror
+                                                @error('specificationRanges.' . $specId)
+                                                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                                                @enderror --}}
+
+                                                <input type="text"
+                                                    wire:model="specificationUnits.{{ $specId }}"
+                                                    placeholder="e.g., %, ppm, mg/L"
+                                                    class="w-full sm:w-48 rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm">
                                             </div>
+
+
+
+
                                         </div>
                                     @endif
                                 @endforeach
@@ -415,8 +467,8 @@
                                 Cancel
                             </button>
                             <button type="submit" wire:loading.attr="disabled" wire:target="store"
-                                class="{{ $materials->isEmpty() ? 'opacity-50 cursor-not-allowed' : '' }} cursor-pointer rounded-lg bg-blue-500 px-6 py-2 text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
-                                {{ $materials->isEmpty() ? 'disabled' : '' }}>
+                                class="{{ $solders->isEmpty() || $specifications->isEmpty() ? 'opacity-50 cursor-not-allowed' : '' }} cursor-pointer rounded-lg bg-blue-500 px-6 py-2 text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
+                                {{ $solders->isEmpty() || $specifications->isEmpty() ? 'disabled' : '' }}>
                                 <span wire:loading.remove wire:target="store">Save Reference</span>
                                 <span wire:loading wire:target="store">Saving...</span>
                             </button>
@@ -432,7 +484,7 @@
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/75 p-4">
             <div class="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-8 shadow-2xl">
                 <div class="flex items-center justify-between border-b pb-4">
-                    <h3 class="text-2xl font-bold">Edit Reference</h3>
+                    <h3 class="text-2xl font-bold">Edit Solder Reference</h3>
                     <button wire:click="closeEditModal()" class="cursor-pointer rounded-full p-2 hover:bg-gray-100">
                         <svg class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -464,10 +516,10 @@
                         </div>
 
                         <div class="relative mb-5">
-                            <label for="edit-material" class="mb-2 block text-sm font-bold">Raw Material</label>
+                            <label for="edit-solder" class="mb-2 block text-sm font-bold">Solder</label>
                             <div class="relative">
-                                <input type="text" wire:model.live.debounce.1000ms="materialSearch"
-                                    wire:click="openMaterialDropdown" placeholder="Search raw material..."
+                                <input type="text" wire:model.live.debounce.1000ms="solderSearch"
+                                    wire:click="openSolderDropdown" placeholder="Search solder..."
                                     class="@error('material_id') border-red-500 @else border-gray-300 @enderror w-full rounded-lg border px-4 py-3 pr-10 shadow-sm"
                                     autocomplete="off">
 
@@ -481,30 +533,30 @@
                                 </div>
 
                                 <!-- Dropdown List -->
-                                @if ($showMaterialDropdown && count($this->filteredMaterials) > 0)
+                                @if ($showSolderDropdown && count($this->filteredSolders) > 0)
                                     <div
                                         class="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                                        @foreach ($this->filteredMaterials as $material)
-                                            <div wire:click="selectMaterial({{ $material->id }}, '{{ $material->name }}')"
+                                        @foreach ($this->filteredSolders as $solder)
+                                            <div wire:click="selectSolder({{ $solder->id }}, '{{ $solder->name }}')"
                                                 class="px-4 py-3 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0">
-                                                {{ $material->name }}
+                                                {{ $solder->name }}
                                             </div>
                                         @endforeach
                                     </div>
-                                @elseif($showMaterialDropdown && empty($this->materialSearch))
+                                @elseif($showSolderDropdown && empty($this->solderSearch))
                                     <div
                                         class="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                                        @foreach ($materials as $material)
-                                            <div wire:click="selectMaterial({{ $material->id }}, '{{ $material->name }}')"
+                                        @foreach ($solders as $solder)
+                                            <div wire:click="selectSolder({{ $solder->id }}, '{{ $solder->name }}')"
                                                 class="px-4 py-3 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0">
-                                                {{ $material->name }}
+                                                {{ $solder->name }}
                                             </div>
                                         @endforeach
                                     </div>
-                                @elseif($showMaterialDropdown)
+                                @elseif($showSolderDropdown)
                                     <div
                                         class="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg">
-                                        <div class="px-4 py-3 text-gray-500">No raw materials found</div>
+                                        <div class="px-4 py-3 text-gray-500">No solders found</div>
                                     </div>
                                 @endif
                             </div>
@@ -550,62 +602,85 @@
                                                     class="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
                                                     {{ $spec->name }}
                                                 </div>
-                                                <div class="w-24 relative">
+                                                <div class="w-24">
                                                     <select
                                                         wire:model.live="specificationOperators.{{ $specId }}"
-                                                        class="@error('specificationOperators.' . $specId) border-red-500 @else border-gray-300 @enderror w-full cursor-pointer appearance-none rounded-lg border px-2 py-2 pr-7 text-sm shadow-sm">
+                                                        class="@error('specificationOperators.' . $specId) border-red-500 @else border-gray-300 @enderror w-full cursor-pointer appearance-none rounded-lg border px-3 py-2 text-sm shadow-sm">
                                                         <option value=">=">>=</option>
                                                         <option value="<=">&lt;=</option>
                                                         <option value="==">==</option>
                                                         <option value="-">Range</option>
                                                         <option value="should_be">Should be</option>
                                                     </select>
-                                                    <div
-                                                        class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                                        <svg class="w-4 h-4 text-gray-400" fill="none"
-                                                            stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                                stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                                        </svg>
-                                                    </div>
                                                     @error('specificationOperators.' . $specId)
                                                         <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                                                     @enderror
                                                 </div>
 
                                                 @if (isset($specificationOperators[$specId]) && $specificationOperators[$specId] === '-')
-                                                    <div class="flex-1">
-                                                        <div class="flex items-center space-x-2">
-                                                            <input type="number" step="any"
-                                                                wire:model="specificationRanges.{{ $specId }}.0.min"
-                                                                placeholder="Min"
-                                                                class="@error('specificationRanges.' . $specId . '.0.min') border-red-500 @else border-gray-300 @enderror w-24 rounded-lg border px-3 py-2 text-sm shadow-sm">
-                                                            <span class="text-gray-500">-</span>
-                                                            <input type="number" step="any"
-                                                                wire:model="specificationRanges.{{ $specId }}.0.max"
-                                                                placeholder="Max"
-                                                                class="@error('specificationRanges.' . $specId . '.0.max') border-red-500 @else border-gray-300 @enderror w-24 rounded-lg border px-3 py-2 text-sm shadow-sm">
-                                                        </div>
-
+                                                    <div class="space-y-2 flex-1">
+                                                        @if (isset($specificationRanges[$specId]))
+                                                            @foreach ($specificationRanges[$specId] as $index => $range)
+                                                                <div>
+                                                                    <div class="flex items-center space-x-2">
+                                                                        <input type="text"
+                                                                            wire:model="specificationRanges.{{ $specId }}.{{ $index }}.min"
+                                                                            placeholder="Min"
+                                                                            class="@error('specificationRanges.' . $specId . '.' . $index . '.min') border-red-500 @else border-gray-300 @enderror w-24 rounded-lg border px-3 py-2 text-sm shadow-sm">
+                                                                        <span class="text-gray-500">-</span>
+                                                                        <input type="text"
+                                                                            wire:model="specificationRanges.{{ $specId }}.{{ $index }}.max"
+                                                                            placeholder="Max"
+                                                                            class="@error('specificationRanges.' . $specId . '.' . $index . '.max') border-red-500 @else border-gray-300 @enderror w-24 rounded-lg border px-3 py-2 text-sm shadow-sm">
+                                                                        @if ($index > 0)
+                                                                            <button type="button"
+                                                                                wire:click="removeRangeRow({{ $specId }}, {{ $index }})"
+                                                                                class="text-red-500 hover:text-red-700">
+                                                                                <svg class="h-4 w-4" fill="none"
+                                                                                    stroke="currentColor"
+                                                                                    viewBox="0 0 24 24">
+                                                                                    <path stroke-linecap="round"
+                                                                                        stroke-linejoin="round"
+                                                                                        stroke-width="2"
+                                                                                        d="M6 18L18 6M6 6l12 12"></path>
+                                                                                </svg>
+                                                                            </button>
+                                                                        @endif
+                                                                    </div>
+                                                                    @error('specificationRanges.' . $specId . '.' .
+                                                                        $index . '.min')
+                                                                        <p class="mt-1 text-xs text-red-500">
+                                                                            {{ $message }}</p>
+                                                                    @enderror
+                                                                    @error('specificationRanges.' . $specId . '.' .
+                                                                        $index . '.max')
+                                                                        <p class="mt-1 text-xs text-red-500">
+                                                                            {{ $message }}</p>
+                                                                    @enderror
+                                                                </div>
+                                                            @endforeach
+                                                        @endif
                                                     </div>
                                                 @else
                                                     <div class="flex-1">
-                                                        @if (isset($specificationOperators[$specId]) && $specificationOperators[$specId] === 'should_be')
+                                                        @if (isset($specificationOperators[$specId]) && in_array($specificationOperators[$specId], ['should_be']))
                                                             <input type="text"
                                                                 wire:model="specificationTextValues.{{ $specId }}"
-                                                                placeholder="Enter text value for {{ $spec->name }}"
+                                                                placeholder="Enter {{ $specificationOperators[$specId] === 'should_be' ? 'expected values (comma-separated)' : 'text to contain' }} for {{ $spec->name }}"
                                                                 class="@error('specificationTextValues.' . $specId) border-red-500 @else border-gray-300 @enderror w-full rounded-lg border px-3 py-2 text-sm shadow-sm">
-
                                                         @else
                                                             <input type="number" step="any"
                                                                 wire:model="specificationValues.{{ $specId }}"
                                                                 placeholder="Enter numeric value for {{ $spec->name }}"
                                                                 class="@error('specificationValues.' . $specId) border-red-500 @else border-gray-300 @enderror w-full rounded-lg border px-3 py-2 text-sm shadow-sm">
-
                                                         @endif
                                                     </div>
                                                 @endif
 
+                                                <input type="text"
+                                                    wire:model="specificationUnits.{{ $specId }}"
+                                                    placeholder="e.g., %, ppm, mg/L"
+                                                    class="w-full sm:w-48 rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm">
 
                                             </div>
                                         </div>
