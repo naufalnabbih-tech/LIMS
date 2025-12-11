@@ -112,7 +112,8 @@
                                                 class="inline-flex items-center px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs font-medium rounded-md transition-colors duration-150 cursor-pointer">
                                                 <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor"
                                                     viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
                                                         d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                 </svg>
                                                 Delete
@@ -175,7 +176,8 @@
                             @if ($roles->onFirstPage())
                                 <span
                                     class="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 cursor-not-allowed rounded-md">
-                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M15 19l-7-7 7-7" />
                                     </svg>
@@ -184,7 +186,8 @@
                             @else
                                 <button wire:click="previousPage"
                                     class="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 cursor-pointer">
-                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M15 19l-7-7 7-7" />
                                     </svg>
@@ -241,7 +244,8 @@
                                 <button wire:click="nextPage"
                                     class="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 cursor-pointer">
                                     <span class="hidden sm:inline">Next</span>
-                                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M9 5l7 7-7 7" />
                                     </svg>
@@ -250,7 +254,8 @@
                                 <span
                                     class="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 cursor-not-allowed rounded-md">
                                     <span class="hidden sm:inline">Next</span>
-                                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M9 5l7 7-7 7" />
                                     </svg>
@@ -282,8 +287,7 @@
                         <div class="overflow-y-auto flex-1 p-6">
 
                             @if ($errors->any())
-                                <div
-                                    class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded-r-lg">
+                                <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded-r-lg">
                                     <ul class="list-disc list-inside">
                                         @foreach ($errors->all() as $error)
                                             <li>{{ $error }}</li>
@@ -304,7 +308,8 @@
                                 </div>
 
                                 <div>
-                                    <label for="display_name" class="block text-sm font-bold mb-2">Display Name</label>
+                                    <label for="display_name" class="block text-sm font-bold mb-2">Display
+                                        Name</label>
                                     <input type="text" id="display_name" wire:model="display_name"
                                         class="shadow-sm border @error('display_name') border-red-500 @else border-gray-300 @enderror rounded-lg w-full py-3 px-4 cursor-pointer"
                                         required>
@@ -407,10 +412,7 @@
                                                         'view_audit_reports',
                                                         'export_reports',
                                                     ],
-                                                    'Dashboard & Profile' => [
-                                                        'view_dashboard',
-                                                        'manage_profile',
-                                                    ],
+                                                    'Dashboard & Profile' => ['view_dashboard', 'manage_profile'],
                                                     'CoA Management' => [
                                                         'manage_coas',
                                                         'view_coas',
@@ -467,8 +469,10 @@
                             </button>
                             <button type="submit" wire:loading.attr="disabled" wire:target="save"
                                 class="px-6 py-2 rounded-lg text-white bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
-                                <span wire:loading.remove wire:target="save">{{ $isEditing ? 'Update Role' : 'Save Role' }}</span>
-                                <span wire:loading wire:target="save">{{ $isEditing ? 'Updating...' : 'Saving...' }}</span>
+                                <span wire:loading.remove
+                                    wire:target="save">{{ $isEditing ? 'Update Role' : 'Save Role' }}</span>
+                                <span wire:loading
+                                    wire:target="save">{{ $isEditing ? 'Updating...' : 'Saving...' }}</span>
                             </button>
                         </div>
                     </form>
