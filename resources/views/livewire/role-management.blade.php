@@ -390,9 +390,17 @@
                                                     'Sample Management' => [
                                                         'manage_samples',
                                                         'view_samples',
+                                                        'submit_samples',
                                                         'manage_sample_analysis',
                                                         'view_sample_analysis',
                                                         'edit_analysis',
+                                                    ],
+                                                    'Sample Workflow' => [
+                                                        'analyze_samples',
+                                                        'handover_samples',
+                                                        'takeover_samples',
+                                                        'review_samples',
+                                                        'approve_samples',
                                                     ],
                                                     'Instruments' => [
                                                         'manage_instruments',

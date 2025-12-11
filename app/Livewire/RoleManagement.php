@@ -77,9 +77,17 @@ class RoleManagement extends Component
         // Sample Management
         'manage_samples' => 'Manage Sample Submissions',
         'view_samples' => 'View Sample Submissions',
+        'submit_samples' => 'Submit Samples',
         'manage_sample_analysis' => 'Manage Sample Analysis',
         'view_sample_analysis' => 'View Sample Analysis',
         'edit_analysis' => 'Edit Analysis Results',
+
+        // Sample Workflow
+        'analyze_samples' => 'Analyze Samples',
+        'handover_samples' => 'Hand Over Samples',
+        'takeover_samples' => 'Take Over Samples',
+        'review_samples' => 'Review Sample Results',
+        'approve_samples' => 'Approve Samples',
 
         // Instrument Management
         'manage_instruments' => 'Manage Instruments',

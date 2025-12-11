@@ -181,120 +181,131 @@
                 </div>
 
                 <!-- Review & Approval Actions -->
-                <div class="p-3">
-                    <div class="px-2 py-1.5"
-                        x-show="['analysis_completed', 'review', 'reviewed', 'approved'].includes(sampleData.status)">
-                        <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Review & Approval</h4>
-                    </div>
-                    <div class="space-y-1">
-                        <button
-                            x-show="['analysis_completed', 'review', 'reviewed', 'approved'].includes(sampleData.status)"
-                            @click="
-                                callLivewireMethod('reviewResults', sampleData.sampleId);
-                                setTimeout(() => {
-                                    window.location.href = '/results-review/' + sampleData.sampleId;
-                                }, 100);
-                            "
-                            class="flex items-center w-full px-3 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 rounded-lg transition-colors duration-150 group cursor-pointer">
-                            <div
-                                class="flex-shrink-0 w-9 h-9 bg-purple-100 group-hover:bg-purple-200 rounded-lg flex items-center justify-center mr-3 transition-colors">
-                                <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                                </svg>
-                            </div>
-                            <div class="flex-1 text-left">
-                                <span class="font-medium block">Review Results</span>
-                                <span class="text-xs text-gray-500">Review analysis results and findings</span>
-                            </div>
-                        </button>
+                @if(auth()->user()->can('review_samples') || auth()->user()->can('approve_samples'))
+                    <div class="p-3">
+                        <div class="px-2 py-1.5"
+                            x-show="['analysis_completed', 'review', 'reviewed', 'approved'].includes(sampleData.status)">
+                            <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Review & Approval</h4>
+                        </div>
+                        <div class="space-y-1">
+                            @can('review_samples')
+                                <button
+                                    x-show="['analysis_completed', 'review', 'reviewed', 'approved'].includes(sampleData.status)"
+                                    @click="
+                                        callLivewireMethod('reviewResults', sampleData.sampleId);
+                                        setTimeout(() => {
+                                            window.location.href = '/results-review/' + sampleData.sampleId;
+                                        }, 100);
+                                    "
+                                    class="flex items-center w-full px-3 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 rounded-lg transition-colors duration-150 group cursor-pointer">
+                                    <div
+                                        class="flex-shrink-0 w-9 h-9 bg-purple-100 group-hover:bg-purple-200 rounded-lg flex items-center justify-center mr-3 transition-colors">
+                                        <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                        </svg>
+                                    </div>
+                                    <div class="flex-1 text-left">
+                                        <span class="font-medium block">Review Results</span>
+                                        <span class="text-xs text-gray-500">Review analysis results and findings</span>
+                                    </div>
+                                </button>
+                            @endcan
 
-                        <button x-show="sampleData.canApprove"
-                            @click="
-                                if (confirm('Are you sure you want to approve this sample? This action cannot be undone.')) {
-                                    callLivewireMethod('approveSample', sampleData.sampleId);
-                                }
-                            "
-                            class="flex items-center w-full px-3 py-2.5 text-sm text-green-700 hover:bg-green-50 hover:text-green-800 rounded-lg transition-colors duration-150 group cursor-pointer">
-                            <div
-                                class="flex-shrink-0 w-9 h-9 bg-green-100 group-hover:bg-green-200 rounded-lg flex items-center justify-center mr-3 transition-colors">
-                                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M5 13l4 4L19 7" />
-                                </svg>
-                            </div>
-                            <div class="flex-1 text-left">
-                                <span class="font-medium block">Approve Sample</span>
-                                <span class="text-xs text-gray-500">Final approval and sign-off</span>
-                            </div>
-                        </button>
-
+                            @can('approve_samples')
+                                <button x-show="sampleData.canApprove"
+                                    @click="
+                                        if (confirm('Are you sure you want to approve this sample? This action cannot be undone.')) {
+                                            callLivewireMethod('approveSample', sampleData.sampleId);
+                                        }
+                                    "
+                                    class="flex items-center w-full px-3 py-2.5 text-sm text-green-700 hover:bg-green-50 hover:text-green-800 rounded-lg transition-colors duration-150 group cursor-pointer">
+                                    <div
+                                        class="flex-shrink-0 w-9 h-9 bg-green-100 group-hover:bg-green-200 rounded-lg flex items-center justify-center mr-3 transition-colors">
+                                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </div>
+                                    <div class="flex-1 text-left">
+                                        <span class="font-medium block">Approve Sample</span>
+                                        <span class="text-xs text-gray-500">Final approval and sign-off</span>
+                                    </div>
+                                </button>
+                            @endcan
+                        </div>
                     </div>
-                </div>
+                @endif
 
                 <!-- Divider -->
-                <div class="border-t border-gray-100"></div>
+                @if(auth()->user()->can('review_samples') || auth()->user()->can('approve_samples'))
+                    <div class="border-t border-gray-100"></div>
+                @endif
 
                 <!-- CoA Actions -->
-                <div class="p-3"
-                    x-show="['approved', 'completed'].includes(sampleData.status) && sampleData.canCreateCoA">
-                    <div class="px-2 py-1.5">
-                        <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Certificate of
-                            Analysis</h4>
+                @can('create_coa')
+                    <div class="p-3"
+                        x-show="['approved', 'completed'].includes(sampleData.status) && sampleData.canCreateCoA">
+                        <div class="px-2 py-1.5">
+                            <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Certificate of
+                                Analysis</h4>
+                        </div>
+                        <div class="space-y-1">
+                            <button @click="callLivewireMethod('openCoAForm', sampleData.sampleId)"
+                                class="flex items-center w-full px-3 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700 rounded-lg transition-colors duration-150 group cursor-pointer">
+                                <div
+                                    class="flex-shrink-0 w-9 h-9 bg-orange-100 group-hover:bg-orange-200 rounded-lg flex items-center justify-center mr-3 transition-colors">
+                                    <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                </div>
+                                <div class="flex-1 text-left">
+                                    <span class="font-medium block">Create CoA</span>
+                                    <span class="text-xs text-gray-500">Generate Certificate of Analysis</span>
+                                </div>
+                            </button>
+                        </div>
                     </div>
-                    <div class="space-y-1">
-                        <button @click="callLivewireMethod('openCoAForm', sampleData.sampleId)"
-                            class="flex items-center w-full px-3 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700 rounded-lg transition-colors duration-150 group cursor-pointer">
-                            <div
-                                class="flex-shrink-0 w-9 h-9 bg-orange-100 group-hover:bg-orange-200 rounded-lg flex items-center justify-center mr-3 transition-colors">
-                                <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                            </div>
-                            <div class="flex-1 text-left">
-                                <span class="font-medium block">Create CoA</span>
-                                <span class="text-xs text-gray-500">Generate Certificate of Analysis</span>
-                            </div>
-                        </button>
-                    </div>
-                </div>
 
-                <!-- Divider -->
-                <div class="border-t border-gray-100"
-                    x-show="['approved', 'completed'].includes(sampleData.status) && sampleData.canCreateCoA"></div>
+                    <!-- Divider -->
+                    <div class="border-t border-gray-100"
+                        x-show="['approved', 'completed'].includes(sampleData.status) && sampleData.canCreateCoA"></div>
+                @endcan
 
                 <!-- Delete Actions -->
-                <div class="p-3">
-                    <div class="px-2 py-1.5">
-                        <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Danger Zone</h4>
+                @can('manage_samples')
+                    <div class="p-3">
+                        <div class="px-2 py-1.5">
+                            <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Danger Zone</h4>
+                        </div>
+                        <div class="space-y-1">
+                            <button
+                                @click="
+                            if (confirm('Are you sure you want to delete this sample? This action cannot be undone.')) {
+                                callLivewireMethod('deleteSample', sampleData.sampleId);
+                            }
+                        "
+                                class="flex items-center w-full px-3 py-2.5 text-sm text-red-700 hover:bg-red-50 hover:text-red-800 rounded-lg transition-colors duration-150 group cursor-pointer">
+                                <div
+                                    class="flex-shrink-0 w-9 h-9 bg-red-100 group-hover:bg-red-200 rounded-lg flex items-center justify-center mr-3 transition-colors">
+                                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </div>
+                                <div class="flex-1 text-left">
+                                    <span class="font-medium block">Delete Sample</span>
+                                    <span class="text-xs text-gray-500">Permanently remove this sample</span>
+                                </div>
+                            </button>
+                        </div>
                     </div>
-                    <div class="space-y-1">
-                        <button
-                            @click="
-                        if (confirm('Are you sure you want to delete this sample? This action cannot be undone.')) {
-                            callLivewireMethod('deleteSample', sampleData.sampleId);
-                        }
-                    "
-                            class="flex items-center w-full px-3 py-2.5 text-sm text-red-700 hover:bg-red-50 hover:text-red-800 rounded-lg transition-colors duration-150 group cursor-pointer">
-                            <div
-                                class="flex-shrink-0 w-9 h-9 bg-red-100 group-hover:bg-red-200 rounded-lg flex items-center justify-center mr-3 transition-colors">
-                                <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                            </div>
-                            <div class="flex-1 text-left">
-                                <span class="font-medium block">Delete Sample</span>
-                                <span class="text-xs text-gray-500">Permanently remove this sample</span>
-                            </div>
-                        </button>
-                    </div>
-                </div>
+                @endcan
             </div>
         </div>
     </div>

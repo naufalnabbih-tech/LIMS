@@ -129,6 +129,86 @@ class RoleSeeder extends Seeder
                 ],
                 'is_active' => true,
             ],
+            [
+                'name' => 'operator',
+                'display_name' => 'Laboratory Operator',
+                'description' => 'Laboratory operator who performs sample analysis',
+                'permissions' => [
+                    // View access
+                    'view_raw_materials',
+                    'view_solders',
+                    'view_chemicals',
+                    'view_samples',
+                    'view_sample_analysis',
+                    'view_dashboard',
+                    'view_coas',
+
+                    // Analysis workflow
+                    'analyze_samples',
+                    'handover_samples',
+                    'takeover_samples',
+                    'submit_samples',
+
+                    // Instruments
+                    'view_instruments',
+                    'view_instrument_conditions',
+                    'view_thermohygrometers',
+                    'view_thermohygrometer_conditions',
+
+                    // Profile
+                    'manage_profile',
+                ],
+                'is_active' => true,
+            ],
+            [
+                'name' => 'reviewer',
+                'display_name' => 'Sample Reviewer',
+                'description' => 'Can review sample analysis results',
+                'permissions' => [
+                    // View access
+                    'view_samples',
+                    'view_sample_analysis',
+                    'view_raw_materials',
+                    'view_solders',
+                    'view_chemicals',
+                    'view_dashboard',
+                    'view_reports',
+                    'view_coas',
+
+                    // Review permission
+                    'review_samples',
+
+                    // Profile
+                    'manage_profile',
+                ],
+                'is_active' => true,
+            ],
+            [
+                'name' => 'approver',
+                'display_name' => 'Sample Approver',
+                'description' => 'Can approve reviewed samples and create CoA',
+                'permissions' => [
+                    // View access
+                    'view_samples',
+                    'view_sample_analysis',
+                    'view_raw_materials',
+                    'view_solders',
+                    'view_chemicals',
+                    'view_dashboard',
+                    'view_reports',
+                    'view_coas',
+
+                    // Approval & CoA permissions
+                    'approve_samples',
+                    'create_coa',
+                    'edit_coa',
+                    'manage_coas',
+
+                    // Profile
+                    'manage_profile',
+                ],
+                'is_active' => true,
+            ],
         ];
 
         foreach ($roles as $role) {
