@@ -22,6 +22,7 @@ class SampleChemicalSubmission extends Component
     public $sortBy = 'created_at';
     public $sortDirection = 'desc';
     public $searchBatchLot = '';
+    public $canCreateSubmission = false;
 
     // CoA Form Properties
     public $showCoAModal = false;
@@ -45,6 +46,12 @@ class SampleChemicalSubmission extends Component
         'takeOverSubmitted' => '$refresh',
         'openCoAForm' => 'openCoAForm'
     ];
+
+    public function mount()
+    {
+        // Check if user has permission to create chemical submission
+        $this->canCreateSubmission = auth()->user()->hasPermission('create_chemical_submission');
+    }
 
     public function updatingSearchBatchLot()
     {

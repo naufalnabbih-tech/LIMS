@@ -1,6 +1,21 @@
-<div>
+<div id="sample-actions-dropdown-component" wire:ignore>
     <!-- Sample Action Dropdown -->
-    <div x-data="sampleDropdown()" x-init="initGlobalDropdown()" @click.away="handleClickAway()"
+    <script>
+        console.log('🔴 [Livewire] sample-actions-dropdown.blade.php rendered at:', new Date().toISOString());
+    </script>
+    <div x-data="sampleDropdown()" x-init="initGlobalDropdown();
+        // Debug: Count how many dropdown instances exist
+        setTimeout(() => {
+            const dropdownCount = document.querySelectorAll('#sample-actions-dropdown-component').length;
+            const alpineInstances = document.querySelectorAll('[x-data*=sampleDropdown]').length;
+            console.log('📊 [DOM Check] Dropdown components in DOM:', dropdownCount);
+            console.log('📊 [DOM Check] Alpine instances:', alpineInstances);
+            if (dropdownCount > 1 || alpineInstances > 1) {
+                console.error('⛔ [DOM ERROR] Multiple dropdown components detected!');
+                console.log('Components:', document.querySelectorAll('#sample-actions-dropdown-component'));
+            }
+        }, 500);
+    " @click.away="handleClickAway()"
         @keydown.escape.window="closeDropdown()">
 
         <!-- Dropdown Content -->
@@ -10,10 +25,11 @@
             x-transition:leave-end="opacity-0 scale-95"
             class="fixed z-[9999] w-80 rounded-xl bg-white shadow-2xl ring-1 ring-black/5 focus:outline-none border border-gray-200"
             :style="{
-                top: (sampleData.position?.top || 200) + 'px',
-                left: (sampleData.position?.left || 300) + 'px',
+                top: (sampleData.position?.top || -9999) + 'px',
+                left: (sampleData.position?.left || -9999) + 'px',
                 maxHeight: '85vh',
-                overflowY: 'auto'
+                overflowY: 'auto',
+                visibility: (sampleData.position?.left > 0) ? 'visible' : 'hidden'
             }"
             x-cloak>
 
@@ -277,7 +293,7 @@
                 @endcan
 
                 <!-- Delete Actions -->
-                @can('manage_samples')
+                @can('delete_sample')
                     <div class="p-3">
                         <div class="px-2 py-1.5">
                             <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Danger Zone</h4>
@@ -313,7 +329,12 @@
     <!-- Alpine.js Dropdown Logic -->
     <script>
         function sampleDropdown() {
+            // Generate unique instance ID untuk tracking
+            const instanceId = 'dropdown_' + Math.random().toString(36).substr(2, 9);
+            console.log('🔵 [Alpine] sampleDropdown() initialized with ID:', instanceId);
+
             return {
+                instanceId: instanceId,
                 isOpen: false,
                 sampleData: {},
                 justOpened: false,
@@ -327,9 +348,24 @@
                 },
 
                 openDropdown(sampleId, data) {
+                    console.log('🟢 [Open] Instance:', this.instanceId, 'Opening dropdown for sample:', sampleId);
+
+                    // Jika dropdown sudah terbuka untuk sample yang sama, tutup
+                    if (this.isOpen && this.sampleData.sampleId === sampleId) {
+                        console.log('⚠️ [Toggle] Instance:', this.instanceId, 'Closing because same sample');
+                        this.closeDropdown();
+                        return;
+                    }
+
                     this.sampleData = this.createSampleData(sampleId, data);
-                    if (data.buttonRect) this.calculatePosition(data.buttonRect);
                     this.showDropdown();
+
+                    // Hitung posisi setelah dropdown muncul (agar bisa baca tinggi actual)
+                    this.$nextTick(() => {
+                        if (data.buttonRect) {
+                            this.calculatePosition(data.buttonRect);
+                        }
+                    });
                 },
 
                 closeDropdown() {
@@ -357,52 +393,129 @@
                         ...data,
                         ...statusPermissions,
                         position: {
-                            left: 300,
-                            top: 200
+                            left: -9999,  // Off-screen until calculated
+                            top: -9999
                         }
                     };
                 },
 
                 calculatePosition(buttonRect) {
-                    const {
-                        dropdownWidth,
-                        dropdownHeight,
-                        margin,
-                        viewportMargin
-                    } = this.config;
+                    // Ambil tinggi dropdown yang sebenarnya (dinamis berdasarkan konten)
+                    const dropdownElement = document.querySelector('[x-show="isOpen"]');
+                    const actualDropdownHeight = dropdownElement ?
+                        Math.min(dropdownElement.scrollHeight + 20, 600) : // +20 untuk padding
+                        300; // fallback minimal
+
+                    const dropdownWidth = this.config.dropdownWidth;
+                    const margin = this.config.margin;
+                    const viewportMargin = this.config.viewportMargin;
+
                     const viewport = {
                         width: window.innerWidth,
-                        height: window.innerHeight
+                        height: window.innerHeight,
+                        scrollY: window.scrollY || window.pageYOffset,
+                        // Total document height
+                        documentHeight: Math.max(
+                            document.body.scrollHeight,
+                            document.body.offsetHeight,
+                            document.documentElement.clientHeight,
+                            document.documentElement.scrollHeight,
+                            document.documentElement.offsetHeight
+                        )
                     };
 
-                    const space = {
-                        left: buttonRect.left,
-                        right: viewport.width - buttonRect.right,
-                        above: buttonRect.top,
-                        below: viewport.height - buttonRect.bottom
-                    };
+                    console.log('📐 [Position] Viewport:', viewport);
+                    console.log('📐 [Position] Button rect:', buttonRect);
+                    console.log('📐 [Position] Dropdown height:', actualDropdownHeight);
 
-                    const left = space.left >= dropdownWidth ?
-                        buttonRect.left - dropdownWidth - margin :
-                        space.right >= dropdownWidth ?
-                        buttonRect.right + margin :
-                        (viewport.width - dropdownWidth) / 2;
+                    // === HORIZONTAL POSITIONING (Scenario 3) ===
+                    // Prioritas: Kanan button > Kiri button > Center
+                    let left;
+                    const spaceRight = viewport.width - buttonRect.right;
+                    const spaceLeft = buttonRect.left;
 
-                    const top = space.below >= dropdownHeight ?
-                        buttonRect.bottom + margin :
-                        space.above >= dropdownHeight ?
-                        buttonRect.top - dropdownHeight - margin :
-                        (viewport.height - dropdownHeight) / 2;
+                    if (spaceRight >= dropdownWidth + margin) {
+                        // Tampilkan di KANAN button
+                        left = buttonRect.right + margin;
+                    } else if (spaceLeft >= dropdownWidth + margin) {
+                        // Tampilkan di KIRI button
+                        left = buttonRect.left - dropdownWidth - margin;
+                    } else {
+                        // Fallback: align kanan dari button tapi pastikan tidak overflow
+                        left = Math.max(viewportMargin, Math.min(
+                            buttonRect.right - dropdownWidth,
+                            viewport.width - dropdownWidth - viewportMargin
+                        ));
+                    }
+
+                    // === VERTICAL POSITIONING (FIXED for scroll issue) ===
+                    // Calculate button position in document (bukan viewport)
+                    const buttonTopInDocument = buttonRect.top + viewport.scrollY;
+                    const buttonBottomInDocument = buttonRect.bottom + viewport.scrollY;
+
+                    // Calculate available space in VIEWPORT (visible area)
+                    const buttonTopInViewport = buttonRect.top;
+                    const buttonBottomInViewport = buttonRect.bottom;
+                    const visibleSpaceBelow = viewport.height - buttonBottomInViewport;
+                    const visibleSpaceAbove = buttonTopInViewport;
+
+                    console.log('📐 [Position] Space below in viewport:', visibleSpaceBelow);
+                    console.log('📐 [Position] Space above in viewport:', visibleSpaceAbove);
+
+                    let top;
+
+                    // Prioritas: Bawah button > Atas button > Fit in viewport
+                    if (visibleSpaceBelow >= actualDropdownHeight + margin) {
+                        // Cukup ruang di bawah button di viewport
+                        top = buttonBottomInDocument + margin;
+                        console.log('📐 [Position] Placing BELOW button');
+                    } else if (visibleSpaceAbove >= actualDropdownHeight + margin) {
+                        // Cukup ruang di atas button di viewport
+                        top = buttonTopInDocument - actualDropdownHeight - margin;
+                        console.log('📐 [Position] Placing ABOVE button');
+                    } else {
+                        // Tidak cukup ruang di atas atau bawah
+                        // Letakkan di tempat yang paling memaksimalkan visibility
+                        // Align dengan top of viewport (dengan margin)
+                        top = viewport.scrollY + viewportMargin;
+
+                        // Tapi pastikan tidak melewati bottom of viewport
+                        const maxTop = viewport.scrollY + viewport.height - actualDropdownHeight - viewportMargin;
+                        top = Math.min(top, maxTop);
+
+                        console.log('📐 [Position] FALLBACK - aligning with viewport top');
+                    }
+
+                    // Ensure dropdown tidak keluar dari document bounds
+                    const minTop = viewport.scrollY + viewportMargin;
+                    const maxTop = viewport.scrollY + viewport.height - actualDropdownHeight - viewportMargin;
+                    top = Math.max(minTop, Math.min(top, maxTop));
+
+                    console.log('📐 [Position] Final top:', top);
 
                     this.sampleData.position = {
                         left: Math.max(viewportMargin, Math.min(left, viewport.width - dropdownWidth - viewportMargin)),
-                        top: Math.max(viewportMargin, Math.min(top, viewport.height - dropdownHeight - viewportMargin))
+                        top: top
                     };
+
+                    // Force Alpine to update the DOM
+                    this.$nextTick(() => {
+                        console.log('✅ [Position] Dropdown positioned at:', this.sampleData.position);
+                    });
                 },
 
                 showDropdown() {
+                    console.log('👁️ [Show] Instance:', this.instanceId, 'Setting isOpen to true');
                     this.justOpened = true;
                     this.isOpen = true;
+
+                    // Debug: Check sections in DOM after showing
+                    this.$nextTick(() => {
+                        const sections = document.querySelectorAll('.text-xs.font-semibold.text-gray-400.uppercase');
+                        console.log('📋 [Sections] Found', sections.length, 'section headers:',
+                            Array.from(sections).map(s => s.textContent.trim()));
+                    });
+
                     setTimeout(() => this.justOpened = false, 100);
                 },
 
@@ -460,12 +573,21 @@
                 },
 
                 initGlobalDropdown() {
+                    console.log('🟡 [Init] Instance:', this.instanceId, 'Registering to window.globalDropdown');
+
+                    // Check if globalDropdown already exists
+                    if (window.globalDropdown && window.globalDropdown.instanceId) {
+                        console.error('⛔ [ERROR] DUPLICATE DETECTED! Previous instance:', window.globalDropdown.instanceId, 'New instance:', this.instanceId);
+                        console.trace('Stack trace for duplicate initialization:');
+                    }
+
                     // Override the placeholder with actual implementation
                     window.globalDropdown = {
+                        instanceId: this.instanceId,
                         open: (sampleId, data) => this.openDropdown(sampleId, data),
                         close: () => this.closeDropdown()
                     };
-                    console.log('Global dropdown implementation loaded');
+                    console.log('✅ [Init] Global dropdown registered with instance:', this.instanceId);
                 }
             };
         }

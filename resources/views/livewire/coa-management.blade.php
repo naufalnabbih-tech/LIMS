@@ -265,14 +265,6 @@
                                     <span class="text-red-600 text-sm">{{ $message }}</span>
                                 @enderror
                             </div>
-
-                            <!-- Notes -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                                <textarea wire:model="notes" rows="4"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder="Additional notes..."></textarea>
-                            </div>
                         </div>
 
                         <!-- Modal Footer -->
@@ -361,14 +353,6 @@
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Position</label>
                                     <p class="text-gray-900">{{ $approverRole ?: 'Authorized Signatory' }}</p>
-                                </div>
-                            @endif
-
-                            <!-- Notes -->
-                            @if ($notes)
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                                    <p class="text-gray-900 whitespace-pre-wrap">{{ $notes }}</p>
                                 </div>
                             @endif
 

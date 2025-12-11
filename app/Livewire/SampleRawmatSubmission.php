@@ -17,6 +17,8 @@ class SampleRawmatSubmission extends Component
 {
     use WithPagination;
 
+    public $canCreateSubmission = false;
+
     protected $listeners = [
         'sampleUpdated' => '$refresh',
         'sampleCreated' => '$refresh',
@@ -25,6 +27,12 @@ class SampleRawmatSubmission extends Component
         'handOverSubmitted' => '$refresh',
         'takeOverSubmitted' => '$refresh'
     ];
+
+    public function mount()
+    {
+        // Check if user has permission to create rawmat submission
+        $this->canCreateSubmission = auth()->user()->hasPermission('create_rawmat_submission');
+    }
 
     // Action Methods - now dispatch events to child components
     public function viewDetails($sampleId)

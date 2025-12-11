@@ -23,6 +23,7 @@ class SampleSolderSubmission extends Component
     public $sortBy = 'created_at';
     public $sortDirection = 'desc';
     public $searchBatchLot = '';
+    public $canCreateSubmission = false;
 
     // CoA Form Properties
     public $showCoAModal = false;
@@ -46,6 +47,12 @@ class SampleSolderSubmission extends Component
         'takeOverSubmitted' => '$refresh',
         'openCoAForm' => 'openCoAForm'
     ];
+
+    public function mount()
+    {
+        // Check if user has permission to create solder submission
+        $this->canCreateSubmission = auth()->user()->hasPermission('create_solder_submission');
+    }
 
     public function updatingSearchBatchLot()
     {

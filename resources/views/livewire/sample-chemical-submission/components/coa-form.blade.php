@@ -1,12 +1,12 @@
 <!-- Create CoA Modal -->
 @if ($showCoAModal)
-    <div class="fixed inset-0 bg-gray-900/75 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-2/3 lg:w-1/2 shadow-lg rounded-md bg-white">
-            <!-- Modal Header -->
-            <div class="flex justify-between items-center pb-3 mb-4 border-b border-gray-200">
+    <div class="fixed inset-0 bg-gray-900/75 z-50 flex items-center justify-center">
+        <div class="relative mx-auto border w-11/12 md:w-2/3 lg:w-1/2 shadow-lg rounded-md bg-white max-h-[90vh] flex flex-col">
+            <!-- Modal Header (Fixed) -->
+            <div class="flex justify-between items-center p-5 pb-3 border-b border-gray-200">
                 <h3 class="text-lg font-medium text-gray-900">Create Certificate of Analysis</h3>
                 <button type="button" wire:click="closeCoAModal"
-                    class="text-gray-400 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5">
+                    class="text-gray-400 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                         stroke="currentColor" class="w-6 h-6">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
@@ -14,8 +14,8 @@
                 </button>
             </div>
 
-            <!-- Modal Body -->
-            <div class="space-y-4">
+            <!-- Modal Body (Scrollable) -->
+            <div class="overflow-y-auto p-5 space-y-4">
                 <!-- Sample Info (Read-only) -->
                 <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
                     <p class="text-sm font-medium text-gray-700 mb-2">Sample Information</p>
@@ -135,24 +135,16 @@
                         </div>
                     </div>
                 @endif
-
-                <!-- Notes -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                    <textarea wire:model="coaNotes" rows="3"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Additional notes..."></textarea>
-                </div>
             </div>
 
-            <!-- Modal Footer -->
-            <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
+            <!-- Modal Footer (Fixed) -->
+            <div class="flex justify-end gap-3 p-5 pt-4 border-t border-gray-200">
                 <button type="button" wire:click="closeCoAModal"
-                    class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                    class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
                     Cancel
                 </button>
                 <button type="button" wire:click="createCoA"
-                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer">
                     Create CoA
                 </button>
             </div>

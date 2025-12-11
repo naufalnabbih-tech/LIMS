@@ -391,6 +391,9 @@
                                                         'manage_samples',
                                                         'view_samples',
                                                         'submit_samples',
+                                                        'create_chemical_submission',
+                                                        'create_rawmat_submission',
+                                                        'create_solder_submission',
                                                         'manage_sample_analysis',
                                                         'view_sample_analysis',
                                                         'edit_analysis',
@@ -401,6 +404,7 @@
                                                         'takeover_samples',
                                                         'review_samples',
                                                         'approve_samples',
+                                                        'delete_sample',
                                                     ],
                                                     'Instruments' => [
                                                         'manage_instruments',

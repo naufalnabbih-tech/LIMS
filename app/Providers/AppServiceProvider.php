@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Gate;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -20,6 +21,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Register dynamic Gates for all permissions
+        Gate::before(function ($user, $ability) {
+            // If the ability check matches our permission system, use hasPermission
+            if ($user->hasPermission($ability)) {
+                return true;
+            }
+            // Return null to continue checking other gates
+            return null;
+        });
+
         // Register @permission blade directive
         Blade::if('permission', function ($permission) {
             return auth()->check() && auth()->user()->hasPermission($permission);

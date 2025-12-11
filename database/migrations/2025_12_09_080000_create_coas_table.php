@@ -34,9 +34,7 @@ return new class extends Migration {
             $table->dateTime('approved_at')->nullable();
 
             // File & Data
-            $table->string('file_path')->nullable();
             $table->longText('data')->nullable(); // JSON data for CoA content
-            $table->text('notes')->nullable();
 
             $table->timestamps();
 

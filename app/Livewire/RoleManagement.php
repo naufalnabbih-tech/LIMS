@@ -78,6 +78,9 @@ class RoleManagement extends Component
         'manage_samples' => 'Manage Sample Submissions',
         'view_samples' => 'View Sample Submissions',
         'submit_samples' => 'Submit Samples',
+        'create_chemical_submission' => 'Create Chemical Submission',
+        'create_rawmat_submission' => 'Create Raw Material Submission',
+        'create_solder_submission' => 'Create Solder Submission',
         'manage_sample_analysis' => 'Manage Sample Analysis',
         'view_sample_analysis' => 'View Sample Analysis',
         'edit_analysis' => 'Edit Analysis Results',
@@ -88,6 +91,7 @@ class RoleManagement extends Component
         'takeover_samples' => 'Take Over Samples',
         'review_samples' => 'Review Sample Results',
         'approve_samples' => 'Approve Samples',
+        'delete_sample' => 'Delete Sample',
 
         // Instrument Management
         'manage_instruments' => 'Manage Instruments',
