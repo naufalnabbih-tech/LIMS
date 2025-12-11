@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Certificate of Analysis Template - PT TIMAH INDUSTRI</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    @php
+        use Illuminate\Support\Facades\Storage;
+    @endphp
     <style>
         /* Mengatur ukuran kertas secara eksplisit */
         @page {
@@ -148,7 +151,17 @@
             <!-- Signature Section -->
             <div class="flex justify-end mt-4 px-10 flex-grow">
                 <div class="text-center">
-                    <div class="h-36"></div>
+                    <!-- QR Code Signature -->
+                    @if ($approverQRSignature)
+                        <div class="mb-3 flex justify-center">
+                            <img src="{{ Storage::url($approverQRSignature) }}"
+                                alt="QR Signature"
+                                class="h-32 w-32 border border-gray-400 rounded p-1">
+                        </div>
+                    @else
+                        <div class="h-36"></div>
+                    @endif
+
                     @if ($approver)
                         <p class="font-bold border-b border-black inline-block mb-1">{{ $approver }}</p>
                         <p class="text-sm">{{ $approverRole ?: 'Authorized Signatory' }}</p>

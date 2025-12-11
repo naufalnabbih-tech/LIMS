@@ -188,6 +188,7 @@ Route::middleware(['auth'])->group(function () {
                 'tests' => $coa->data['tests'] ?? [],
                 'approver' => $coa->approver?->name ?? '',
                 'approverRole' => $coa->approver?->role?->display_name ?? '',
+                'approverQRSignature' => $coa->approver?->signature_qr_image ?? null,
             ]);
         })->name('coa-print');
         Route::get('/coa-document-formats', CoaDocumentFormatManagement::class)->name('coa-document-formats');
@@ -212,9 +213,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // User Profile Routes
-    Route::middleware('permission:manage_profile')->group(function () {
-        Route::get('/profile', function () {
-            return view('profile.index');
-        })->name('profile');
+    Route::middleware('auth')->group(function () {
+        Route::get('/profile', \App\Livewire\UserProfile::class)->name('profile');
     });
 });

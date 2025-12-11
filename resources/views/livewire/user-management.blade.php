@@ -238,7 +238,7 @@
     <!-- Add/Edit Modal -->
     @if($showModal)
         <div class="fixed inset-0 bg-gray-900/75 p-4 flex items-center justify-center z-50">
-            <div class="relative w-full max-w-md bg-white rounded-2xl shadow-2xl p-8">
+            <div class="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl p-8 max-h-[90vh] overflow-y-auto">
                 <div class="flex justify-between items-center pb-4 border-b">
                     <h3 class="text-2xl font-bold">{{ $isEditing ? 'Edit User' : 'Add New User' }}</h3>
                     <button wire:click="closeModal" class="p-2 rounded-full hover:bg-gray-100 cursor-pointer">
@@ -281,7 +281,7 @@
                         <div class="mb-5">
                             <label for="name" class="block text-sm font-bold mb-2">Name</label>
                             <input type="text" id="name" wire:model="name"
-                                class="shadow-sm border @error('name') border-red-500 @else border-gray-300 @enderror rounded-lg w-full py-3 px-4 cursor-pointer"
+                                class="shadow-sm border @error('name') border-red-500 @else border-gray-300 @enderror rounded-lg w-full py-3 px-4 cursor-text"
                                 required>
                             @error('name')
                                 <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
@@ -291,7 +291,7 @@
                         <div class="mb-5">
                             <label for="email" class="block text-sm font-bold mb-2">Email</label>
                             <input type="email" id="email" wire:model="email"
-                                class="shadow-sm border @error('email') border-red-500 @else border-gray-300 @enderror rounded-lg w-full py-3 px-4 cursor-pointer"
+                                class="shadow-sm border @error('email') border-red-500 @else border-gray-300 @enderror rounded-lg w-full py-3 px-4 cursor-text"
                                 required>
                             @error('email')
                                 <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
@@ -326,7 +326,7 @@
                                 Password {{ $isEditing ? '(leave blank to keep current)' : '' }}
                             </label>
                             <input type="password" id="password" wire:model="password"
-                                class="shadow-sm border @error('password') border-red-500 @else border-gray-300 @enderror rounded-lg w-full py-3 px-4 cursor-pointer"
+                                class="shadow-sm border @error('password') border-red-500 @else border-gray-300 @enderror rounded-lg w-full py-3 px-4 cursor-text"
                                 {{ !$isEditing ? 'required' : '' }}>
                             @error('password')
                                 <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
@@ -337,23 +337,92 @@
                         <div class="mb-5">
                             <label for="password_confirmation" class="block text-sm font-bold mb-2">Confirm Password</label>
                             <input type="password" id="password_confirmation" wire:model="password_confirmation"
-                                class="shadow-sm border @error('password_confirmation') border-red-500 @else border-gray-300 @enderror rounded-lg w-full py-3 px-4 cursor-pointer"
+                                class="shadow-sm border @error('password_confirmation') border-red-500 @else border-gray-300 @enderror rounded-lg w-full py-3 px-4 cursor-text"
                                 {{ !$isEditing ? 'required' : '' }}>
                             @error('password_confirmation')
                                 <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                             @enderror
                         </div>
                         @endif
+
+                        <!-- QR Signature Upload Section -->
+                        <div class="mb-5 border-t pt-5 mt-5">
+                            <h4 class="text-sm font-bold mb-3 text-gray-700">Digital Signature (QR Code) - {{ $isEditing ? 'Optional' : 'Optional' }}</h4>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <!-- Upload Area -->
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-2">Upload QR</label>
+                                    <div class="relative border-2 border-dashed border-blue-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-500 transition-colors min-h-[160px] flex items-center justify-center">
+                                        <input type="file" wire:model="new_signature_qr" accept="image/*"
+                                            class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+
+                                        <div class="flex flex-col items-center justify-center">
+                                            <svg class="w-6 h-6 text-blue-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                            </svg>
+                                            <p class="text-sm text-gray-700 font-medium">Click to upload</p>
+                                            <p class="text-xs text-gray-500">Max 2MB</p>
+                                        </div>
+                                    </div>
+                                    @error('new_signature_qr') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                                </div>
+
+                                <!-- Current Signature Display (Edit Only) -->
+                                @if($isEditing)
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-2">Current QR</label>
+                                    @if($current_user_qr)
+                                        <div class="bg-gray-50 rounded-lg p-4 text-center border border-gray-300 min-h-[160px] flex items-center justify-center">
+                                            <div>
+                                                <img src="{{ $current_user_qr }}"
+                                                    alt="QR Signature"
+                                                    class="h-32 w-32 mx-auto rounded mb-2 border-2 border-gray-300">
+                                                <button type="button" wire:click="deleteQRSignature"
+                                                    class="text-xs text-red-600 hover:text-red-700 font-medium w-full cursor-pointer">
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <div class="bg-gray-50 rounded-lg p-4 text-center border-2 border-dashed border-gray-300 min-h-[160px] flex items-center justify-center">
+                                            <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
+                                            <p class="text-xs text-gray-500">No QR uploaded</p>
+                                        </div>
+                                    @endif
+                                </div>
+                                @else
+                                <!-- For Create New User - Show Preview -->
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-2">Preview</label>
+                                    @if($new_signature_qr)
+                                        <div class="bg-gray-50 rounded-lg p-4 text-center border border-gray-300 min-h-[160px] flex items-center justify-center">
+                                            <img src="{{ $new_signature_qr->temporaryUrl() }}"
+                                                alt="Preview"
+                                                class="h-32 w-32 rounded border-2 border-blue-300">
+                                        </div>
+                                    @else
+                                        <div class="bg-gray-50 rounded-lg p-4 text-center border-2 border-dashed border-gray-300 min-h-[160px] flex items-center justify-center">
+                                            <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
+                                        </div>
+                                    @endif
+                                </div>
+                                @endif
+                            </div>
+
+                            <!-- Removed duplicate preview section -->
+
+                            <p class="text-xs text-gray-500 mt-2">ℹ️ QR signature akan ditampilkan di CoA document saat di-print</p>
                         </div>
 
                         <div class="flex justify-end pt-5 border-t mt-6">
                             <button type="button" wire:click="closeModal"
                                 class="px-6 py-2 rounded-lg text-gray-700 bg-gray-100 hover:bg-gray-200 mr-3 cursor-pointer">
                                 Cancel
-                            </button>
-                            <button type="button" wire:click="testSave"
-                                class="px-6 py-2 rounded-lg text-yellow-700 bg-yellow-100 hover:bg-yellow-200 mr-3 cursor-pointer">
-                                Test
                             </button>
                             <button type="button" wire:click="save" wire:loading.attr="disabled" wire:target="save"
                                 class="px-6 py-2 rounded-lg text-white bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">

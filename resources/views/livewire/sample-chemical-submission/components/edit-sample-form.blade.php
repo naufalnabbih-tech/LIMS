@@ -2,7 +2,7 @@
     use Illuminate\Support\Facades\Storage;
 @endphp
 
-<div>
+<div x-data="{ showConfirmation: false }">
     @if ($show && $sample)
         <div class="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-50" x-data="{ show: true }"
             x-show="show" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0"
@@ -239,7 +239,7 @@
                                     </svg>
                                     <span>Cancel</span>
                                 </button>
-                                <button type="submit" wire:loading.attr="disabled"
+                                <button type="button" @click="showConfirmation = true" wire:loading.attr="disabled"
                                     class="px-8 py-3 bg-gradient-to-r from-amber-600 to-amber-700 text-white text-sm font-medium rounded-xl hover:from-amber-700 hover:to-amber-800 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-all duration-200 flex items-center space-x-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                         wire:loading.remove>
@@ -260,8 +260,94 @@
                 </div>
             </div>
             {{-- Modal confirmation --}}
-            
+
+            <!-- Confirmation Modal -->
+            <div x-show="showConfirmation" x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0" class="fixed inset-0 z-[9999] overflow-y-auto"
+                style="display: none;">
+
+                <!-- Background overlay -->
+                <div class="fixed inset-0 transition-opacity" @click="showConfirmation = false" aria-hidden="true">
+                    <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+                </div>
+
+                <!-- Modal container - centered -->
+                <div class="flex items-center justify-center min-h-screen p-4">
+                    <!-- Modal panel -->
+                    <div
+                        class="relative bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all max-w-lg w-full mx-auto">
+                        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                            <div class="sm:flex sm:items-start">
+                                <div
+                                    class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 sm:mx-0 sm:h-10 sm:w-10">
+                                    <svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24"
+                                        stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                </div>
+                                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                                    <h3 class="text-lg leading-6 font-medium text-gray-900">
+                                        Konfirmasi Update Sample
+                                    </h3>
+                                    <div class="mt-2">
+                                        <p class="text-sm text-gray-500 mb-3">
+                                            Apakah Anda yakin ingin memperbarui informasi sample ini? Perubahan akan
+                                            tersimpan dan tidak dapat diubah untuk sample yang sudah disetujui.
+                                        </p>
+
+                                        <!-- Sample Details -->
+                                        <div class="bg-gray-50 rounded-lg p-3 text-sm">
+                                            <div class="space-y-2">
+
+                                                <div class="flex justify-between">
+                                                    <span class="text-gray-600 font-medium">Material Category:</span>
+                                                    <span
+                                                        class="text-gray-900">{{ $sample->category?->name ?? 'N/A' }}</span>
+                                                </div>
+                                                <div class="flex justify-between">
+                                                    <span class="text-gray-600 font-medium">Material:</span>
+                                                    <span
+                                                        class="text-gray-900">{{ $sample->material?->name ?? 'N/A' }}</span>
+                                                </div>
+
+                                                <div class="flex justify-between">
+                                                    <span class="text-gray-600 font-medium">Testing Reference:</span>
+                                                    <span
+                                                        class="text-gray-900">{{ $sample->reference?->name ?? 'N/A' }}</span>
+                                                </div>
+
+                                                <div class="flex justify-between">
+                                                    <span class="text-gray-600 font-medium">Batch/Lot:</span>
+                                                    <span
+                                                        class="text-gray-900">{{ $sample->batch_lot ?? 'N/A' }}</span>
+                                                </div>
+
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                            <button wire:click="updateSample" @click="showConfirmation = false"
+                                wire:loading.attr="disabled"
+                                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-gradient-to-r from-amber-600 to-amber-700 text-base font-medium text-white hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 sm:ml-3 sm:w-auto sm:text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                                <span wire:loading.remove>Update Sample</span>
+                                <span wire:loading>Updating...</span>
+                            </button>
+                            <button @click="showConfirmation = false"
+                                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm cursor-pointer">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     @endif
 </div>
-

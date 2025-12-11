@@ -99,44 +99,62 @@
                                     {{ $coa->approver?->name ?? '-' }}
                                 </td>
                                 <td class="px-6 py-4 text-sm space-x-2">
-                                    <button wire:click="viewCoA({{ $coa->id }})" wire:loading.attr="disabled"
-                                        class="px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors disabled:opacity-50">
-                                        View
+                                    <button wire:click="viewCoA({{ $coa->id }})"
+                                        wire:loading.attr="disabled"
+                                        wire:target="viewCoA({{ $coa->id }})"
+                                        class="px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors disabled:opacity-50 cursor-pointer">
+                                        <span wire:loading.remove wire:target="viewCoA({{ $coa->id }})">View</span>
+                                        <span wire:loading wire:target="viewCoA({{ $coa->id }})">Loading...</span>
                                     </button>
 
                                     @if ($coa->isDraft() || $coa->isPending())
                                         <button wire:click="editCoA({{ $coa->id }})"
-                                            class="px-3 py-1 bg-amber-100 text-amber-700 rounded hover:bg-amber-200 transition-colors">
-                                            Edit
+                                            wire:loading.attr="disabled"
+                                            wire:target="editCoA({{ $coa->id }})"
+                                            class="px-3 py-1 bg-amber-100 text-amber-700 rounded hover:bg-amber-200 transition-colors disabled:opacity-50 cursor-pointer">
+                                            <span wire:loading.remove wire:target="editCoA({{ $coa->id }})">Edit</span>
+                                            <span wire:loading wire:target="editCoA({{ $coa->id }})">Loading...</span>
                                         </button>
                                     @endif
 
                                     @if ($coa->isDraft())
                                         <button wire:click="submitForReview({{ $coa->id }})"
-                                            class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 transition-colors">
-                                            Submit
+                                            wire:loading.attr="disabled"
+                                            wire:target="submitForReview({{ $coa->id }})"
+                                            class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 transition-colors disabled:opacity-50 cursor-pointer">
+                                            <span wire:loading.remove wire:target="submitForReview({{ $coa->id }})">Submit</span>
+                                            <span wire:loading wire:target="submitForReview({{ $coa->id }})">Submitting...</span>
                                         </button>
                                     @endif
 
                                     @if (auth()->user()?->hasPermission('approve_coa') && $coa->isPending())
                                         <button wire:click="approveCoA({{ $coa->id }})"
-                                            class="px-3 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors">
-                                            Approve
+                                            wire:loading.attr="disabled"
+                                            wire:target="approveCoA({{ $coa->id }})"
+                                            class="px-3 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors disabled:opacity-50 cursor-pointer">
+                                            <span wire:loading.remove wire:target="approveCoA({{ $coa->id }})">Approve</span>
+                                            <span wire:loading wire:target="approveCoA({{ $coa->id }})">Approving...</span>
                                         </button>
                                     @endif
 
                                     @if (auth()->user()?->hasPermission('approve_coa') && ($coa->isApproved() || $coa->isPrinted()))
                                         <button wire:click="printCoA({{ $coa->id }})"
-                                            class="px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors">
-                                            Print
+                                            wire:loading.attr="disabled"
+                                            wire:target="printCoA({{ $coa->id }})"
+                                            class="px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors disabled:opacity-50 cursor-pointer">
+                                            <span wire:loading.remove wire:target="printCoA({{ $coa->id }})">Print</span>
+                                            <span wire:loading wire:target="printCoA({{ $coa->id }})">Printing...</span>
                                         </button>
                                     @endif
 
                                     @if ($coa->isDraft())
                                         <button wire:click="deleteCoA({{ $coa->id }})"
                                             wire:confirm="Are you sure you want to delete this CoA?"
-                                            class="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors">
-                                            Delete
+                                            wire:loading.attr="disabled"
+                                            wire:target="deleteCoA({{ $coa->id }})"
+                                            class="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors disabled:opacity-50 cursor-pointer">
+                                            <span wire:loading.remove wire:target="deleteCoA({{ $coa->id }})">Delete</span>
+                                            <span wire:loading wire:target="deleteCoA({{ $coa->id }})">Deleting...</span>
                                         </button>
                                     @endif
                                 </td>
@@ -195,7 +213,7 @@
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">CoA Format</label>
                                     <select wire:model.live="formatId"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
                                         <option value="">Select Format...</option>
                                         @foreach ($availableFormats as $format)
                                             <option value="{{ $format['id'] }}">
@@ -284,7 +302,7 @@
                             <h3 class="text-lg font-medium text-gray-900">View CoA -
                                 {{ $documentNumber ?: 'Loading...' }}</h3>
                             <button type="button" wire:click="closeViewModal"
-                                class="text-gray-400 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5">
+                                class="text-gray-400 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 cursor-pointer">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                     stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
@@ -475,13 +493,13 @@
                             @if (auth()->user()?->hasPermission('approve_coa') && $status === 'pending_review')
                                 <button type="button" wire:click="approveCoA({{ $coaId }})"
                                     onclick="return confirm('Approve this CoA?')"
-                                    class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                                    class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors cursor-pointer">
                                     Approve CoA
                                 </button>
                             @endif
 
                             <button type="button" wire:click="closeViewModal"
-                                class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors">
+                                class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors cursor-pointer">
                                 Close
                             </button>
                         </div>
@@ -491,18 +509,21 @@
         </div>
     </div>
 
+    @script
     <script>
-        document.addEventListener('livewire:initialized', () => {
-            Livewire.on('openPrintWindow', (data) => {
-                const printUrl = data.url;
-                const printWindow = window.open(printUrl, '_blank', 'width=1200,height=800');
-                if (printWindow) {
-                    printWindow.addEventListener('load', () => {
-                        setTimeout(() => {
-                            printWindow.print();
-                        }, 500);
-                    });
-                }
-            });
+        $wire.on('openPrintWindow', (event) => {
+            const printUrl = event.url;
+            console.log('Opening print window for:', printUrl);
+            const printWindow = window.open(printUrl, '_blank', 'width=1200,height=800');
+            if (printWindow) {
+                printWindow.addEventListener('load', () => {
+                    setTimeout(() => {
+                        printWindow.print();
+                    }, 500);
+                });
+            } else {
+                alert('Popup blocked! Please allow popups for this site.');
+            }
         });
     </script>
+    @endscript
