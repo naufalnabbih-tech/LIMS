@@ -120,15 +120,20 @@
                         <div class="bg-gray-50 rounded-lg p-6 text-center">
                             <p class="text-sm text-gray-600 mb-4">Your current signature:</p>
                             <div class="flex justify-center mb-4">
-                                <img src="{{ Storage::url($signature_qr_image) }}"
+                                <img src="{{ asset('storage/' . $signature_qr_image) }}"
                                     alt="QR Signature"
-                                    class="h-40 w-40 border-2 border-gray-300 rounded">
+                                    class="h-40 w-40 border-2 border-gray-300 rounded"
+                                    onerror="console.error('Failed to load image:', this.src); this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                <div style="display:none;" class="text-red-500 text-sm">
+                                    <p>Image failed to load</p>
+                                    <p class="text-xs">Path: {{ $signature_qr_image }}</p>
+                                </div>
                             </div>
                             <p class="text-xs text-gray-500 mb-4">150x150px</p>
 
                             <button type="button" wire:click="deleteSignatureQR"
                                 wire:confirm="Are you sure you want to delete your QR signature?"
-                                class="w-full px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors">
+                                class="w-full px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors cursor-pointer">
                                 Delete QR Signature
                             </button>
                         </div>

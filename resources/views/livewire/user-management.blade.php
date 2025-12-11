@@ -368,50 +368,51 @@
                                     @error('new_signature_qr') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                                 </div>
 
-                                <!-- Current Signature Display (Edit Only) -->
-                                @if($isEditing)
+                                <!-- Preview/Current Signature Display -->
                                 <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-2">Current QR</label>
-                                    @if($current_user_qr)
+                                    @if($isEditing)
+                                        <label class="block text-xs font-medium text-gray-600 mb-2">
+                                            {{ $new_signature_qr ? 'New QR Preview' : 'Current QR' }}
+                                        </label>
+                                    @else
+                                        <label class="block text-xs font-medium text-gray-600 mb-2">Preview</label>
+                                    @endif
+
+                                    @if($new_signature_qr)
+                                        {{-- Show preview of new upload --}}
+                                        <div class="bg-gray-50 rounded-lg p-4 text-center border border-blue-300 min-h-[160px] flex items-center justify-center">
+                                            <div>
+                                                <img src="{{ $new_signature_qr->temporaryUrl() }}"
+                                                    alt="New QR Preview"
+                                                    class="h-32 w-32 mx-auto rounded mb-2 border-2 border-blue-300">
+                                                <p class="text-xs text-blue-600 font-medium">New QR to be saved</p>
+                                            </div>
+                                        </div>
+                                    @elseif($isEditing && $current_user_qr)
+                                        {{-- Show current QR in edit mode --}}
                                         <div class="bg-gray-50 rounded-lg p-4 text-center border border-gray-300 min-h-[160px] flex items-center justify-center">
                                             <div>
                                                 <img src="{{ $current_user_qr }}"
-                                                    alt="QR Signature"
+                                                    alt="Current QR Signature"
                                                     class="h-32 w-32 mx-auto rounded mb-2 border-2 border-gray-300">
                                                 <button type="button" wire:click="deleteQRSignature"
                                                     class="text-xs text-red-600 hover:text-red-700 font-medium w-full cursor-pointer">
-                                                    Delete
+                                                    Delete Current QR
                                                 </button>
                                             </div>
                                         </div>
                                     @else
+                                        {{-- No QR available --}}
                                         <div class="bg-gray-50 rounded-lg p-4 text-center border-2 border-dashed border-gray-300 min-h-[160px] flex items-center justify-center">
-                                            <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                            </svg>
-                                            <p class="text-xs text-gray-500">No QR uploaded</p>
+                                            <div>
+                                                <svg class="w-8 h-8 text-gray-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                </svg>
+                                                <p class="text-xs text-gray-500 mt-2">No QR uploaded</p>
+                                            </div>
                                         </div>
                                     @endif
                                 </div>
-                                @else
-                                <!-- For Create New User - Show Preview -->
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-600 mb-2">Preview</label>
-                                    @if($new_signature_qr)
-                                        <div class="bg-gray-50 rounded-lg p-4 text-center border border-gray-300 min-h-[160px] flex items-center justify-center">
-                                            <img src="{{ $new_signature_qr->temporaryUrl() }}"
-                                                alt="Preview"
-                                                class="h-32 w-32 rounded border-2 border-blue-300">
-                                        </div>
-                                    @else
-                                        <div class="bg-gray-50 rounded-lg p-4 text-center border-2 border-dashed border-gray-300 min-h-[160px] flex items-center justify-center">
-                                            <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                            </svg>
-                                        </div>
-                                    @endif
-                                </div>
-                                @endif
                             </div>
 
                             <!-- Removed duplicate preview section -->
