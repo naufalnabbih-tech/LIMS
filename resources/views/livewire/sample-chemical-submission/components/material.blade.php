@@ -276,13 +276,13 @@
             @endif
         </div>
 
-        <!-- Add Modal -->
-        @if ($isAddModalOpen)
+        <!-- Unified Modal for Add/Edit -->
+        @if ($isAddModalOpen || $isEditModalOpen)
             <div class="fixed inset-0 bg-gray-900/75 p-4 flex items-center justify-center z-50">
                 <div class="relative w-full max-w-md bg-white rounded-2xl shadow-2xl p-8">
                     <div class="flex justify-between items-center pb-4 border-b">
-                        <h3 class="text-2xl font-bold">Add New Chemical</h3>
-                        <button wire:click="closeAddModal()"
+                        <h3 class="text-2xl font-bold">{{ $isEditModalOpen ? 'Edit' : 'Add New' }} Chemical</h3>
+                        <button wire:click="{{ $isEditModalOpen ? 'closeEditModal()' : 'closeAddModal()' }}"
                             class="p-2 rounded-full hover:bg-gray-100 cursor-pointer">
                             <svg class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor">
@@ -303,10 +303,10 @@
                             </div>
                         @endif
 
-                        <form wire:submit="store">
+                        <form wire:submit="{{ $isEditModalOpen ? 'update' : 'store' }}">
                             <div class="mb-5">
-                                <label for="add-name" class="block text-sm font-bold mb-2">Chemical Name</label>
-                                <input type="text" id="add-name" wire:model="name"
+                                <label for="chemical-name" class="block text-sm font-bold mb-2">Chemical Name</label>
+                                <input type="text" id="chemical-name" wire:model="name"
                                     class="shadow-sm border @error('name') border-red-500 @else border-gray-300 @enderror rounded-lg w-full py-3 px-4"
                                     required>
                                 @error('name')
@@ -315,8 +315,8 @@
                             </div>
 
                             <div class="mb-5">
-                                <label for="add-code" class="block text-sm font-bold mb-2">Internal Code</label>
-                                <input type="text" id="add-code" wire:model="code"
+                                <label for="chemical-code" class="block text-sm font-bold mb-2">Internal Code</label>
+                                <input type="text" id="chemical-code" wire:model="code"
                                     placeholder="e.g., CH-001, CH-ACID-01"
                                     class="shadow-sm border @error('code') border-red-500 @else border-gray-300 @enderror rounded-lg w-full py-3 px-4"
                                     required>
@@ -325,6 +325,7 @@
                                 @enderror
                             </div>
 
+                            <!-- Chemical Category Dropdown -->
                             <div class="mb-5 relative" x-data="{
                                 open: false,
                                 toggle() {
@@ -401,108 +402,24 @@
                                     <p class="text-red-500 text-sm mt-1 animate-pulse">{{ $message }}</p>
                                 @enderror
                             </div>
+
                             <div class="flex justify-end pt-5 border-t mt-6">
-                                <button type="button" wire:click="closeAddModal()"
+                                <button type="button" wire:click="{{ $isEditModalOpen ? 'closeEditModal()' : 'closeAddModal()' }}"
                                     class="px-6 py-2 rounded-lg text-gray-700 bg-gray-100 hover:bg-gray-200 mr-3 cursor-pointer">
                                     Cancel
                                 </button>
-                                <button type="submit" wire:loading.attr="disabled" wire:target="store"
+                                <button type="submit"
+                                    wire:loading.attr="disabled"
+                                    wire:target="{{ $isEditModalOpen ? 'update' : 'store' }}"
                                     class="px-6 py-2 rounded-lg text-white bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer
-                                   {{ $categories->isEmpty() ? 'opacity-50 cursor-not-allowed' : '' }}"
-                                    {{ $categories->isEmpty() ? 'disabled' : '' }}>
-                                    <span wire:loading.remove wire:target="store">Save Chemical</span>
-                                    <span wire:loading wire:target="store">Saving...</span>
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        @endif
-
-        <!-- Edit Modal -->
-        @if ($isEditModalOpen)
-            <div class="fixed inset-0 bg-gray-900/75 p-4 flex items-center justify-center z-50">
-                <div class="relative w-full max-w-md bg-white rounded-2xl shadow-2xl p-8">
-                    <div class="flex justify-between items-center pb-4 border-b">
-                        <h3 class="text-2xl font-bold">Edit Chemical</h3>
-                        <button wire:click="closeEditModal()"
-                            class="p-2 rounded-full hover:bg-gray-100 cursor-pointer">
-                            <svg class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
-                    <div class="mt-6">
-                        <!-- Error Display -->
-                        @if ($errors->any())
-                            <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded-r-lg">
-                                <ul class="list-disc list-inside">
-                                    @foreach ($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                        @endif
-
-                        <form wire:submit="update">
-                            <div class="mb-5">
-                                <label for="edit-name" class="block text-sm font-bold mb-2">Chemical Name</label>
-                                <input type="text" id="edit-name" wire:model="name"
-                                    class="shadow-sm border @error('name') border-red-500 @else border-gray-300 @enderror rounded-lg w-full py-3 px-4 cursor-pointer"
-                                    required>
-                                @error('name')
-                                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            <div class="mb-5">
-                                <label for="edit-code" class="block text-sm font-bold mb-2">Internal Code</label>
-                                <input type="text" id="edit-code" wire:model="code"
-                                    placeholder="e.g., CH-001, CH-ACID-01"
-                                    class="shadow-sm border @error('code') border-red-500 @else border-gray-300 @enderror rounded-lg w-full py-3 px-4 cursor-text"
-                                    required>
-                                @error('code')
-                                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            <div class="mb-5 cursor-pointer relative">
-                                <label for="edit-category" class="block text-sm font-bold mb-2">Chemical
-                                    Category</label>
-                                <div class="relative">
-                                    <select id="edit-category" wire:model="category_id"
-                                        class="shadow-sm border @error('category_id') border-red-500 @else border-gray-300 @enderror rounded-lg w-full py-3 px-4 pr-10 cursor-pointer appearance-none"
-                                        required>
-                                        <option value="" hidden>Select Category</option>
-                                        @foreach ($categories as $category)
-                                            <option value="{{ $category->id }}">{{ $category->name }}</option>
-                                        @endforeach
-                                    </select>
-                                    <!-- Custom dropdown icon -->
-                                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M19 9l-7 7-7-7"></path>
-                                        </svg>
-                                    </div>
-                                </div>
-                                @error('category_id')
-                                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                                @enderror
-                            </div>
-                            <div class="flex justify-end pt-5 border-t mt-6">
-                                <button type="button" wire:click="closeEditModal()"
-                                    class="px-6 py-2 rounded-lg text-gray-700 bg-gray-100 hover:bg-gray-200 mr-3 cursor-pointer">
-                                    Cancel
-                                </button>
-                                <button type="submit" wire:loading.attr="disabled" wire:target="update"
-                                    class="px-6 py-2 rounded-lg text-white bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
-                                    <span wire:loading.remove wire:target="update">Update Chemical</span>
-                                    <span wire:loading wire:target="update">Updating...</span>
+                                    {{ !$isEditModalOpen && $categories->isEmpty() ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                    {{ !$isEditModalOpen && $categories->isEmpty() ? 'disabled' : '' }}>
+                                    <span wire:loading.remove wire:target="{{ $isEditModalOpen ? 'update' : 'store' }}">
+                                        {{ $isEditModalOpen ? 'Update' : 'Save' }} Chemical
+                                    </span>
+                                    <span wire:loading wire:target="{{ $isEditModalOpen ? 'update' : 'store' }}">
+                                        {{ $isEditModalOpen ? 'Updating' : 'Saving' }}...
+                                    </span>
                                 </button>
                             </div>
                         </form>

@@ -153,6 +153,7 @@ Route::middleware(['auth'])->group(function () {
                 'tests' => [],
                 'approver' => '',
                 'approverRole' => '',
+                'approverQRSignature' => null,
             ]);
         })->name('coa-templates');
         Route::get('/coa-print/{coaId}', function ($coaId) {
