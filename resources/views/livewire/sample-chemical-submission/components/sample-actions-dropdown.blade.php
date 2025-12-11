@@ -119,7 +119,7 @@
                     </div>
                     <div class="space-y-1">
                         <button x-show="sampleData.canStartAnalysis"
-                            @click="callLivewireMethod('openAnalysisForm', sampleData.sampleId)"
+                            @click="callLivewireMethod('startAnalysis', sampleData.sampleId)"
                             class="flex items-center w-full px-3 py-2.5 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 rounded-lg transition-colors duration-150 group cursor-pointer">
                             <div
                                 class="flex-shrink-0 w-9 h-9 bg-green-100 group-hover:bg-green-200 rounded-lg flex items-center justify-center mr-3 transition-colors">

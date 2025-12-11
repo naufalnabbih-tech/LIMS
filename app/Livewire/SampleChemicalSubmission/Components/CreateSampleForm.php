@@ -28,10 +28,18 @@ class CreateSampleForm extends Component
     public $submission_time = '';
     public $notes = '';
 
+    // Search fields
+    public $categorySearch = '';
+    public $materialSearch = '';
+    public $referenceSearch = '';
+
     // Data collections
     public $categories = [];
     public $materials = [];
     public $references = [];
+    public $allCategories = [];
+    public $allMaterials = [];
+    public $allReferences = [];
 
     protected $listeners = [
         'openCreateForm' => 'show',
@@ -67,33 +75,102 @@ class CreateSampleForm extends Component
 
     public function mount()
     {
-        $this->categories = Category::where('type', 'chemical')->get();  // ✅ GANTI KE 'chemical'
+        $this->allCategories = Category::where('type', 'chemical')->get();
+        $this->categories = $this->allCategories;
         $this->materials = collect();
         $this->references = collect();
         $this->submission_date = Carbon::now('Asia/Jakarta')->format('Y-m-d');
         $this->submission_time = Carbon::now('Asia/Jakarta')->format('H:i');
     }
 
+    public function updatedCategorySearch($value)
+    {
+        if (empty($value)) {
+            $this->categories = $this->allCategories;
+        } else {
+            $this->categories = $this->allCategories->filter(function ($category) use ($value) {
+                return stripos($category->name, $value) !== false;
+            });
+        }
+    }
+
     public function updatedCategoryId($value)
     {
         $this->material_id = '';
         $this->reference_id = '';
+        $this->materialSearch = '';
+        $this->referenceSearch = '';
         if ($value) {
-            $this->materials = Material::where('category_id', $value)->get();
+            $this->allMaterials = Material::where('category_id', $value)->get();
+            $this->materials = $this->allMaterials;
         } else {
+            $this->allMaterials = collect();
             $this->materials = collect();
         }
+        $this->allReferences = collect();
         $this->references = collect();
+    }
+
+    public function updatedMaterialSearch($value)
+    {
+        if (empty($value)) {
+            $this->materials = $this->allMaterials;
+        } else {
+            $this->materials = $this->allMaterials->filter(function ($material) use ($value) {
+                return stripos($material->name, $value) !== false;
+            });
+        }
     }
 
     public function updatedMaterialId($value)
     {
         $this->reference_id = '';
+        $this->referenceSearch = '';
         if ($value) {
-            $this->references = Reference::where('material_id', $value)->get();
+            $this->allReferences = Reference::where('material_id', $value)->get();
+            $this->references = $this->allReferences;
         } else {
+            $this->allReferences = collect();
             $this->references = collect();
         }
+    }
+
+    public function updatedReferenceSearch($value)
+    {
+        if (empty($value)) {
+            $this->references = $this->allReferences;
+        } else {
+            $this->references = $this->allReferences->filter(function ($reference) use ($value) {
+                return stripos($reference->name, $value) !== false;
+            });
+        }
+    }
+
+    public function getSelectedCategoryNameProperty()
+    {
+        if (empty($this->category_id)) {
+            return '';
+        }
+        $category = Category::find($this->category_id);
+        return $category ? $category->name : '';
+    }
+
+    public function getSelectedMaterialNameProperty()
+    {
+        if (empty($this->material_id)) {
+            return '';
+        }
+        $material = Material::find($this->material_id);
+        return $material ? $material->name : '';
+    }
+
+    public function getSelectedReferenceNameProperty()
+    {
+        if (empty($this->reference_id)) {
+            return '';
+        }
+        $reference = Reference::find($this->reference_id);
+        return $reference ? $reference->name : '';
     }
 
     public function show()
@@ -117,8 +194,14 @@ class CreateSampleForm extends Component
         $this->submission_date = Carbon::now('Asia/Jakarta')->format('Y-m-d');
         $this->submission_time = Carbon::now('Asia/Jakarta')->format('H:i');
         $this->notes = '';
+        $this->categorySearch = '';
+        $this->materialSearch = '';
+        $this->referenceSearch = '';
+        $this->categories = $this->allCategories;
         $this->materials = collect();
         $this->references = collect();
+        $this->allMaterials = collect();
+        $this->allReferences = collect();
         $this->showConfirmation = false;
         $this->resetErrorBag();
     }

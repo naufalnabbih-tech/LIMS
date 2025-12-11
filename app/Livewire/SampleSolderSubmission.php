@@ -367,7 +367,6 @@ class SampleSolderSubmission extends Component
             'net_weight' => $this->coaNetWeight,
             'po_no' => $this->coaPoNo,
             'status' => 'draft',
-            'notes' => $this->coaNotes,
             'data' => $dataToSave,
             'created_by' => auth()->id(),
         ]);

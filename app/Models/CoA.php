@@ -19,7 +19,6 @@ class CoA extends Model
         'po_no',
         'approved_by',
         'approved_at',
-        'notes',
         'file_path',
         'data'
     ];

@@ -111,18 +111,43 @@ class SampleChemicalSubmission extends Component
 
     public function startAnalysis($sampleId)
     {
-        $sample = Sample::with('status')->findOrFail($sampleId);
-        $inProgressStatus = Status::where('name', 'in_progress')->first();
+        \DB::beginTransaction();
+        try {
+            // Lock the row to prevent race condition
+            $sample = Sample::with('status')->lockForUpdate()->findOrFail($sampleId);
 
-        $sample->update([
-            'status_id' => $inProgressStatus ? $inProgressStatus->id : null,
-            'analysis_started_at' => Carbon::now('Asia/Jakarta'),
-            'primary_analyst_id' => auth()->id()
-        ]);
+            // Check if sample is still pending
+            if ($sample->status->name !== 'pending') {
+                \DB::rollBack();
+                session()->flash('error', 'Sample sudah diambil oleh operator lain!');
+                $this->dispatch('analysisStarted'); // Refresh table for other operators
+                return;
+            }
 
-        session()->flash('message', "Analysis started for sample");
+            $inProgressStatus = Status::where('name', 'in_progress')->first();
 
-        return redirect()->route('analysis-page', ['sampleId' => $sampleId]);
+            // Update sample status and assign primary analyst
+            $sample->update([
+                'status_id' => $inProgressStatus ? $inProgressStatus->id : null,
+                'analysis_started_at' => Carbon::now('Asia/Jakarta'),
+                'primary_analyst_id' => auth()->id()
+            ]);
+
+            \DB::commit();
+
+            // Dispatch event to refresh table for all operators
+            $this->dispatch('analysisStarted');
+
+            session()->flash('message', "Analysis started for sample #{$sample->id}");
+
+            return redirect()->route('analysis-page', ['sampleId' => $sampleId]);
+
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            session()->flash('error', 'Terjadi kesalahan saat memulai analysis: ' . $e->getMessage());
+            \Log::error('Start analysis error: ' . $e->getMessage());
+            return;
+        }
     }
 
     public function continueAnalysis($sampleId)
@@ -389,7 +414,6 @@ class SampleChemicalSubmission extends Component
             'net_weight' => $this->coaNetWeight,
             'po_no' => $this->coaPoNo,
             'status' => 'draft',
-            'notes' => $this->coaNotes,
             'data' => $dataToSave,
             'created_by' => auth()->id(),
         ]);
@@ -416,23 +440,58 @@ class SampleChemicalSubmission extends Component
 
     public function render()
     {
+        $userId = auth()->id();
+        $user = auth()->user();
+
         $query = Sample::with(['category', 'material', 'reference', 'submittedBy', 'status'])
             ->where('sample_type', 'chemical')
-            ->where(function($query) {
-                // Show all samples that are NOT in_progress
-                $query->whereHas('status', function($q) {
-                    $q->where('name', '!=', 'in_progress');
-                })
-                // OR show in_progress samples only if user is primary or secondary analyst
-                ->orWhere(function($q) {
-                    $q->whereHas('status', function($q2) {
-                        $q2->where('name', 'in_progress');
-                    })
-                    ->where(function($q2) {
-                        $q2->where('primary_analyst_id', auth()->id())
-                          ->orWhere('secondary_analyst_id', auth()->id());
+            ->where(function($query) use ($userId, $user) {
+                $hasAnyPermission = false;
+
+                // Pending samples - show if user has permission
+                if ($user->hasPermission('view_pending_samples')) {
+                    $query->orWhereHas('status', function($q) {
+                        $q->where('name', 'pending');
                     });
-                });
+                    $hasAnyPermission = true;
+                }
+
+                // In Progress samples - show if user has permission
+                if ($user->hasPermission('view_in_progress_samples')) {
+                    $query->orWhereHas('status', function($q) {
+                        $q->where('name', 'in_progress');
+                    });
+                    $hasAnyPermission = true;
+                }
+
+                // Analysis Completed samples - show if user has permission
+                if ($user->hasPermission('view_completed_samples')) {
+                    $query->orWhereHas('status', function($q) {
+                        $q->where('name', 'analysis_completed');
+                    });
+                    $hasAnyPermission = true;
+                }
+
+                // Reviewed samples - show if user has permission
+                if ($user->hasPermission('view_reviewed_samples')) {
+                    $query->orWhereHas('status', function($q) {
+                        $q->where('name', 'reviewed');
+                    });
+                    $hasAnyPermission = true;
+                }
+
+                // Approved samples - show if user has permission
+                if ($user->hasPermission('view_approved_samples')) {
+                    $query->orWhereHas('status', function($q) {
+                        $q->where('name', 'approved');
+                    });
+                    $hasAnyPermission = true;
+                }
+
+                // If user doesn't have any status permissions, show nothing
+                if (!$hasAnyPermission) {
+                    $query->whereRaw('1 = 0'); // Always false condition
+                }
             });
 
         // Apply search filter for batch/lot

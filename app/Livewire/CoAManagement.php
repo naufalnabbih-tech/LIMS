@@ -24,17 +24,17 @@ class CoAManagement extends Component
         public $status = 'draft';
         public $netWeight;
         public $poNo;
-        public $notes = '';
         public $data = [];
         public $availableFormats = [];
         public $approvedBy = '';
         public $approverRole = '';
-        public $approvedAt = '';    public $searchDocNumber = '';
-    public $searchStatus = '';
-    public $searchDateFrom = '';
-    public $searchDateTo = '';
-    public $sortBy = 'created_at';
-    public $sortDirection = 'desc';
+        public $approvedAt = '';
+        public $searchDocNumber = '';
+        public $searchStatus = '';
+        public $searchDateFrom = '';
+        public $searchDateTo = '';
+        public $sortBy = 'created_at';
+        public $sortDirection = 'desc';
 
     protected $listeners = [
         'openCoAForm' => 'openCreateModal',
@@ -111,7 +111,6 @@ class CoAManagement extends Component
         $this->status = $coa->status;
         $this->netWeight = $coa->net_weight;
         $this->poNo = $coa->po_no;
-        $this->notes = $coa->notes;
         $this->data = $coa->data ?? [];
         $this->sampleId = $coa->sample_id;
 
@@ -130,7 +129,6 @@ class CoAManagement extends Component
         $this->status = $coa->status;
         $this->netWeight = $coa->net_weight;
         $this->poNo = $coa->po_no;
-        $this->notes = $coa->notes;
         $this->data = $coa->data ?? [];
         $this->sampleId = $coa->sample_id;
         $this->approvedBy = $coa->approver?->name ?? '-';
@@ -151,7 +149,6 @@ class CoAManagement extends Component
                 'documentNumber' => 'required|string|min:3',
                 'netWeight' => 'nullable|string|max:255',
                 'poNo' => 'nullable|string|max:255',
-                'notes' => 'nullable|string',
                 'sampleId' => 'required_if:modalMode,create|exists:samples,id'
             ];
 
@@ -175,7 +172,6 @@ class CoAManagement extends Component
                     'status' => 'draft',
                     'net_weight' => $this->netWeight,
                     'po_no' => $this->poNo,
-                    'notes' => $this->notes,
                     'data' => $dataToSave
                 ]);
 
@@ -195,7 +191,6 @@ class CoAManagement extends Component
                 $coa->update([
                     'net_weight' => $this->netWeight,
                     'po_no' => $this->poNo,
-                    'notes' => $this->notes,
                     'data' => $dataToSave
                 ]);
 
@@ -326,7 +321,6 @@ class CoAManagement extends Component
             'status',
             'netWeight',
             'poNo',
-            'notes',
             'data',
             'showModal',
             'availableFormats'

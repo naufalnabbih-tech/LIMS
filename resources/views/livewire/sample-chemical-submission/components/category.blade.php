@@ -272,7 +272,7 @@
                                 <label for="add-name" class="block text-sm font-bold mb-2">Chemical Category Name</label>
                                 <input type="text" id="add-name" wire:model="name"
                                     class="shadow-sm border @error('name') border-red-500 @else border-gray-300 @enderror rounded-lg w-full py-3 px-4"
-                                    required>
+                                    >
                                 @error('name')
                                     <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                 @enderror

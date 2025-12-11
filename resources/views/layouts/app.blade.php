@@ -16,7 +16,7 @@
 
     <!-- Livewire Styles -->
     @livewireStyles
-    
+
     <style>
         /* Smooth transitions for navigation */
         [wire\\:navigate] {

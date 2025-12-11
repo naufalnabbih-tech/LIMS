@@ -108,20 +108,78 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <!-- Category Selection -->
                                     <div class="space-y-2">
-                                        <label for="category_id" class="block text-sm font-semibold text-gray-700">
+                                        <label class="block text-sm font-semibold text-gray-700">
                                             <span class="flex items-center space-x-1">
                                                 <span>Material Category</span>
                                                 <span class="text-red-500">*</span>
                                             </span>
                                         </label>
-                                        <select wire:model.live="category_id" id="category_id"
-                                            class="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all duration-200 @error('category_id') border-red-500 ring-red-200 @enderror @if ($categories->isEmpty()) bg-gray-100 cursor-not-allowed @endif"
-                                            {{ $categories->isEmpty() ? 'disabled' : '' }}>
-                                            <option value="" hidden>Choose material category</option>
-                                            @foreach ($categories as $category)
-                                                <option value="{{ $category->id }}">{{ $category->name }}</option>
-                                            @endforeach
-                                        </select>
+
+                                        {{-- Custom Searchable Dropdown for Category --}}
+                                        <div class="relative" x-data="{ showDropdown: false }" @click.away="showDropdown = false">
+                                            <input type="text"
+                                                wire:model.live.debounce.300ms="categorySearch"
+                                                @click="showDropdown = !{{ $categories->isEmpty() ? 'true' : 'false' }} && (showDropdown = true)"
+                                                value="{{ !empty($this->selectedCategoryName) ? $this->selectedCategoryName : $categorySearch }}"
+                                                placeholder="🔍 Search material category..."
+                                                class="@error('category_id') border-red-500 @else border-gray-300 @enderror w-full rounded-xl border-2 px-4 py-3 pr-10 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-medium @if ($categories->isEmpty()) bg-gray-100 cursor-not-allowed @endif"
+                                                autocomplete="off"
+                                                {{ $categories->isEmpty() ? 'disabled' : '' }}>
+
+                                            {{-- Arrow Icon with Animation --}}
+                                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                                                <svg class="h-5 w-5 text-gray-400 transition-transform duration-200"
+                                                     :class="{ 'rotate-180': showDropdown }"
+                                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M19 9l-7 7-7-7"></path>
+                                                </svg>
+                                            </div>
+
+                                            {{-- Dropdown List --}}
+                                            @if (!$categories->isEmpty())
+                                                <div x-show="showDropdown"
+                                                     x-transition:enter="transition ease-out duration-200"
+                                                     x-transition:enter-start="opacity-0 transform scale-95"
+                                                     x-transition:enter-end="opacity-100 transform scale-100"
+                                                     x-transition:leave="transition ease-in duration-150"
+                                                     x-transition:leave-start="opacity-100 transform scale-100"
+                                                     x-transition:leave-end="opacity-0 transform scale-95"
+                                                     class="absolute z-50 mt-2 w-full bg-white border-2 border-gray-200 rounded-xl shadow-xl max-h-60 overflow-y-auto">
+                                                    @if (count($categories) > 0)
+                                                        @foreach ($categories as $category)
+                                                            <div wire:click="$set('category_id', {{ $category->id }})"
+                                                                 @click="showDropdown = false"
+                                                                 class="px-4 py-3 hover:bg-blue-50 hover:text-blue-700 cursor-pointer border-b border-gray-100 last:border-0 transition-all duration-150 flex items-center justify-between group">
+                                                                <div class="flex items-center space-x-3 flex-1">
+                                                                    <svg class="w-5 h-5 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                              d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                                                                    </svg>
+                                                                    <div class="flex-1">
+                                                                        <div class="font-semibold text-sm">{{ $category->name }}</div>
+                                                                        <div class="text-xs text-gray-500 mt-0.5">Material category</div>
+                                                                    </div>
+                                                                </div>
+
+                                                                {{-- Checkmark for selected item --}}
+                                                                @if ($category_id == $category->id)
+                                                                    <svg class="w-5 h-5 text-green-500 flex-shrink-0 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
+                                                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                                                    </svg>
+                                                                @else
+                                                                    <svg class="w-5 h-5 text-gray-300 opacity-0 group-hover:opacity-100 flex-shrink-0 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                                                    </svg>
+                                                                @endif
+                                                            </div>
+                                                        @endforeach
+                                                    @else
+                                                        <div class="px-4 py-3 text-sm text-gray-500 text-center">No categories found</div>
+                                                    @endif
+                                                </div>
+                                            @endif
+                                        </div>
 
                                         {{-- Alert --}}
                                         @if ($categories->isEmpty())
@@ -160,25 +218,78 @@
 
                                     <!-- Chemical Selection -->
                                     <div class="space-y-2">
-
-
-                                        <label for="material_id" class="block text-sm font-semibold text-gray-700">
+                                        <label class="block text-sm font-semibold text-gray-700">
                                             <span class="flex items-center space-x-1">
                                                 <span>Chemical</span>
                                                 <span class="text-red-500">*</span>
                                             </span>
                                         </label>
 
-                                        {{-- Select Chemical --}}
-                                        <select wire:model.live="material_id" id="material_id"
-                                            class="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all duration-200 @error('material_id') border-red-500 ring-red-200 @enderror @if (empty($category_id)) bg-gray-100 cursor-not-allowed @endif"
-                                            {{ empty($category_id) ? 'disabled' : '' }}>
-                                            <option value="" disabled hidden>Choose chemical</option>
+                                        {{-- Custom Searchable Dropdown for Chemical --}}
+                                        <div class="relative" x-data="{ showDropdown: false }" @click.away="showDropdown = false">
+                                            <input type="text"
+                                                wire:model.live.debounce.300ms="materialSearch"
+                                                @click="showDropdown = !{{ empty($category_id) || $materials->isEmpty() ? 'true' : 'false' }} && (showDropdown = true)"
+                                                value="{{ !empty($this->selectedMaterialName) ? $this->selectedMaterialName : $materialSearch }}"
+                                                placeholder="🔍 Search chemical..."
+                                                class="@error('material_id') border-red-500 @else border-gray-300 @enderror w-full rounded-xl border-2 px-4 py-3 pr-10 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-medium @if (empty($category_id) || $materials->isEmpty()) bg-gray-100 cursor-not-allowed @endif"
+                                                autocomplete="off"
+                                                {{ empty($category_id) || $materials->isEmpty() ? 'disabled' : '' }}>
 
-                                            @foreach ($materials as $material)
-                                                <option value="{{ $material->id }}">{{ $material->name }}</option>
-                                            @endforeach
-                                        </select>
+                                            {{-- Arrow Icon with Animation --}}
+                                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                                                <svg class="h-5 w-5 text-gray-400 transition-transform duration-200"
+                                                     :class="{ 'rotate-180': showDropdown }"
+                                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M19 9l-7 7-7-7"></path>
+                                                </svg>
+                                            </div>
+
+                                            {{-- Dropdown List --}}
+                                            @if (!empty($category_id) && !$materials->isEmpty())
+                                                <div x-show="showDropdown"
+                                                     x-transition:enter="transition ease-out duration-200"
+                                                     x-transition:enter-start="opacity-0 transform scale-95"
+                                                     x-transition:enter-end="opacity-100 transform scale-100"
+                                                     x-transition:leave="transition ease-in duration-150"
+                                                     x-transition:leave-start="opacity-100 transform scale-100"
+                                                     x-transition:leave-end="opacity-0 transform scale-95"
+                                                     class="absolute z-50 mt-2 w-full bg-white border-2 border-gray-200 rounded-xl shadow-xl max-h-60 overflow-y-auto">
+                                                    @if (count($materials) > 0)
+                                                        @foreach ($materials as $material)
+                                                            <div wire:click="$set('material_id', {{ $material->id }})"
+                                                                 @click="showDropdown = false"
+                                                                 class="px-4 py-3 hover:bg-blue-50 hover:text-blue-700 cursor-pointer border-b border-gray-100 last:border-0 transition-all duration-150 flex items-center justify-between group">
+                                                                <div class="flex items-center space-x-3 flex-1">
+                                                                    <svg class="w-5 h-5 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                              d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                                                                    </svg>
+                                                                    <div class="flex-1">
+                                                                        <div class="font-semibold text-sm">{{ $material->name }}</div>
+                                                                        <div class="text-xs text-gray-500 mt-0.5">Chemical material</div>
+                                                                    </div>
+                                                                </div>
+
+                                                                {{-- Checkmark for selected item --}}
+                                                                @if ($material_id == $material->id)
+                                                                    <svg class="w-5 h-5 text-green-500 flex-shrink-0 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
+                                                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                                                    </svg>
+                                                                @else
+                                                                    <svg class="w-5 h-5 text-gray-300 opacity-0 group-hover:opacity-100 flex-shrink-0 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                                                    </svg>
+                                                                @endif
+                                                            </div>
+                                                        @endforeach
+                                                    @else
+                                                        <div class="px-4 py-3 text-sm text-gray-500 text-center">No chemicals found</div>
+                                                    @endif
+                                                </div>
+                                            @endif
+                                        </div>
 
                                         {{-- Alert --}}
                                         @if (!empty($category_id) && $materials->isEmpty())
@@ -186,7 +297,7 @@
                                                 x-transition:enter="transition ease-out duration-300"
                                                 x-transition:enter-start="opacity-0 transform -translate-y-2"
                                                 x-transition:enter-end="opacity-100 transform translate-y-0"
-                                                class="mt-2 flex items-center p-4 mb-4 text-sm text-yellow-800 rounded-lg bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-300 shadow-sm"
+                                                class="mt-2 flex items-center p-4 text-sm text-yellow-800 rounded-lg bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-300 shadow-sm"
                                                 role="alert">
                                                 <svg class="flex-shrink-0 inline w-5 h-5 me-3 text-yellow-600"
                                                     aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
@@ -220,21 +331,78 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                                     <!-- Reference Selection -->
                                     <div class="space-y-2">
-                                        <label for="reference_id" class="block text-sm font-semibold text-gray-700">
+                                        <label class="block text-sm font-semibold text-gray-700">
                                             <span class="flex items-center space-x-1">
                                                 <span>Testing Reference</span>
                                                 <span class="text-red-500">*</span>
                                             </span>
                                         </label>
-                                        <select wire:model.live="reference_id" id="reference_id"
-                                            class="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all duration-200 @error('reference_id') border-red-500 ring-red-200 @enderror @if (empty($material_id) || $references->isEmpty()) bg-gray-100 cursor-not-allowed @endif"
-                                            {{ empty($material_id) || $references->isEmpty() ? 'disabled' : '' }}>
-                                            <option value="">Choose testing reference</option>
-                                            @foreach ($references as $reference)
-                                                <option value="{{ $reference->id }}">{{ $reference->name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
+
+                                        {{-- Custom Searchable Dropdown --}}
+                                        <div class="relative" x-data="{ showDropdown: false }" @click.away="showDropdown = false">
+                                            <input type="text"
+                                                wire:model.live.debounce.300ms="referenceSearch"
+                                                @click="showDropdown = !{{ empty($material_id) || $references->isEmpty() ? 'true' : 'false' }} && (showDropdown = true)"
+                                                value="{{ !empty($this->selectedReferenceName) ? $this->selectedReferenceName : $referenceSearch }}"
+                                                placeholder="🔍 Search testing reference..."
+                                                class="@error('reference_id') border-red-500 @else border-gray-300 @enderror w-full rounded-xl border-2 px-4 py-3 pr-10 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-medium @if (empty($material_id) || $references->isEmpty()) bg-gray-100 cursor-not-allowed @endif"
+                                                autocomplete="off"
+                                                {{ empty($material_id) || $references->isEmpty() ? 'disabled' : '' }}>
+
+                                            {{-- Arrow Icon with Animation --}}
+                                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                                                <svg class="h-5 w-5 text-gray-400 transition-transform duration-200"
+                                                     :class="{ 'rotate-180': showDropdown }"
+                                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M19 9l-7 7-7-7"></path>
+                                                </svg>
+                                            </div>
+
+                                            {{-- Dropdown List --}}
+                                            @if (!empty($material_id) && !$references->isEmpty())
+                                                <div x-show="showDropdown"
+                                                     x-transition:enter="transition ease-out duration-200"
+                                                     x-transition:enter-start="opacity-0 transform scale-95"
+                                                     x-transition:enter-end="opacity-100 transform scale-100"
+                                                     x-transition:leave="transition ease-in duration-150"
+                                                     x-transition:leave-start="opacity-100 transform scale-100"
+                                                     x-transition:leave-end="opacity-0 transform scale-95"
+                                                     class="absolute z-50 mt-2 w-full bg-white border-2 border-gray-200 rounded-xl shadow-xl max-h-60 overflow-y-auto">
+                                                    @if (count($references) > 0)
+                                                        @foreach ($references as $reference)
+                                                            <div wire:click="$set('reference_id', {{ $reference->id }}); showDropdown = false"
+                                                                 @click="showDropdown = false"
+                                                                 class="px-4 py-3 hover:bg-blue-50 hover:text-blue-700 cursor-pointer border-b border-gray-100 last:border-0 transition-all duration-150 flex items-center justify-between group">
+                                                                <div class="flex items-center space-x-3 flex-1">
+                                                                    <svg class="w-5 h-5 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                                                    </svg>
+                                                                    <div class="flex-1">
+                                                                        <div class="font-semibold text-sm">{{ $reference->name }}</div>
+                                                                        <div class="text-xs text-gray-500 mt-0.5">Standard testing reference</div>
+                                                                    </div>
+                                                                </div>
+
+                                                                {{-- Checkmark for selected item --}}
+                                                                @if ($reference_id == $reference->id)
+                                                                    <svg class="w-5 h-5 text-green-500 flex-shrink-0 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
+                                                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                                                    </svg>
+                                                                @else
+                                                                    <svg class="w-5 h-5 text-gray-300 opacity-0 group-hover:opacity-100 flex-shrink-0 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                                                    </svg>
+                                                                @endif
+                                                            </div>
+                                                        @endforeach
+                                                    @else
+                                                        <div class="px-4 py-3 text-sm text-gray-500 text-center">No references found</div>
+                                                    @endif
+                                                </div>
+                                            @endif
+                                        </div>
 
                                         {{-- Alert --}}
                                         @if (!empty($material_id) && $references->isEmpty())
@@ -242,7 +410,7 @@
                                                 x-transition:enter="transition ease-out duration-300"
                                                 x-transition:enter-start="opacity-0 transform -translate-y-2"
                                                 x-transition:enter-end="opacity-100 transform translate-y-0"
-                                                class="mt-2 flex items-center p-4 mb-4 text-sm text-yellow-800 rounded-lg bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-300 shadow-sm"
+                                                class="mt-2 flex items-center p-4 text-sm text-yellow-800 rounded-lg bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-300 shadow-sm"
                                                 role="alert">
                                                 <svg class="flex-shrink-0 inline w-5 h-5 me-3 text-yellow-600"
                                                     aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
@@ -257,6 +425,7 @@
                                                 </div>
                                             </div>
                                         @endif
+
                                         @error('reference_id')
                                             <p class="text-red-500 text-xs mt-1 flex items-center space-x-1">
                                                 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">

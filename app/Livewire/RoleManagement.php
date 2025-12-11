@@ -93,6 +93,13 @@ class RoleManagement extends Component
         'approve_samples' => 'Approve Samples',
         'delete_sample' => 'Delete Sample',
 
+        // Status-based Sample Viewing
+        'view_pending_samples' => 'View Pending Samples',
+        'view_in_progress_samples' => 'View In Progress Samples',
+        'view_completed_samples' => 'View Completed Samples',
+        'view_reviewed_samples' => 'View Reviewed Samples',
+        'view_approved_samples' => 'View Approved Samples',
+
         // Instrument Management
         'manage_instruments' => 'Manage Instruments',
         'view_instruments' => 'View Instruments',

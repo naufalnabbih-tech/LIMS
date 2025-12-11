@@ -71,6 +71,13 @@ class RoleSeeder extends Seeder
                     'approve_samples',
                     'delete_sample',
 
+                    // Status-based sample viewing
+                    'view_pending_samples',
+                    'view_in_progress_samples',
+                    'view_completed_samples',
+                    'view_reviewed_samples',
+                    'view_approved_samples',
+
                     // Instruments
                     'manage_instruments',
                     'view_instruments',
@@ -164,6 +171,13 @@ class RoleSeeder extends Seeder
                     'create_chemical_submission',
                     'create_rawmat_submission',
                     'create_solder_submission',
+
+                    // Status-based sample viewing
+                    'view_pending_samples',
+                    'view_in_progress_samples',
+                    'view_completed_samples',
+                    'view_reviewed_samples',
+                    'view_approved_samples',
 
                     // Instruments
                     'view_instruments',

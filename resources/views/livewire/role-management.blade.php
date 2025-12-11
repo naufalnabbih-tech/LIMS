@@ -351,7 +351,14 @@
                                     <div class="p-4">
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             @php
-                                                $groupedPermissions = [
+                                                    $groupedPermissions = [
+                                                        'Sample Status Access' => [
+                                                            'view_pending_samples',
+                                                            'view_in_progress_samples',
+                                                            'view_completed_samples',
+                                                            'view_reviewed_samples',
+                                                            'view_approved_samples',
+                                                        ],
                                                     'System Management' => [
                                                         'manage_users',
                                                         'manage_roles',
@@ -443,16 +450,12 @@
                                                         {{ $groupName }}</h4>
                                                     <div class="space-y-2">
                                                         @foreach ($groupPermissions as $permission)
-                                                            @if (isset($availablePermissions[$permission]))
-                                                                <label
-                                                                    class="flex items-center cursor-pointer hover:bg-gray-50 p-1 rounded">
-                                                                    <input type="checkbox" wire:model="permissions"
-                                                                        value="{{ $permission }}"
-                                                                        class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500 focus:ring-offset-0">
-                                                                    <span
-                                                                        class="ml-2 text-sm text-gray-700">{{ $availablePermissions[$permission] }}</span>
-                                                                </label>
-                                                            @endif
+                                                                @if (isset($availablePermissions[$permission]))
+                                                                    <label class="flex items-center cursor-pointer hover:bg-gray-50 p-1 rounded">
+                                                                        <input type="checkbox" wire:model="permissions" value="{{ $permission }}" class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500 focus:ring-offset-0">
+                                                                        <span class="ml-2 text-sm text-gray-700">{{ $availablePermissions[$permission] ?? Str::of($permission)->replace('_', ' ')->title() }}</span>
+                                                                    </label>
+                                                                @endif
                                                         @endforeach
                                                     </div>
                                                 </div>
