@@ -104,8 +104,8 @@ class RoleManagement extends Component
         'manage_profile' => 'Manage Own Profile',
 
         // CoA Management
-        'manage_coa' => 'Manage CoA',
-        'view_coa' => 'View CoA',
+        'manage_coas' => 'Manage CoA',
+        'view_coas' => 'View CoA',
         'create_coa' => 'Create CoA',
         'edit_coa' => 'Edit CoA',
         'approve_coa' => 'Approve CoA',

@@ -5,8 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use App\Models\Role;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -19,8 +18,8 @@ return new class extends Migration
 
             // Add CoA permissions
             $coaPermissions = [
-                'manage_coa',
-                'view_coa',
+                'manage_coas',
+                'view_coas',
                 'create_coa',
                 'edit_coa',
                 'approve_coa',
@@ -51,8 +50,8 @@ return new class extends Migration
 
             // Remove CoA permissions
             $coaPermissions = [
-                'manage_coa',
-                'view_coa',
+                'manage_coas',
+                'view_coas',
                 'create_coa',
                 'edit_coa',
                 'approve_coa',

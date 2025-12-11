@@ -412,8 +412,8 @@
                                                         'manage_profile',
                                                     ],
                                                     'CoA Management' => [
-                                                        'manage_coa',
-                                                        'view_coa',
+                                                        'manage_coas',
+                                                        'view_coas',
                                                         'create_coa',
                                                         'edit_coa',
                                                         'approve_coa',

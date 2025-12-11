@@ -86,8 +86,8 @@ class RoleSeeder extends Seeder
                     'view_dashboard',
 
                     // CoA (Certificate of Analysis)
-                    'manage_coa',
-                    'view_coa',
+                    'manage_coas',
+                    'view_coas',
                     'create_coa',
                     'edit_coa',
                     'approve_coa',
