@@ -294,4 +294,138 @@
             </div>
         </div>
     </div>
+
+    <!-- Alpine.js Dropdown Logic -->
+    <script>
+        function sampleDropdown() {
+            return {
+                isOpen: false,
+                sampleData: {},
+                justOpened: false,
+
+                config: {
+                    dropdownWidth: 320,
+                    dropdownHeight: 400,
+                    margin: 8,
+                    viewportMargin: 10,
+                    transitionDuration: 150
+                },
+
+                openDropdown(sampleId, data) {
+                    this.sampleData = this.createSampleData(sampleId, data);
+                    if (data.buttonRect) this.calculatePosition(data.buttonRect);
+                    this.showDropdown();
+                },
+
+                closeDropdown() {
+                    this.isOpen = false;
+                    setTimeout(() => this.resetData(), this.config.transitionDuration);
+                },
+
+                createSampleData(sampleId, data) {
+                    const statusPermissions = {
+                        canEdit: ['submitted', 'pending'].includes(data.status),
+                        canStartAnalysis: ['submitted', 'pending'].includes(data.status),
+                        canContinueAnalysis: ['in_progress'].includes(data.status),
+                        canHandOver: ['in_progress'].includes(data.status),
+                        canTakeOver: ['hand_over', 'hand over'].includes(data.status?.toLowerCase()) &&
+                            data.handoverFromAnalystId != data.currentUserId,
+                        canCompleteAnalysis: ['in_progress', 'analysis_started'].includes(data.status),
+                        canReview: ['analysis_completed', 'pending_review'].includes(data.status),
+                        canApprove: ['reviewed'].includes(data.status),
+                        canCreateCoA: ['approved', 'completed'].includes(data.status),
+                        canDelete: !['approved', 'completed'].includes(data.status)
+                    };
+
+                    return {
+                        sampleId,
+                        ...data,
+                        ...statusPermissions,
+                        position: {
+                            left: 300,
+                            top: 200
+                        }
+                    };
+                },
+
+                calculatePosition(buttonRect) {
+                    const {
+                        dropdownWidth,
+                        dropdownHeight,
+                        margin,
+                        viewportMargin
+                    } = this.config;
+                    const viewport = {
+                        width: window.innerWidth,
+                        height: window.innerHeight
+                    };
+
+                    const space = {
+                        left: buttonRect.left,
+                        right: viewport.width - buttonRect.right,
+                        above: buttonRect.top,
+                        below: viewport.height - buttonRect.bottom
+                    };
+
+                    const left = space.left >= dropdownWidth ?
+                        buttonRect.left - dropdownWidth - margin :
+                        space.right >= dropdownWidth ?
+                        buttonRect.right + margin :
+                        (viewport.width - dropdownWidth) / 2;
+
+                    const top = space.below >= dropdownHeight ?
+                        buttonRect.bottom + margin :
+                        space.above >= dropdownHeight ?
+                        buttonRect.top - dropdownHeight - margin :
+                        (viewport.height - dropdownHeight) / 2;
+
+                    this.sampleData.position = {
+                        left: Math.max(viewportMargin, Math.min(left, viewport.width - dropdownWidth - viewportMargin)),
+                        top: Math.max(viewportMargin, Math.min(top, viewport.height - dropdownHeight - viewportMargin))
+                    };
+                },
+
+                showDropdown() {
+                    this.justOpened = true;
+                    this.isOpen = true;
+                    setTimeout(() => this.justOpened = false, 100);
+                },
+
+                resetData() {
+                    this.sampleData = {};
+                },
+
+                handleClickAway() {
+                    if (!this.justOpened) this.closeDropdown();
+                },
+
+                callLivewireMethod(method, sampleId) {
+                    try {
+                        const mainComponent = document.querySelector('[wire\\:id][id*="sample"]');
+
+                        if (mainComponent) {
+                            const wireId = mainComponent.getAttribute('wire:id');
+                            const livewireComponent = window.Livewire.find(wireId);
+
+                            if (livewireComponent && typeof livewireComponent[method] === 'function') {
+                                livewireComponent[method](sampleId);
+                            }
+                        }
+                    } catch (error) {
+                        // Silently handle errors
+                    }
+
+                    this.closeDropdown();
+                },
+
+                initGlobalDropdown() {
+                    // Override the placeholder with actual implementation
+                    window.globalDropdown = {
+                        open: (sampleId, data) => this.openDropdown(sampleId, data),
+                        close: () => this.closeDropdown()
+                    };
+                }
+            };
+        }
+    </script>
 </div>

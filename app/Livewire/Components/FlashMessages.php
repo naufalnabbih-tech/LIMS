@@ -12,6 +12,19 @@ use Livewire\Component;
  */
 class FlashMessages extends Component
 {
+    public $message = '';
+    public $type = '';
+
+    protected $listeners = [
+        'flash-message' => 'handleFlashMessage'
+    ];
+
+    public function handleFlashMessage($data)
+    {
+        $this->type = $data['type'] ?? 'success';
+        $this->message = $data['message'] ?? '';
+    }
+
     public function render()
     {
         return view('livewire.components.flash-messages');

@@ -192,9 +192,14 @@ class CoAForm extends Component
             'created_by' => auth()->id(),
         ]);
 
-        session()->flash('message', 'Certificate of Analysis created successfully!');
         $this->closeCoAModal();
         $this->dispatch('sampleUpdated');
+
+        // Dispatch flash message event
+        $this->dispatch('flash-message', [
+            'type' => 'success',
+            'message' => 'Certificate of Analysis created successfully!'
+        ])->to('components.flash-messages');
     }
 
     public function render()

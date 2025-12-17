@@ -398,42 +398,19 @@
 
                 callLivewireMethod(method, sampleId) {
                     try {
-                        // Find the main SampleSolderSubmission component
+                        // Find the main component
                         const mainComponent = document.querySelector('[wire\\:id][id*="sample"]');
-
-                        console.log('Looking for Livewire component...', {
-                            method,
-                            sampleId,
-                            mainComponent,
-                            selector: '[wire:id][id*="sample"]'
-                        });
 
                         if (mainComponent) {
                             const wireId = mainComponent.getAttribute('wire:id');
-                            console.log('Found component with wire:id:', wireId);
-
                             const livewireComponent = window.Livewire.find(wireId);
-                            console.log('Livewire component:', livewireComponent);
 
                             if (livewireComponent && typeof livewireComponent[method] === 'function') {
-                                console.log(`Calling ${method}(${sampleId})`);
                                 livewireComponent[method](sampleId);
-                            } else {
-                                console.error(`Method ${method} not found on component`, {
-                                    method,
-                                    componentFound: !!livewireComponent,
-                                    methodExists: livewireComponent ? typeof livewireComponent[method] : 'N/A',
-                                    availableMethods: livewireComponent ? Object.keys(livewireComponent).filter(k => typeof livewireComponent[k] === 'function') : 'Component not found'
-                                });
                             }
-                        } else {
-                            console.error('Main Livewire component not found', {
-                                selector: '[wire:id][id*="sample"]',
-                                allWireComponents: document.querySelectorAll('[wire\\:id]')
-                            });
                         }
                     } catch (error) {
-                        console.error('Error calling Livewire method:', error);
+                        // Silently handle errors
                     }
 
                     this.closeDropdown();
