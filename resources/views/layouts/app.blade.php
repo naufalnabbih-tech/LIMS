@@ -171,5 +171,15 @@
     <!-- Livewire Scripts -->
     @livewireScripts
 
+    <!-- Fix for Alpine.js state after Livewire navigation -->
+    <script>
+        document.addEventListener('livewire:navigated', () => {
+            // Reinitialize Alpine components after navigation
+            if (window.Alpine) {
+                window.Alpine.initTree(document.body);
+            }
+        });
+    </script>
+
 </body>
 </html>

@@ -1,4 +1,4 @@
-@props(['label' => '', 'items' => [], 'modelName' => '', 'required' => false, 'disabled' => false, 'placeholder' => 'Select an option', 'selectedValue' => null])
+@props(['label' => '', 'items' => [], 'modelName' => '', 'required' => false, 'disabled' => false, 'placeholder' => 'Select an option', 'selectedValue' => null, 'ringColor' => 'blue'])
 
 <div class="relative" x-data="{
     open: false,
@@ -22,7 +22,7 @@
     <div class="relative">
         <button type="button" @click="toggle()"
             class="relative w-full py-3 px-4 text-left border rounded-lg shadow-sm focus:outline-none transition-all duration-200
-            @error($modelName) border-red-500 focus:ring-red-200 @else border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 @enderror
+            @error($modelName) border-red-500 focus:ring-red-200 @else border-gray-300 focus:border-{{ $ringColor }}-500 focus:ring-2 focus:ring-{{ $ringColor }}-500 @enderror
             {{ $disabled ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 cursor-pointer' }}">
             <span class="block truncate">
                 @if ($disabled && $items->isEmpty())

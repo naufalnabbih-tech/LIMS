@@ -153,7 +153,7 @@
     <livewire:sample-solder-submission.components.edit-sample-form />
     <livewire:sample-solder-submission.components.hand-over-form />
     <livewire:sample-solder-submission.components.take-over-form />
-    @include('livewire.sample-solder-submission.components.coa-form')
+    <livewire:components.coa-form />
 
 </div>
 

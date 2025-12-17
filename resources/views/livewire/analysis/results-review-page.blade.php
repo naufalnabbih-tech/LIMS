@@ -573,7 +573,7 @@
                         </div>
                     </div>
                     <button type="button" wire:click="closeApprovalForm"
-                        class="text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm p-2 transition-all duration-200">
+                        class="text-white/70 hover:text-white hover:bg-white/10 rounded-lg text-sm p-2 transition-all duration-200 cursor-pointer">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"
                             viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -600,11 +600,11 @@
                 <!-- Modal Footer -->
                 <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
                     <button type="button" wire:click="closeApprovalForm"
-                        class="px-6 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-colors duration-200">
+                        class="px-6 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-colors duration-200 cursor-pointer">
                         Cancel
                     </button>
                     <button type="button" wire:click="submitReview" wire:loading.attr="disabled"
-                        class="px-6 py-2.5 {{ $approvalAction === 'approve' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700' }} text-white font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                        class="px-6 py-2.5 {{ $approvalAction === 'approve' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700' }} text-white font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
                         <span
                             wire:loading.remove>{{ $approvalAction === 'approve' ? 'Approve Sample' : 'Reject Sample' }}</span>
                         <span wire:loading>Processing...</span>

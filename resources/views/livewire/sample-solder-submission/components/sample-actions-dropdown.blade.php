@@ -238,7 +238,7 @@
                         <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Certificate of Analysis</h4>
                     </div>
                     <div class="space-y-1">
-                        <button @click="callLivewireMethod('openCoAForm', sampleData.sampleId)"
+                        <button @click="$wire.dispatch('openCoAForm', [sampleData.sampleId]); closeDropdown();"
                             class="flex items-center w-full px-3 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700 rounded-lg transition-colors duration-150 group cursor-pointer">
                             <div
                                 class="flex-shrink-0 w-9 h-9 bg-orange-100 group-hover:bg-orange-200 rounded-lg flex items-center justify-center mr-3 transition-colors">
