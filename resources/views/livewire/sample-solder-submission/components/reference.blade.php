@@ -421,6 +421,7 @@
 
                                                         <div class="sm:w-1/3 min-w-[110px]" x-data="{
                                                             open: false,
+                                                            openUpward: false,
                                                             operator: @entangle('specificationOperators.' . $specId).live,
                                                             labels: {
                                                                 '>=': 'Greater (>=)',
@@ -430,12 +431,23 @@
                                                                 'should_be': 'Should Be'
                                                             },
                                                             toggle() {
-                                                                this.open = !this.open
+                                                                if (!this.open) {
+                                                                    // Check available space before opening
+                                                                    const button = this.$refs.button;
+                                                                    const rect = button.getBoundingClientRect();
+                                                                    const spaceBelow = window.innerHeight - rect.bottom;
+                                                                    const spaceAbove = rect.top;
+                                                                    const dropdownHeight = 280; // Estimated dropdown height
+
+                                                                    // Open upward if not enough space below
+                                                                    this.openUpward = spaceBelow < dropdownHeight;
+                                                                }
+                                                                this.open = !this.open;
                                                             },
                                                             close() { this.open = false }
                                                         }" @click.away="close()">
                                                             <div class="relative">
-                                                                <button type="button" @click="toggle()"
+                                                                <button type="button" @click="toggle()" x-ref="button"
                                                                     class="relative w-full py-2 px-3 text-left border rounded-lg shadow-sm cursor-pointer focus:outline-none transition-all duration-200 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 bg-white text-gray-700">
                                                                     <span class="block truncate text-xs font-medium"
                                                                         x-text="labels[operator] || 'Greater (>=)'"></span>
@@ -455,13 +467,13 @@
 
                                                                 <div x-show="open"
                                                                     x-transition:enter="transition ease-out duration-100"
-                                                                    x-transition:enter-start="opacity-0 scale-95 -translate-y-2"
-                                                                    x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                                                                    x-transition:enter-start="opacity-0 scale-95"
+                                                                    x-transition:enter-end="opacity-100 scale-100"
                                                                     x-transition:leave="transition ease-in duration-75"
-                                                                    x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-                                                                    x-transition:leave-end="opacity-0 scale-95 -translate-y-2"
+                                                                    x-transition:leave-start="opacity-100 scale-100"
+                                                                    x-transition:leave-end="opacity-0 scale-95"
                                                                     style="display: none;"
-                                                                    class="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-lg shadow-xl max-h-60 overflow-y-auto custom-scrollbar">
+                                                                    :class="openUpward ? 'absolute z-50 w-full bottom-full mb-2 bg-white border border-gray-100 rounded-lg shadow-xl max-h-60 overflow-y-auto custom-scrollbar' : 'absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-lg shadow-xl max-h-60 overflow-y-auto custom-scrollbar'">
 
                                                                     <ul class="py-1 text-base text-gray-700">
                                                                         @foreach (['>=' => 'Greater (>=)', '<=' => 'Less (<=)', '==' => 'Equal (==)', '-' => 'Range', 'should_be' => 'Should Be'] as $val => $label)
