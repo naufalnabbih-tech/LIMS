@@ -42,7 +42,7 @@ class EditSampleForm extends Component
         'edit_batch_lot' => 'required|string|max:255',
         'edit_submission_date' => 'required|date',
         'edit_submission_time' => 'required',
-        'edit_notes' => 'nullable|string|max:1000',
+        'edit_notes' => 'required|string|max:1000',
     ];
 
     protected $messages = [
@@ -58,6 +58,7 @@ class EditSampleForm extends Component
         'edit_submission_date.required' => 'Tanggal submission wajib diisi.',
         'edit_submission_date.date' => 'Tanggal submission tidak valid.',
         'edit_submission_time.required' => 'Waktu submission wajib diisi.',
+        'edit_notes.required' => 'Catatan wajib diisi.',
         'edit_notes.string' => 'Catatan harus berupa teks.',
         'edit_notes.max' => 'Catatan maksimal 1000 karakter.',
     ];
