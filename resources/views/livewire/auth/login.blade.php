@@ -20,6 +20,20 @@
             </div>
         @endif
 
+        <!-- Generic Error Message -->
+        @if ($genericError)
+            <div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+                <div class="flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                            clip-rule="evenodd" />
+                    </svg>
+                    {{ $genericError }}
+                </div>
+            </div>
+        @endif
+
         <!-- Email -->
         <div class="space-y-2">
             <label for="email" class="block text-sm font-semibold text-gray-700">Email Address</label>
@@ -30,7 +44,7 @@
                             d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
                     </svg>
                 </div>
-                <input wire:model="email" id="email" type="email" placeholder="Enter your email" required
+                <input wire:model="email" id="email" type="email" placeholder="Enter your email"
                     autofocus autocomplete="username"
                     class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" />
             </div>
@@ -56,7 +70,7 @@
                             d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
                 </div>
-                <input wire:model="password" id="password" type="password" placeholder="Enter your password" required
+                <input wire:model="password" id="password" type="password" placeholder="Enter your password"
                     autocomplete="current-password"
                     class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" />
             </div>
@@ -88,7 +102,7 @@
         </div>
 
         <button type="submit"
-            class="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent text-sm font-semibold rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition transform hover:scale-[1.02]">
+            class="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent text-sm font-semibold rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition transform hover:scale-[1.02] cursor-pointer">
 
             <svg wire:loading.remove wire:target="login" class="w-5 h-5" fill="none" stroke="currentColor"
                 viewBox="0 0 24 24">

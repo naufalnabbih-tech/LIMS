@@ -15,6 +15,17 @@ class Login extends Component
     public $password = '';
 
     public $remember = false;
+    public $genericError = '';
+
+    public function updatedEmail()
+    {
+        $this->genericError = '';
+    }
+
+    public function updatedPassword()
+    {
+        $this->genericError = '';
+    }
 
     public function login()
     {
@@ -25,7 +36,9 @@ class Login extends Component
             return $this->redirect('/dashboard', navigate: true);
         }
 
-        $this->addError('email', 'The provided credentials do not match our records.');
+        // Clear any previous field errors and show generic message instead
+        $this->resetErrorBag();
+        $this->genericError = 'Incorrect email or password.';
     }
 
     public function render()
