@@ -59,7 +59,7 @@
                         <button type="button"
                             wire:click="$set('{{ $modelName }}', {{ $item->id }})"
                             @click="close()"
-                            class="group flex items-center justify-between w-full px-4 py-3 text-sm text-left hover:bg-gray-50 hover:text-gray-700 transition-colors cursor-pointer
+                            class="group flex items-center justify-between w-full px-4 py-3 text-sm text-left hover:bg-gray-100 hover:text-gray-700 transition-colors cursor-pointer
                             {{ $selectedValue == $item->id ? 'bg-indigo-50 text-gray-700 font-semibold' : '' }}">
 
                             <span>{{ $item->name }}</span>

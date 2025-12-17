@@ -235,45 +235,64 @@
                                 @enderror
                             </div>
 
-                            <div class="relative">
+                            <div class="relative" x-data="{ dropdownOpen: @entangle('showChemicalDropdown') }" @click.away="dropdownOpen = false">
                                 <label class="mb-2 block text-sm font-bold text-gray-700">Chemical Material</label>
                                 <div class="relative">
                                     <input type="text" wire:model.live.debounce.300ms="chemicalSearch"
-                                        wire:click="openChemicalDropdown" placeholder="Search chemical..."
+                                        @click="$wire.openChemicalDropdown()" placeholder="Search chemical..."
                                         class="@error('material_id') border-red-500 @else border-gray-300 @enderror w-full rounded-lg border px-4 py-2.5 pr-10 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                                         autocomplete="off">
 
                                     <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                                        <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor"
+                                        <svg class="h-4 w-4 text-gray-400 transition-transform duration-200"
+                                            :class="dropdownOpen ? 'transform rotate-180' : ''"
+                                            fill="none" stroke="currentColor"
                                             viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M19 9l-7 7-7-7"></path>
                                         </svg>
                                     </div>
 
-                                    @if ($showChemicalDropdown)
-                                        <div
-                                            class="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                                    <div x-show="dropdownOpen"
+                                        x-transition:enter="transition ease-out duration-100"
+                                        x-transition:enter-start="opacity-0 scale-95 -translate-y-2"
+                                        x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                                        x-transition:leave="transition ease-in duration-75"
+                                        x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                                        x-transition:leave-end="opacity-0 scale-95 -translate-y-2"
+                                        class="absolute z-50 mt-1 w-full bg-white border border-gray-100 rounded-lg shadow-xl max-h-60 overflow-y-auto custom-scrollbar"
+                                        style="display: none;">
+
+                                        <ul class="py-1 text-base text-gray-700">
                                             @if (count($this->filteredChemicals) > 0)
                                                 @foreach ($this->filteredChemicals as $chemical)
-                                                    <div wire:click="selectChemical({{ $chemical->id }}, '{{ $chemical->name }}')"
-                                                        class="px-4 py-2.5 hover:bg-blue-50 hover:text-blue-700 cursor-pointer border-b border-gray-50 last:border-0 text-sm transition-colors">
-                                                        {{ $chemical->name }}
-                                                    </div>
+                                                    <li>
+                                                        <button type="button"
+                                                            wire:click="selectChemical({{ $chemical->id }}, '{{ $chemical->name }}')"
+                                                            @click="dropdownOpen = false"
+                                                            class="w-full px-4 py-2.5 text-sm text-left hover:bg-gray-50 hover:text-gray-700 cursor-pointer transition-colors">
+                                                            {{ $chemical->name }}
+                                                        </button>
+                                                    </li>
                                                 @endforeach
                                             @elseif(empty($this->chemicalSearch))
                                                 @foreach ($chemicals as $chemical)
-                                                    <div wire:click="selectChemical({{ $chemical->id }}, '{{ $chemical->name }}')"
-                                                        class="px-4 py-2.5 hover:bg-blue-50 hover:text-blue-700 cursor-pointer border-b border-gray-50 last:border-0 text-sm transition-colors">
-                                                        {{ $chemical->name }}
-                                                    </div>
+                                                    <li>
+                                                        <button type="button"
+                                                            wire:click="selectChemical({{ $chemical->id }}, '{{ $chemical->name }}')"
+                                                            @click="dropdownOpen = false"
+                                                            class="w-full px-4 py-2.5 text-sm text-left hover:bg-gray-50 hover:text-gray-700 cursor-pointer transition-colors">
+                                                            {{ $chemical->name }}
+                                                        </button>
+                                                    </li>
                                                 @endforeach
                                             @else
-                                                <div class="px-4 py-3 text-sm text-gray-500 text-center">No chemicals
-                                                    found</div>
+                                                <li>
+                                                    <div class="px-4 py-3 text-sm text-gray-500 text-center">No chemicals found</div>
+                                                </li>
                                             @endif
-                                        </div>
-                                    @endif
+                                        </ul>
+                                    </div>
                                 </div>
                                 @error('material_id')
                                     <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
@@ -359,40 +378,66 @@
                                                                 '==': 'Equal (==)',
                                                                 '-': 'Range',
                                                                 'should_be': 'Should Be'
-                                                            }
-                                                        }">
+                                                            },
+                                                            toggle() {
+                                                                this.open = !this.open
+                                                            },
+                                                            close() { this.open = false }
+                                                        }" @click.away="close()">
                                                             <div class="relative">
-                                                                <button type="button" @click="open = !open"
-                                                                    @click.away="open = false"
-                                                                    class="w-full flex items-center justify-between px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-xs font-medium text-gray-700 hover:bg-white focus:ring-2 focus:ring-blue-500 transition-all">
-
-                                                                    <span
+                                                                <button type="button" @click="toggle()"
+                                                                    class="relative w-full py-2 px-3 text-left border rounded-lg shadow-sm cursor-pointer focus:outline-none transition-all duration-200 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 bg-white text-gray-700">
+                                                                    <span class="block truncate text-xs font-medium"
                                                                         x-text="labels[operator] || 'Greater (>=)'"></span>
 
-                                                                    <svg class="w-3 h-3 text-gray-400 ml-1"
-                                                                        fill="none" stroke="currentColor"
-                                                                        viewBox="0 0 24 24">
-                                                                        <path stroke-linecap="round"
-                                                                            stroke-linejoin="round" stroke-width="2"
-                                                                            d="M19 9l-7 7-7-7" />
-                                                                    </svg>
+                                                                    <span
+                                                                        class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                                                        <svg class="w-4 h-4 text-gray-400 transition-transform duration-200"
+                                                                            :class="open ? 'transform rotate-180' : ''"
+                                                                            fill="none" stroke="currentColor"
+                                                                            viewBox="0 0 24 24">
+                                                                            <path stroke-linecap="round"
+                                                                                stroke-linejoin="round" stroke-width="2"
+                                                                                d="M19 9l-7 7-7-7"></path>
+                                                                        </svg>
+                                                                    </span>
                                                                 </button>
 
                                                                 <div x-show="open"
-                                                                    class="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl py-1 max-h-60 overflow-y-auto"
+                                                                    x-transition:enter="transition ease-out duration-100"
+                                                                    x-transition:enter-start="opacity-0 scale-95 -translate-y-2"
+                                                                    x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                                                                    x-transition:leave="transition ease-in duration-75"
+                                                                    x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                                                                    x-transition:leave-end="opacity-0 scale-95 -translate-y-2"
                                                                     style="display: none;"
-                                                                    x-transition.opacity.duration.200ms>
+                                                                    class="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-lg shadow-xl max-h-60 overflow-y-auto custom-scrollbar">
 
-                                                                    @foreach (['>=' => 'Greater (>=)', '<=' => 'Less (<=)', '==' => 'Equal (==)', '-' => 'Range', 'should_be' => 'Should Be'] as $val => $label)
-                                                                        <button type="button"
-                                                                            @click="operator = '{{ $val }}'; open = false"
-                                                                            class="w-full text-left px-4 py-2 text-xs text-gray-700 hover:bg-blue-50 hover:text-blue-700 block"
-                                                                            :class="operator == '{{ $val }}' ?
-                                                                                'bg-blue-50 text-blue-700 font-bold' :
-                                                                                ''">
-                                                                            {{ $label }}
-                                                                        </button>
-                                                                    @endforeach
+                                                                    <ul class="py-1 text-base text-gray-700">
+                                                                        @foreach (['>=' => 'Greater (>=)', '<=' => 'Less (<=)', '==' => 'Equal (==)', '-' => 'Range', 'should_be' => 'Should Be'] as $val => $label)
+                                                                            <li>
+                                                                                <button type="button"
+                                                                                    @click="operator = '{{ $val }}'; close()"
+                                                                                    class="group flex items-center justify-between w-full px-4 py-3 text-xs text-left hover:bg-gray-50 hover:text-gray-700 transition-colors cursor-pointer"
+                                                                                    :class="operator == '{{ $val }}' ?
+                                                                                        'bg-indigo-50 text-gray-700 font-semibold' :
+                                                                                        ''">
+
+                                                                                    <span>{{ $label }}</span>
+
+                                                                                    <svg x-show="operator == '{{ $val }}'"
+                                                                                        class="w-4 h-4 text-gray-600"
+                                                                                        fill="none" viewBox="0 0 24 24"
+                                                                                        stroke="currentColor">
+                                                                                        <path stroke-linecap="round"
+                                                                                            stroke-linejoin="round"
+                                                                                            stroke-width="2"
+                                                                                            d="M5 13l4 4L19 7" />
+                                                                                    </svg>
+                                                                                </button>
+                                                                            </li>
+                                                                        @endforeach
+                                                                    </ul>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -486,4 +531,5 @@
             </div>
         @endif
     @endforeach
+
 </div>

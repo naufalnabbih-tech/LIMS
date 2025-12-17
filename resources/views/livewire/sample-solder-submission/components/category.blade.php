@@ -21,9 +21,9 @@
 
         <!-- Success/Error Messages -->
         @if (session()->has('success'))
-            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4" 
-                 x-data="{ show: true }" 
-                 x-show="show" 
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4"
+                 x-data="{ show: true }"
+                 x-show="show"
                  x-init="setTimeout(() => show = false, 2000)"
                  x-transition:leave="transition ease-in duration-300"
                  x-transition:leave-start="opacity-100"
@@ -34,8 +34,8 @@
 
         @if (session()->has('error'))
             <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4"
-                 x-data="{ show: true }" 
-                 x-show="show" 
+                 x-data="{ show: true }"
+                 x-show="show"
                  x-init="setTimeout(() => show = false, 2000)"
                  x-transition:leave="transition ease-in duration-300"
                  x-transition:leave-start="opacity-100"
@@ -110,7 +110,7 @@
                                         <p class="text-sm text-gray-500 mb-4">Get started by adding your first solder
                                             category</p>
                                         <button wire:click="openAddModal()"
-                                            class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200">
+                                            class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 cursor-pointer">
                                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

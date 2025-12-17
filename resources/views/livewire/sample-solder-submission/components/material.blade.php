@@ -144,7 +144,7 @@
                                     <p class="text-sm text-gray-500 mb-4">Get started by adding your first solder
                                     </p>
                                     <button wire:click="openAddModal()"
-                                        class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200
+                                        class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 cursor-pointer
                                                        {{ $categories->isEmpty() ? 'opacity-50 cursor-not-allowed' : '' }}"
                                         {{ $categories->isEmpty() ? 'disabled' : '' }}>
                                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
@@ -322,35 +322,85 @@
                             @enderror
                         </div>
 
-                        <div class="mb-5 cursor-pointer relative">
-                            <label for="add-category" class="block text-sm font-bold mb-2">Solder Category</label>
+                        <!-- Solder Category Dropdown -->
+                        <div class="mb-5 relative" x-data="{
+                            open: false,
+                            toggle() {
+                                if (!{{ $categories->isEmpty() ? 'true' : 'false' }}) {
+                                    this.open = !this.open
+                                }
+                            },
+                            close() { this.open = false }
+                        }" @click.away="close()">
+
+                            <label class="block text-sm font-bold mb-2 text-slate-700">Solder Category</label>
+
                             <div class="relative">
-                                <select id="add-category" wire:model="category_id"
-                                    class="shadow-sm border @error('category_id') border-red-500 @else border-gray-300 @enderror rounded-lg w-full py-3 px-4 pr-10 cursor-pointer appearance-none
-                                       {{ $categories->isEmpty() ? 'bg-gray-100 cursor-not-allowed' : '' }}"
-                                    {{ $categories->isEmpty() ? 'disabled' : '' }} required>
-                                    @if ($categories->isEmpty())
-                                        <option value="">Tidak ada kategori tersedia</option>
-                                    @else
-                                        <option value="" hidden>Select Category</option>
+                                <button type="button" @click="toggle()"
+                                    class="relative w-full py-3 px-4 text-left border rounded-lg shadow-sm cursor-pointer focus:outline-none transition-all duration-200
+        @error('category_id') border-red-500 focus:ring-red-200 @else border-gray-300 focus:border-gray-500 focus:ring-2 focus:ring-gray-500 @enderror
+        {{ $categories->isEmpty() ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700' }}">
+                                    <span class="block truncate">
+                                        @if ($categories->isEmpty())
+                                            Tidak ada kategori tersedia
+                                        @elseif($category_id)
+                                            {{ $categories->find($category_id)?->name ?? 'Select Category' }}
+                                        @else
+                                            <span class="text-gray-400">Select Category</span>
+                                        @endif
+                                    </span>
+
+                                    <span
+                                        class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                        <svg class="w-5 h-5 text-gray-400 transition-transform duration-200"
+                                            :class="open ? 'transform rotate-180' : ''" fill="none"
+                                            stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 9l-7 7-7-7"></path>
+                                        </svg>
+                                    </span>
+                                </button>
+
+                                <div x-show="open" x-transition:enter="transition ease-out duration-100"
+                                    x-transition:enter-start="opacity-0 scale-95 -translate-y-2"
+                                    x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                                    x-transition:leave="transition ease-in duration-75"
+                                    x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                                    x-transition:leave-end="opacity-0 scale-95 -translate-y-2"
+                                    style="display: none;"
+                                    class="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-lg shadow-xl max-h-60 overflow-y-auto custom-scrollbar">
+
+                                    <ul class="py-1 text-base text-gray-700">
                                         @foreach ($categories as $category)
-                                            <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                            <li>
+                                                <button type="button"
+                                                    wire:click="$set('category_id', '{{ $category->id }}')"
+                                                    @click="close()"
+                                                    class="group flex items-center justify-between w-full px-4 py-3 text-sm text-left hover:bg-gray-50 hover:text-gray-700 transition-colors cursor-pointer
+                                                {{ $category_id == $category->id ? 'bg-indigo-50 text-gray-700 font-semibold' : '' }}">
+
+                                                    <span>{{ $category->name }}</span>
+
+                                                    @if ($category_id == $category->id)
+                                                        <svg class="w-4 h-4 text-gray-600" fill="none"
+                                                            viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2" d="M5 13l4 4L19 7" />
+                                                        </svg>
+                                                    @endif
+                                                </button>
+                                            </li>
                                         @endforeach
-                                    @endif
-                                </select>
-                                <!-- Custom dropdown icon -->
-                                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M19 9l-7 7-7-7"></path>
-                                    </svg>
+                                    </ul>
                                 </div>
                             </div>
+
                             @error('category_id')
-                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                <p class="text-red-500 text-sm mt-1 animate-pulse">{{ $message }}</p>
                             @enderror
                         </div>
+
+
                         <div class="flex justify-end pt-5 border-t mt-6">
                             <button type="button" wire:click="closeAddModal()"
                                 class="px-6 py-2 rounded-lg text-gray-700 bg-gray-100 hover:bg-gray-200 mr-3 cursor-pointer">
@@ -417,28 +467,81 @@
                             @enderror
                         </div>
 
-                        <div class="mb-5 cursor-pointer relative">
-                            <label for="edit-category" class="block text-sm font-bold mb-2">Solder Category</label>
+                        <!-- Solder Category Dropdown -->
+                        <div class="mb-5 relative" x-data="{
+                            open: false,
+                            toggle() {
+                                if (!{{ $categories->isEmpty() ? 'true' : 'false' }}) {
+                                    this.open = !this.open
+                                }
+                            },
+                            close() { this.open = false }
+                        }" @click.away="close()">
+
+                            <label class="block text-sm font-bold mb-2 text-slate-700">Solder Category</label>
+
                             <div class="relative">
-                                <select id="edit-category" wire:model="category_id"
-                                    class="shadow-sm border @error('category_id') border-red-500 @else border-gray-300 @enderror rounded-lg w-full py-3 px-4 pr-10 cursor-pointer appearance-none"
-                                    required>
-                                    <option value="">Select Category</option>
-                                    @foreach ($categories as $category)
-                                        <option value="{{ $category->id }}">{{ $category->name }}</option>
-                                    @endforeach
-                                </select>
-                                <!-- Custom dropdown icon -->
-                                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M19 9l-7 7-7-7"></path>
-                                    </svg>
+                                <button type="button" @click="toggle()"
+                                    class="relative w-full py-3 px-4 text-left border rounded-lg shadow-sm cursor-pointer focus:outline-none transition-all duration-200
+        @error('category_id') border-red-500 focus:ring-red-200 @else border-gray-300 focus:border-gray-500 focus:ring-2 focus:ring-gray-500 @enderror
+        {{ $categories->isEmpty() ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700' }}">
+                                    <span class="block truncate">
+                                        @if ($categories->isEmpty())
+                                            Tidak ada kategori tersedia
+                                        @elseif($category_id)
+                                            {{ $categories->find($category_id)?->name ?? 'Select Category' }}
+                                        @else
+                                            <span class="text-gray-400">Select Category</span>
+                                        @endif
+                                    </span>
+
+                                    <span
+                                        class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                        <svg class="w-5 h-5 text-gray-400 transition-transform duration-200"
+                                            :class="open ? 'transform rotate-180' : ''" fill="none"
+                                            stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 9l-7 7-7-7"></path>
+                                        </svg>
+                                    </span>
+                                </button>
+
+                                <div x-show="open" x-transition:enter="transition ease-out duration-100"
+                                    x-transition:enter-start="opacity-0 scale-95 -translate-y-2"
+                                    x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                                    x-transition:leave="transition ease-in duration-75"
+                                    x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                                    x-transition:leave-end="opacity-0 scale-95 -translate-y-2"
+                                    style="display: none;"
+                                    class="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-lg shadow-xl max-h-60 overflow-y-auto custom-scrollbar">
+
+                                    <ul class="py-1 text-base text-gray-700">
+                                        @foreach ($categories as $category)
+                                            <li>
+                                                <button type="button"
+                                                    wire:click="$set('category_id', '{{ $category->id }}')"
+                                                    @click="close()"
+                                                    class="group flex items-center justify-between w-full px-4 py-3 text-sm text-left hover:bg-gray-50 hover:text-gray-700 transition-colors cursor-pointer
+                                                {{ $category_id == $category->id ? 'bg-indigo-50 text-gray-700 font-semibold' : '' }}">
+
+                                                    <span>{{ $category->name }}</span>
+
+                                                    @if ($category_id == $category->id)
+                                                        <svg class="w-4 h-4 text-gray-600" fill="none"
+                                                            viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2" d="M5 13l4 4L19 7" />
+                                                        </svg>
+                                                    @endif
+                                                </button>
+                                            </li>
+                                        @endforeach
+                                    </ul>
                                 </div>
                             </div>
+
                             @error('category_id')
-                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                                <p class="text-red-500 text-sm mt-1 animate-pulse">{{ $message }}</p>
                             @enderror
                         </div>
                         <div class="flex justify-end pt-5 border-t mt-6">

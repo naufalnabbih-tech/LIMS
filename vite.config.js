@@ -15,10 +15,10 @@ export default defineConfig({
         tailwindcss(),
     ],
     // server: {
-    //     host: '10.8.18.81',
+    //     host: '10.250.135.179',
     //     port: 5173,
     //     hmr: {
-    //         host: '10.8.18.81',
+    //         host: '10.250.135.179',
     //     },
     // },
 });
