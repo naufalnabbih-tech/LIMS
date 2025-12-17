@@ -445,7 +445,6 @@
                         open: (sampleId, data) => this.openDropdown(sampleId, data),
                         close: () => this.closeDropdown()
                     };
-                    console.log('Global dropdown implementation loaded');
                 }
             };
         }

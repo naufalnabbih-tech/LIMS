@@ -48,7 +48,6 @@
                     buttonRect: $el.getBoundingClientRect()
                 });
             } else {
-                console.error('Global dropdown not initialized yet');
                 alert('Dropdown not ready. Please refresh the page.');
             }
         "
