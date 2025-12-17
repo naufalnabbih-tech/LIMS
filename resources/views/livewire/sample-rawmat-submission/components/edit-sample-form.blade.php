@@ -83,86 +83,37 @@
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <!-- Category Selection -->
-                                    <div class="space-y-2">
-                                        <label for="edit_category_id" class="block text-sm font-semibold text-gray-700">
-                                            <span class="flex items-center space-x-1">
-                                                <span>Material Category</span>
-                                                <span class="text-red-500">*</span>
-                                            </span>
-                                        </label>
-                                        <select wire:model.live="edit_category_id" id="edit_category_id"
-                                            class="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent shadow-sm transition-all duration-200 @error('edit_category_id') border-red-500 ring-red-200 @enderror">
-                                            <option value="" hidden>Choose material category</option>
-                                            @foreach ($categories as $category)
-                                                <option value="{{ $category->id }}">{{ $category->name }}</option>
-                                            @endforeach
-                                        </select>
-                                        @error('edit_category_id')
-                                            <p class="text-red-500 text-xs mt-1 flex items-center space-x-1">
-                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd"
-                                                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                                                        clip-rule="evenodd" />
-                                                </svg>
-                                                <span>{{ $message }}</span>
-                                            </p>
-                                        @enderror
-                                    </div>
+                                    <x-form.dropdown
+                                        label="Material Category"
+                                        :items="$categories"
+                                        modelName="edit_category_id"
+                                        :selectedValue="$edit_category_id"
+                                        placeholder="Choose material category"
+                                        :disabled="$categories->isEmpty()"
+                                        required />
 
                                     <!-- Raw Material Selection -->
-                                    <div class="space-y-2">
-                                        <label for="edit_material_id" class="block text-sm font-semibold text-gray-700">
-                                            <span class="flex items-center space-x-1">
-                                                <span>Raw Material</span>
-                                                <span class="text-red-500">*</span>
-                                            </span>
-                                        </label>
-                                        <select wire:model.live="edit_material_id" id="edit_material_id"
-                                            class="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent shadow-sm transition-all duration-200
-                                        @error('edit_material_id') border-red-500 ring-red-200 @enderror">
-                                            <option value="" hidden>Choose raw material</option>
-                                            @foreach ($editMaterials as $material)
-                                                <option value="{{ $material->id }}">{{ $material->name }}</option>
-                                            @endforeach
-                                        </select>
-                                        @error('edit_material_id')
-                                            <p class="text-red-500 text-xs mt-1 flex items-center space-x-1">
-                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd"
-                                                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                                                        clip-rule="evenodd" />
-                                                </svg>
-                                                <span>{{ $message }}</span>
-                                            </p>
-                                        @enderror
+                                    <div wire:key="edit-material-dropdown-{{ $edit_category_id ?? 'empty' }}">
+                                        <x-form.dropdown
+                                            label="Raw Material"
+                                            :items="$editMaterials"
+                                            modelName="edit_material_id"
+                                            :selectedValue="$edit_material_id"
+                                            placeholder="Choose raw material"
+                                            :disabled="empty($edit_category_id)"
+                                            required />
                                     </div>
 
                                     <!-- Reference Selection -->
-                                    <div class="space-y-2 md:col-span-2">
-                                        <label for="edit_reference_id"
-                                            class="block text-sm font-semibold text-gray-700">
-                                            <span class="flex items-center space-x-1">
-                                                <span>Testing Reference</span>
-                                                <span class="text-red-500">*</span>
-                                            </span>
-                                        </label>
-                                        <select wire:model="edit_reference_id" id="edit_reference_id"
-                                            class="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent shadow-sm transition-all duration-200 @error('edit_reference_id') border-red-500 ring-red-200 @enderror">
-                                            <option value="" hidden>Choose testing reference</option>
-                                            @foreach ($editReferences as $reference)
-                                                <option value="{{ $reference->id }}">{{ $reference->name }}</option>
-                                            @endforeach
-                                        </select>
-                                        @error('edit_reference_id')
-                                            <p class="text-red-500 text-xs mt-1 flex items-center space-x-1">
-                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd"
-                                                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                                                        clip-rule="evenodd" />
-                                                </svg>
-                                                <span>{{ $message }}</span>
-                                            </p>
-                                        @enderror
+                                    <div class="md:col-span-2" wire:key="edit-reference-dropdown-{{ $edit_material_id ?? 'empty' }}">
+                                        <x-form.dropdown
+                                            label="Testing Reference"
+                                            :items="$editReferences"
+                                            modelName="edit_reference_id"
+                                            :selectedValue="$edit_reference_id"
+                                            placeholder="Choose testing reference"
+                                            :disabled="empty($edit_material_id)"
+                                            required />
                                     </div>
                                 </div>
                             </div>

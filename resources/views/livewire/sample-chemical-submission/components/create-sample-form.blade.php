@@ -8,8 +8,7 @@
             }
         });
     }
-}"
-@scroll-to-error.window="scrollToError()">
+}" @scroll-to-error.window="scrollToError()">
     <!-- Submission Form Modal -->
     @if ($showForm)
         <div class="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-50" x-data="{ show: true }"
@@ -107,167 +106,93 @@
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <!-- Category Selection -->
-                                    <div class="space-y-2">
-                                        <label for="category_id" class="block text-sm font-semibold text-gray-700">
-                                            <span class="flex items-center space-x-1">
-                                                <span>Material Category</span>
-                                                <span class="text-red-500">*</span>
-                                            </span>
-                                        </label>
-                                        <select wire:model.live="category_id" id="category_id"
-                                            class="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all duration-200 @error('category_id') border-red-500 ring-red-200 @enderror @if ($categories->isEmpty()) bg-gray-100 cursor-not-allowed @endif"
-                                            {{ $categories->isEmpty() ? 'disabled' : '' }}>
-                                            <option value="" hidden>Choose material category</option>
-                                            @foreach ($categories as $category)
-                                                <option value="{{ $category->id }}">{{ $category->name }}</option>
-                                            @endforeach
-                                        </select>
+                                    <x-form.dropdown label="Material Category" :items="$categories" modelName="category_id"
+                                        :selectedValue="$category_id" placeholder="Choose material category" :disabled="$categories->isEmpty()"
+                                        required />
 
-                                        {{-- Alert --}}
-                                        @if ($categories->isEmpty())
-                                            <div x-data="{ show: true }" x-show="show"
-                                                x-transition:enter="transition ease-out duration-300"
-                                                x-transition:enter-start="opacity-0 transform -translate-y-2"
-                                                x-transition:enter-end="opacity-100 transform translate-y-0"
-                                                class="mt-2 flex items-center p-4 text-sm text-yellow-800 rounded-lg bg-gradient-to-r from-yellow-50 to-yellow-100 border border-yellow-300 shadow-sm"
-                                                role="alert">
-                                                <svg class="flex-shrink-0 inline w-5 h-5 me-3 text-yellow-600"
-                                                    aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
-                                                    fill="currentColor" viewBox="0 0 20 20">
-                                                    <path
-                                                        d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z" />
-                                                </svg>
-                                                <div class="flex-1">
-                                                    <span class="font-semibold">Tidak ada kategori chemical yang
-                                                        tersedia!</span>
-                                                    <p class="mt-1 text-xs">Silakan tambahkan kategori chemical
-                                                        terlebih dahulu sebelum membuat sampel.</p>
-                                                </div>
+                                    {{-- Alert --}}
+                                    @if ($categories->isEmpty())
+                                        <div x-data="{ show: true }" x-show="show"
+                                            x-transition:enter="transition ease-out duration-300"
+                                            x-transition:enter-start="opacity-0 transform -translate-y-2"
+                                            x-transition:enter-end="opacity-100 transform translate-y-0"
+                                            class="col-span-full mt-2 flex items-center p-4 text-sm text-yellow-800 rounded-lg bg-gradient-to-r from-yellow-50 to-yellow-100 border border-yellow-300 shadow-sm"
+                                            role="alert">
+                                            <svg class="flex-shrink-0 inline w-5 h-5 me-3 text-yellow-600"
+                                                aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                                fill="currentColor" viewBox="0 0 20 20">
+                                                <path
+                                                    d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z" />
+                                            </svg>
+                                            <div class="flex-1">
+                                                <span class="font-semibold">Tidak ada kategori chemical yang
+                                                    tersedia!</span>
+                                                <p class="mt-1 text-xs">Silakan tambahkan kategori chemical
+                                                    terlebih dahulu sebelum membuat sampel.</p>
                                             </div>
-                                        @endif
-
-                                        @error('category_id')
-                                            <p class="text-red-500 text-xs mt-1 flex items-center space-x-1">
-                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd"
-                                                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                                                        clip-rule="evenodd" />
-                                                </svg>
-                                                <span>{{ $message }}</span>
-                                            </p>
-                                        @enderror
-                                    </div>
+                                        </div>
+                                    @endif
 
                                     <!-- Chemical Selection -->
-                                    <div class="space-y-2">
-
-
-                                        <label for="material_id" class="block text-sm font-semibold text-gray-700">
-                                            <span class="flex items-center space-x-1">
-                                                <span>Chemical</span>
-                                                <span class="text-red-500">*</span>
-                                            </span>
-                                        </label>
-
-                                        {{-- Select Chemical --}}
-                                        <select wire:model.live="material_id" id="material_id"
-                                            class="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all duration-200 @error('material_id') border-red-500 ring-red-200 @enderror @if (empty($category_id)) bg-gray-100 cursor-not-allowed @endif"
-                                            {{ empty($category_id) ? 'disabled' : '' }}>
-                                            <option value="" disabled hidden>Choose chemical</option>
-
-                                            @foreach ($materials as $material)
-                                                <option value="{{ $material->id }}">{{ $material->name }}</option>
-                                            @endforeach
-                                        </select>
-
-                                        {{-- Alert --}}
-                                        @if (!empty($category_id) && $materials->isEmpty())
-                                            <div x-data="{ show: true }" x-show="show"
-                                                x-transition:enter="transition ease-out duration-300"
-                                                x-transition:enter-start="opacity-0 transform -translate-y-2"
-                                                x-transition:enter-end="opacity-100 transform translate-y-0"
-                                                class="mt-2 flex items-center p-4 mb-4 text-sm text-yellow-800 rounded-lg bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-300 shadow-sm"
-                                                role="alert">
-                                                <svg class="flex-shrink-0 inline w-5 h-5 me-3 text-yellow-600"
-                                                    aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
-                                                    fill="currentColor" viewBox="0 0 20 20">
-                                                    <path
-                                                        d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z" />
-                                                </svg>
-                                                <span class="sr-only">Info</span>
-                                                <div>
-                                                    <span class="font-semibold">Maaf!</span> Tidak ada material yang
-                                                    tersedia untuk kategori ini.
-                                                </div>
-                                            </div>
-                                        @endif
-
-                                        {{-- Error Notification --}}
-                                        @error('material_id')
-                                            <p class="text-red-500 text-xs mt-1 flex items-center space-x-1">
-                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd"
-                                                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                                                        clip-rule="evenodd" />
-                                                </svg>
-                                                <span>{{ $message }}</span>
-                                            </p>
-                                        @enderror
+                                    <div wire:key="material-dropdown-{{ $category_id ?? 'empty' }}">
+                                        <x-form.dropdown label="Chemical" :items="$materials" modelName="material_id"
+                                            :selectedValue="$material_id" placeholder="Choose chemical" :disabled="empty($category_id)"
+                                            required />
                                     </div>
+
+                                    {{-- Alert --}}
+                                    @if (!empty($category_id) && $materials->isEmpty())
+                                        <div x-data="{ show: true }" x-show="show"
+                                            x-transition:enter="transition ease-out duration-300"
+                                            x-transition:enter-start="opacity-0 transform -translate-y-2"
+                                            x-transition:enter-end="opacity-100 transform translate-y-0"
+                                            class="col-span-full mt-2 flex items-center p-4 mb-4 text-sm text-yellow-800 rounded-lg bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-300 shadow-sm"
+                                            role="alert">
+                                            <svg class="flex-shrink-0 inline w-5 h-5 me-3 text-yellow-600"
+                                                aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                                fill="currentColor" viewBox="0 0 20 20">
+                                                <path
+                                                    d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z" />
+                                            </svg>
+                                            <span class="sr-only">Info</span>
+                                            <div>
+                                                <span class="font-semibold">Maaf!</span> Tidak ada material yang
+                                                tersedia untuk kategori ini.
+                                            </div>
+                                        </div>
+                                    @endif
                                 </div>
 
                                 <!-- Testing Reference and Batch/Lot in separate row -->
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                                     <!-- Reference Selection -->
-                                    <div class="space-y-2">
-                                        <label for="reference_id" class="block text-sm font-semibold text-gray-700">
-                                            <span class="flex items-center space-x-1">
-                                                <span>Testing Reference</span>
-                                                <span class="text-red-500">*</span>
-                                            </span>
-                                        </label>
-                                        <select wire:model.live="reference_id" id="reference_id"
-                                            class="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all duration-200 @error('reference_id') border-red-500 ring-red-200 @enderror @if (empty($material_id) || $references->isEmpty()) bg-gray-100 cursor-not-allowed @endif"
-                                            {{ empty($material_id) || $references->isEmpty() ? 'disabled' : '' }}>
-                                            <option value="">Choose testing reference</option>
-                                            @foreach ($references as $reference)
-                                                <option value="{{ $reference->id }}">{{ $reference->name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-
-                                        {{-- Alert --}}
-                                        @if (!empty($material_id) && $references->isEmpty())
-                                            <div x-data="{ show: true }" x-show="show"
-                                                x-transition:enter="transition ease-out duration-300"
-                                                x-transition:enter-start="opacity-0 transform -translate-y-2"
-                                                x-transition:enter-end="opacity-100 transform translate-y-0"
-                                                class="mt-2 flex items-center p-4 mb-4 text-sm text-yellow-800 rounded-lg bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-300 shadow-sm"
-                                                role="alert">
-                                                <svg class="flex-shrink-0 inline w-5 h-5 me-3 text-yellow-600"
-                                                    aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
-                                                    fill="currentColor" viewBox="0 0 20 20">
-                                                    <path
-                                                        d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z" />
-                                                </svg>
-                                                <span class="sr-only">Info</span>
-                                                <div>
-                                                    <span class="font-semibold">Maaf!</span> Tidak ada referensi
-                                                    pengujian yang tersedia untuk material ini.
-                                                </div>
-                                            </div>
-                                        @endif
-                                        @error('reference_id')
-                                            <p class="text-red-500 text-xs mt-1 flex items-center space-x-1">
-                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd"
-                                                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                                                        clip-rule="evenodd" />
-                                                </svg>
-                                                <span>{{ $message }}</span>
-                                            </p>
-                                        @enderror
+                                    <div wire:key="reference-dropdown-{{ $material_id ?? 'empty' }}">
+                                        <x-form.dropdown label="Testing Reference" :items="$references"
+                                            modelName="reference_id" :selectedValue="$reference_id"
+                                            placeholder="Choose testing reference" :disabled="empty($material_id) || $references->isEmpty()" required />
                                     </div>
+
+                                    {{-- Alert --}}
+                                    @if (!empty($material_id) && $references->isEmpty())
+                                        <div x-data="{ show: true }" x-show="show"
+                                            x-transition:enter="transition ease-out duration-300"
+                                            x-transition:enter-start="opacity-0 transform -translate-y-2"
+                                            x-transition:enter-end="opacity-100 transform translate-y-0"
+                                            class="col-span-full mt-2 flex items-center p-4 mb-4 text-sm text-yellow-800 rounded-lg bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-300 shadow-sm"
+                                            role="alert">
+                                            <svg class="flex-shrink-0 inline w-5 h-5 me-3 text-yellow-600"
+                                                aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                                fill="currentColor" viewBox="0 0 20 20">
+                                                <path
+                                                    d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z" />
+                                            </svg>
+                                            <span class="sr-only">Info</span>
+                                            <div>
+                                                <span class="font-semibold">Maaf!</span> Tidak ada referensi
+                                                pengujian yang tersedia untuk material ini.
+                                            </div>
+                                        </div>
+                                    @endif
 
                                     <!-- Batch/Lot Number -->
                                     <div class="space-y-2">
@@ -433,7 +358,8 @@
                                     </svg>
                                     <span>Cancel</span>
                                 </button>
-                                <button type="button" wire:click="validateBeforeConfirm" wire:loading.attr="disabled"
+                                <button type="button" wire:click="validateBeforeConfirm"
+                                    wire:loading.attr="disabled"
                                     class="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-medium rounded-xl hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 flex items-center space-x-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                         wire:loading.remove wire:target="validateBeforeConfirm">
@@ -456,98 +382,100 @@
         </div>
 
         <!-- Confirmation Modal -->
-        @if($showConfirmation)
-        <div x-show="true" x-transition:enter="transition ease-out duration-300"
-            x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-            x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
-            x-transition:leave-end="opacity-0" class="fixed inset-0 z-[9999] overflow-y-auto" x-cloak>
+        @if ($showConfirmation)
+            <div x-show="true" x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0" class="fixed inset-0 z-[9999] overflow-y-auto" x-cloak>
 
-            <!-- Background overlay -->
-            <div class="fixed inset-0 transition-opacity" wire:click="$set('showConfirmation', false)" aria-hidden="true">
-                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-            </div>
+                <!-- Background overlay -->
+                <div class="fixed inset-0 transition-opacity" wire:click="$set('showConfirmation', false)"
+                    aria-hidden="true">
+                    <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+                </div>
 
-            <!-- Modal container - centered -->
-            <div class="flex items-center justify-center min-h-screen p-4">
-                <!-- Modal panel -->
-                <div
-                    class="relative bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all max-w-lg w-full mx-auto">
-                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                        <div class="sm:flex sm:items-start">
-                            <div
-                                class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 sm:mx-0 sm:h-10 sm:w-10">
-                                <svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24"
-                                    stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                </svg>
-                            </div>
-                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                                <h3 class="text-lg leading-6 font-medium text-gray-900">
-                                    Konfirmasi Submit Sample
-                                </h3>
-                                <div class="mt-2">
-                                    <p class="text-sm text-gray-500 mb-3">
-                                        Apakah Anda yakin ingin submit sample ini untuk analisis? Sample akan masuk ke
-                                        sistem dengan status "Pending".
-                                    </p>
+                <!-- Modal container - centered -->
+                <div class="flex items-center justify-center min-h-screen p-4">
+                    <!-- Modal panel -->
+                    <div
+                        class="relative bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all max-w-lg w-full mx-auto">
+                        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                            <div class="sm:flex sm:items-start">
+                                <div
+                                    class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 sm:mx-0 sm:h-10 sm:w-10">
+                                    <svg class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24"
+                                        stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                </div>
+                                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                                    <h3 class="text-lg leading-6 font-medium text-gray-900">
+                                        Konfirmasi Submit Sample
+                                    </h3>
+                                    <div class="mt-2">
+                                        <p class="text-sm text-gray-500 mb-3">
+                                            Apakah Anda yakin ingin submit sample ini untuk analisis? Sample akan masuk
+                                            ke
+                                            sistem dengan status "Pending".
+                                        </p>
 
-                                    <!-- Sample Details -->
-                                    <div class="bg-gray-50 rounded-lg p-3 text-sm">
-                                        <div class="space-y-2">
-                                            <div class="flex justify-between">
-                                                <span class="text-gray-600 font-medium">Category:</span>
-                                                <span class="text-gray-900">
-                                                    @foreach ($categories as $category)
-                                                        @if ($category->id == $category_id)
-                                                            {{ $category->name }}
-                                                        @endif
-                                                    @endforeach
-                                                </span>
-                                            </div>
+                                        <!-- Sample Details -->
+                                        <div class="bg-gray-50 rounded-lg p-3 text-sm">
+                                            <div class="space-y-2">
+                                                <div class="flex justify-between">
+                                                    <span class="text-gray-600 font-medium">Category:</span>
+                                                    <span class="text-gray-900">
+                                                        @foreach ($categories as $category)
+                                                            @if ($category->id == $category_id)
+                                                                {{ $category->name }}
+                                                            @endif
+                                                        @endforeach
+                                                    </span>
+                                                </div>
 
-                                            <div class="flex justify-between">
-                                                <span class="text-gray-600 font-medium">Material:</span>
-                                                <span class="text-gray-900">
-                                                    @foreach ($materials as $material)
-                                                        @if ($material->id == $material_id)
-                                                            {{ $material->name }}
-                                                        @endif
-                                                    @endforeach
-                                                </span>
-                                            </div>
+                                                <div class="flex justify-between">
+                                                    <span class="text-gray-600 font-medium">Material:</span>
+                                                    <span class="text-gray-900">
+                                                        @foreach ($materials as $material)
+                                                            @if ($material->id == $material_id)
+                                                                {{ $material->name }}
+                                                            @endif
+                                                        @endforeach
+                                                    </span>
+                                                </div>
 
-                                            <div class="flex justify-between">
-                                                <span class="text-gray-600 font-medium">Reference:</span>
-                                                <span class="text-gray-900">
-                                                    @foreach ($references as $reference)
-                                                        @if ($reference->id == $reference_id)
-                                                            {{ $reference->name }}
-                                                        @endif
-                                                    @endforeach
-                                                </span>
+                                                <div class="flex justify-between">
+                                                    <span class="text-gray-600 font-medium">Reference:</span>
+                                                    <span class="text-gray-900">
+                                                        @foreach ($references as $reference)
+                                                            @if ($reference->id == $reference_id)
+                                                                {{ $reference->name }}
+                                                            @endif
+                                                        @endforeach
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                        <button wire:click="submit" wire:loading.attr="disabled"
-                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-                            <span wire:loading.remove>Submit Sample</span>
-                            <span wire:loading>Submitting...</span>
-                        </button>
-                        <button wire:click="$set('showConfirmation', false)"
-                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm cursor-pointer">
-                            Cancel
-                        </button>
+                        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                            <button wire:click="submit" wire:loading.attr="disabled"
+                                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                                <span wire:loading.remove>Submit Sample</span>
+                                <span wire:loading>Submitting...</span>
+                            </button>
+                            <button wire:click="$set('showConfirmation', false)"
+                                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm cursor-pointer">
+                                Cancel
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
         @endif
     @endif
 </div>
