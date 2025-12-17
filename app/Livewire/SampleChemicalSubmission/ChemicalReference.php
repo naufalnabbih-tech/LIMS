@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire;
+namespace App\Livewire\SampleChemicalSubmission;
 
 use App\Models\Reference;
 use App\Models\Specification;
@@ -114,8 +114,8 @@ class ChemicalReference extends Component
 
     protected $messages = [
         'name.required' => 'Nama reference wajib diisi.',
-        'material_id.required' => 'Solder wajib dipilih.',
-        'material_id.exists' => 'Solder yang dipilih tidak valid.',
+        'material_id.required' => 'Chemical wajib dipilih.',
+        'material_id.exists' => 'Chemical yang dipilih tidak valid.',
         'selectedSpecifications.required' => 'Spesifikasi wajib dipilih.',
         'selectedSpecifications.*.exists' => 'Spesifikasi yang dipilih tidak valid.',
         'specificationValues.*.required' => 'Nilai spesifikasi wajib diisi.',
@@ -152,10 +152,10 @@ class ChemicalReference extends Component
             $groupedReferences->get($chemicalName)->push($reference);
         }
 
-        return view('livewire.sample-chemical-submission.components.reference', [
+        return view('livewire.sample-chemical-submission.chemical-reference', [
             'references' => $references,
             'groupedReferences' => $groupedReferences,
-        ])->layout('layouts.app')->title('Solder References');
+        ])->layout('layouts.app')->title('Chemical References');
     }
 
     public function openAddModal()
@@ -294,7 +294,7 @@ class ChemicalReference extends Component
             }
 
             $this->closeAddModal();
-            session()->flash('success', 'Solder reference berhasil dibuat.');
+            session()->flash('success', 'Chemical reference berhasil dibuat.');
             $this->showMessage = true;
         } catch (\Exception $e) {
             $this->addError('name', 'Terjadi kesalahan saat menyimpan reference: ' . $e->getMessage());
@@ -363,7 +363,7 @@ class ChemicalReference extends Component
             $reference->specificationsManytoMany()->sync($syncData);
 
             $this->closeEditModal();
-            session()->flash('success', 'Solder reference berhasil diperbarui.');
+            session()->flash('success', 'Chemical reference berhasil diperbarui.');
             $this->showMessage = true;
         } catch (\Exception $e) {
             $this->addError('name', 'Terjadi kesalahan saat memperbarui reference: ' . $e->getMessage());
@@ -377,7 +377,7 @@ class ChemicalReference extends Component
         try {
             $reference = Reference::findOrFail($id);
             $reference->delete();
-            session()->flash('success', 'Solder reference berhasil dihapus');
+            session()->flash('success', 'Chemical reference berhasil dihapus');
             $this->showMessage = true;
         } catch (\Exception $e) {
             session()->flash('error', 'Terjadi kesalahan saat menghapus reference');

@@ -1,12 +1,13 @@
 <?php
 
-namespace App\Livewire;
+namespace App\Livewire\SampleChemicalSubmission;
 
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Category;
 use Illuminate\Validation\Rule;
-class RawMatCategory extends Component
+
+class ChemicalCategory extends Component
 {
     use WithPagination;
 
@@ -30,7 +31,7 @@ class RawMatCategory extends Component
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('categories', 'name')->where('type', 'raw_material')
+                Rule::unique('categories', 'name')->where('type', 'chemical')
             ],
         ];
 
@@ -41,7 +42,7 @@ class RawMatCategory extends Component
                 'string',
                 'max:255',
                 Rule::unique('categories', 'name')
-                    ->where('type', 'raw_material')
+                    ->where('type', 'chemical')
                     ->ignore($this->editingId)
             ];
         }
@@ -98,15 +99,15 @@ class RawMatCategory extends Component
 
         try {
             Category::create([
-                'type' => 'raw_material',
-                'name' => $this->name
+                'name' => $this->name,
+                'type' => 'chemical'
             ]);
 
             $this->closeAddModal();
             $this->resetPage();
             session()->flash('success', 'Kategori berhasil dibuat.');
         } catch (\Exception $e) {
-            \Log::error('Error creating category: ' . $e->getMessage(), [
+            \Log::error('Error creating chemical category: ' . $e->getMessage(), [
                 'name' => $this->name,
                 'exception' => $e->getTraceAsString()
             ]);
@@ -125,14 +126,15 @@ class RawMatCategory extends Component
         try {
             $category = Category::findOrFail($this->editingId);
             $category->update([
-                'name' => $this->name
+                'name' => $this->name,
+                'type' => 'chemical'
             ]);
 
             $this->closeEditModal();
             $this->dispatch('$refresh');
             session()->flash('success', 'Kategori berhasil diperbarui.');
         } catch (\Exception $e) {
-            \Log::error('Error updating category: ' . $e->getMessage(), [
+            \Log::error('Error updating chemical category: ' . $e->getMessage(), [
                 'name' => $this->name,
                 'editingId' => $this->editingId,
                 'exception' => $e->getTraceAsString()
@@ -164,13 +166,14 @@ class RawMatCategory extends Component
     {
         $this->setPage($page);
     }
+
     public function render()
     {
-        return view('livewire.sample-rawmat-submission.components.category', [
-            'categories' => Category::select('id', 'name', 'type')
-                ->where('type', 'raw_material')
+        return view('livewire.sample-chemical-submission.chemical-category', [
+            'categories' => Category::select('id', 'name')
+                ->where('type', 'chemical')
                 ->latest()
                 ->paginate(10)
-        ])->layout('layouts.app')->title('Raw Material Categories');
+        ])->layout('layouts.app')->title('Chemical Categories');
     }
 }

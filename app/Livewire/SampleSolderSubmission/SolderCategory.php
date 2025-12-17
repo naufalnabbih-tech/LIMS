@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Livewire;
+namespace App\Livewire\SampleSolderSubmission;
 
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Category;
 use Illuminate\Validation\Rule;
 
-class ChemicalCategory extends Component
+class SolderCategory extends Component
 {
     use WithPagination;
 
@@ -31,7 +31,7 @@ class ChemicalCategory extends Component
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('categories', 'name')->where('type', 'chemical')
+                Rule::unique('categories', 'name')->where('type', 'solder')
             ],
         ];
 
@@ -42,7 +42,7 @@ class ChemicalCategory extends Component
                 'string',
                 'max:255',
                 Rule::unique('categories', 'name')
-                    ->where('type', 'chemical')
+                    ->where('type', 'solder')
                     ->ignore($this->editingId)
             ];
         }
@@ -100,14 +100,14 @@ class ChemicalCategory extends Component
         try {
             Category::create([
                 'name' => $this->name,
-                'type' => 'chemical'
+                'type' => 'solder'
             ]);
 
             $this->closeAddModal();
             $this->resetPage();
             session()->flash('success', 'Kategori berhasil dibuat.');
         } catch (\Exception $e) {
-            \Log::error('Error creating chemical category: ' . $e->getMessage(), [
+            \Log::error('Error creating solder category: ' . $e->getMessage(), [
                 'name' => $this->name,
                 'exception' => $e->getTraceAsString()
             ]);
@@ -127,14 +127,14 @@ class ChemicalCategory extends Component
             $category = Category::findOrFail($this->editingId);
             $category->update([
                 'name' => $this->name,
-                'type' => 'chemical'
+                'type' => 'solder'
             ]);
 
             $this->closeEditModal();
             $this->dispatch('$refresh');
             session()->flash('success', 'Kategori berhasil diperbarui.');
         } catch (\Exception $e) {
-            \Log::error('Error updating chemical category: ' . $e->getMessage(), [
+            \Log::error('Error updating solder category: ' . $e->getMessage(), [
                 'name' => $this->name,
                 'editingId' => $this->editingId,
                 'exception' => $e->getTraceAsString()
@@ -169,11 +169,11 @@ class ChemicalCategory extends Component
 
     public function render()
     {
-        return view('livewire.sample-chemical-submission.components.category', [
+        return view('livewire.sample-solder-submission.solder-category', [
             'categories' => Category::select('id', 'name')
-                ->where('type', 'chemical')
+                ->where('type', 'solder')
                 ->latest()
                 ->paginate(10)
-        ])->layout('layouts.app')->title('Chemical Categories');
+        ])->layout('layouts.app')->title('Solder Categories');
     }
 }

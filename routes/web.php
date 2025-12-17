@@ -1,11 +1,11 @@
 <?php
 
 use App\Livewire\Dashboard;
-use App\Livewire\Rawmat;
+use App\Livewire\SampleRawmatSubmission\Rawmat;
 use Illuminate\Support\Facades\Route;
-use App\Livewire\RawMatCategory;
-use App\Livewire\Reference;
-use App\Livewire\Specification;
+use App\Livewire\SampleRawmatSubmission\RawMatCategory;
+use App\Livewire\SampleRawmatSubmission\Reference;
+use App\Livewire\SampleRawmatSubmission\Specification;
 use App\Livewire\Auth\Login;
 use App\Livewire\UserManagement;
 use App\Livewire\RoleManagement;
@@ -20,14 +20,14 @@ use App\Livewire\InstrumentConditionManagement;
 use App\Livewire\InstrumentManagement;
 use App\Livewire\ThermohygrometerManagement;
 use App\Livewire\ThermohygrometerConditionManagement;
-use App\Livewire\SolderCategory;
-use App\Livewire\Solder;
-use App\Livewire\SolderReference;
-use App\Livewire\SolderSpecification;
-use App\Livewire\ChemicalCategory;
-use App\Livewire\Chemical;
-use App\Livewire\ChemicalReference;
-use App\Livewire\ChemicalSpecification;
+use App\Livewire\SampleSolderSubmission\SolderCategory;
+use App\Livewire\SampleSolderSubmission\Solder;
+use App\Livewire\SampleSolderSubmission\SolderReference;
+use App\Livewire\SampleSolderSubmission\SolderSpecification;
+use App\Livewire\SampleChemicalSubmission\ChemicalCategory;
+use App\Livewire\SampleChemicalSubmission\Chemical;
+use App\Livewire\SampleChemicalSubmission\ChemicalReference;
+use App\Livewire\SampleChemicalSubmission\ChemicalSpecification;
 
 // Guest routes (accessible without authentication)
 Route::middleware('guest')->group(function () {

@@ -1,24 +1,26 @@
 <?php
 
-namespace App\Livewire;
+namespace App\Livewire\SampleRawmatSubmission;
 
 use App\Models\Specification as SpecificationsModels;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithPagination;
 
-class ChemicalSpecification extends Component
+class Specification extends Component
 {
     use WithPagination;
 
+    // Form data
     public $name = '';
     public $editingId = null;
 
+    // Modal states
     public $isAddModalOpen = false;
     public $isEditModalOpen = false;
 
+    // Loading states
     public $isSubmitting = false;
-    public $showMessage = false;
 
     protected $paginationTheme = 'tailwind';
 
@@ -28,6 +30,7 @@ class ChemicalSpecification extends Component
             'name' => 'required|string|max:255|unique:specifications,name',
         ];
 
+        // For edit, exclude current record from unique validation
         if ($this->editingId) {
             $rules['name'] = Rule::unique('specifications', 'name')->ignore($this->editingId);
         }
@@ -43,12 +46,12 @@ class ChemicalSpecification extends Component
     public function render()
     {
         $specifications = SpecificationsModels::select('id', 'name')
-            ->withCount('chemicalReferenceManytoMany')
+            ->withCount('referenceManytoMany')
             ->paginate(10);
 
-        return view('livewire.sample-chemical-submission.components.specification', [
+        return view('livewire.sample-rawmat-submission.specification', [
             'specifications' => $specifications,
-        ])->layout('layouts.app')->title('Solder Specifications');
+        ])->layout('layouts.app')->title('Specifications');
     }
 
     public function openAddModal()
@@ -134,8 +137,9 @@ class ChemicalSpecification extends Component
         try {
             $specification = SpecificationsModels::findOrFail($id);
 
-            if ($specification->chemicalReferenceManytoMany()->count() > 0) {
-                session()->flash('error', 'Specification tidak dapat dihapus karena masih digunakan oleh chemical reference.');
+            // Check if specification is being used by any references
+            if ($specification->referenceManytoMany()->count() > 0) {
+                session()->flash('error', 'Specification tidak dapat dihapus karena masih digunakan oleh reference.');
                 return;
             }
 

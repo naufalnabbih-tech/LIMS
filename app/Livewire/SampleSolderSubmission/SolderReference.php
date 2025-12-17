@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire;
+namespace App\Livewire\SampleSolderSubmission;
 
 use App\Models\Reference;
 use App\Models\Specification;
@@ -151,7 +151,7 @@ class SolderReference extends Component
             $groupedReferences->get($solderName)->push($reference);
         }
 
-        return view('livewire.sample-solder-submission.components.reference', [
+        return view('livewire.sample-solder-submission.solder-reference', [
             'references' => $references,
             'groupedReferences' => $groupedReferences,
         ])->layout('layouts.app')->title('Solder References');

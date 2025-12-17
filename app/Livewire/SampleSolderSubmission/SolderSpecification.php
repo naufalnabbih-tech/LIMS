@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire;
+namespace App\Livewire\SampleSolderSubmission;
 
 use App\Models\Specification as SpecificationsModels;
 use Illuminate\Validation\Rule;
@@ -46,7 +46,7 @@ class SolderSpecification extends Component
             ->withCount('solderReferenceManytoMany')
             ->paginate(10);
 
-        return view('livewire.sample-solder-submission.components.specification', [
+        return view('livewire.sample-solder-submission.solder-specification', [
             'specifications' => $specifications,
         ])->layout('layouts.app')->title('Solder Specifications');
     }

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire;
+namespace App\Livewire\SampleRawmatSubmission;
 
 use App\Models\Material;
 use App\Models\Reference as ReferenceModel;
@@ -18,7 +18,11 @@ class Reference extends Component
 
     public function mount()
     {
-        $this->materials = Material::select('id', 'name')->get();
+        $this->materials = Material::select('id', 'name')
+            ->whereHas('category', function($q) {
+                $q->where('type', 'raw_material');
+            })
+            ->get();
         $this->specifications = Specification::select('id', 'name')->get();
     }
 
@@ -96,22 +100,11 @@ class Reference extends Component
                         // Get the corresponding min value
                         $minValue = $this->specificationRanges[$specId][$index]['min'] ?? null;
 
-                        \Log::info('Custom range validation:', [
-                            'attribute' => $attribute,
-                            'specId' => $specId,
-                            'index' => $index,
-                            'min' => $minValue,
-                            'max' => $value,
-                            'minIsSet' => isset($this->specificationRanges[$specId][$index]['min']),
-                            'maxIsSet' => isset($this->specificationRanges[$specId][$index]['max'])
-                        ]);
-
                         if ($minValue !== null && $minValue !== '' && $value !== null && $value !== '') {
                             $min = (float) $minValue;
                             $max = (float) $value;
 
                             if ($max <= $min) {
-                                \Log::info('Range validation FAILED', ['min' => $min, 'max' => $max]);
                                 $fail('Nilai maksimum harus lebih besar dari nilai minimum.');
                             }
                         }
@@ -139,9 +132,6 @@ class Reference extends Component
                             if (isset($range['min']) && isset($range['max']) && $range['min'] !== '' && $range['max'] !== '') {
                                 $min = (float) $range['min'];
                                 $max = (float) $range['max'];
-
-                                // Logging dihapus atau dikomentari agar tidak memenuhi log production
-                                // \Log::info('Range validation check:', ...);
 
                                 if ($max <= $min) {
                                     $validator->errors()->add(
@@ -181,7 +171,11 @@ class Reference extends Component
             'material',
             'material.category',
             'specificationsManytoMany'
-        ])->paginate(10);
+        ])
+        ->whereHas('material.category', function($q) {
+            $q->where('type', 'raw_material');
+        })
+        ->paginate(10);
 
         // Group references by raw material name - use the items() method to get the collection
         $groupedReferences = collect();
@@ -199,7 +193,7 @@ class Reference extends Component
             $groupedReferences->get($materialName)->push($reference);
         }
 
-        return view('livewire.sample-rawmat-submission.components.reference', [
+        return view('livewire.sample-rawmat-submission.reference', [
             'references' => $references,
             'groupedReferences' => $groupedReferences,
         ])->layout('layouts.app')->title('References');
@@ -588,5 +582,10 @@ class Reference extends Component
     public function closeMaterialDropdown()
     {
         $this->showMaterialDropdown = false;
+    }
+
+    public function gotoPage($page)
+    {
+        $this->setPage($page);
     }
 }

@@ -1,13 +1,12 @@
 <?php
 
-namespace App\Livewire;
+namespace App\Livewire\SampleRawmatSubmission;
 
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Category;
 use Illuminate\Validation\Rule;
-
-class SolderCategory extends Component
+class RawMatCategory extends Component
 {
     use WithPagination;
 
@@ -31,7 +30,7 @@ class SolderCategory extends Component
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('categories', 'name')->where('type', 'solder')
+                Rule::unique('categories', 'name')->where('type', 'raw_material')
             ],
         ];
 
@@ -42,7 +41,7 @@ class SolderCategory extends Component
                 'string',
                 'max:255',
                 Rule::unique('categories', 'name')
-                    ->where('type', 'solder')
+                    ->where('type', 'raw_material')
                     ->ignore($this->editingId)
             ];
         }
@@ -99,15 +98,15 @@ class SolderCategory extends Component
 
         try {
             Category::create([
-                'name' => $this->name,
-                'type' => 'solder'
+                'type' => 'raw_material',
+                'name' => $this->name
             ]);
 
             $this->closeAddModal();
             $this->resetPage();
             session()->flash('success', 'Kategori berhasil dibuat.');
         } catch (\Exception $e) {
-            \Log::error('Error creating solder category: ' . $e->getMessage(), [
+            \Log::error('Error creating category: ' . $e->getMessage(), [
                 'name' => $this->name,
                 'exception' => $e->getTraceAsString()
             ]);
@@ -126,15 +125,14 @@ class SolderCategory extends Component
         try {
             $category = Category::findOrFail($this->editingId);
             $category->update([
-                'name' => $this->name,
-                'type' => 'solder'
+                'name' => $this->name
             ]);
 
             $this->closeEditModal();
             $this->dispatch('$refresh');
             session()->flash('success', 'Kategori berhasil diperbarui.');
         } catch (\Exception $e) {
-            \Log::error('Error updating solder category: ' . $e->getMessage(), [
+            \Log::error('Error updating category: ' . $e->getMessage(), [
                 'name' => $this->name,
                 'editingId' => $this->editingId,
                 'exception' => $e->getTraceAsString()
@@ -169,11 +167,11 @@ class SolderCategory extends Component
 
     public function render()
     {
-        return view('livewire.sample-solder-submission.components.category', [
+        return view('livewire.sample-rawmat-submission.rawmat-category', [
             'categories' => Category::select('id', 'name')
-                ->where('type', 'solder')
+                ->where('type', 'raw_material')
                 ->latest()
                 ->paginate(10)
-        ])->layout('layouts.app')->title('Solder Categories');
+        ])->layout('layouts.app')->title('Raw Material Categories');
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire;
+namespace App\Livewire\SampleChemicalSubmission;
 
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -8,7 +8,7 @@ use App\Models\Material;
 use App\Models\Category;
 use Illuminate\Validation\Rule;
 
-class Solder extends Component
+class Chemical extends Component
 {
     use WithPagination;
 
@@ -18,7 +18,7 @@ class Solder extends Component
     {
         // Optimized for 3G networks - load only essential fields
         $this->categories = Category::select('id', 'name')
-            ->where('type', 'solder')
+            ->where('type', 'chemical')
             ->get();
     }
 
@@ -57,30 +57,30 @@ class Solder extends Component
     }
 
     protected $messages = [
-        'name.required' => 'Nama solder wajib diisi.',
-        'name.unique' => 'Nama solder ini sudah ada.',
+        'name.required' => 'Nama chemical wajib diisi.',
+        'name.unique' => 'Nama chemical ini sudah ada.',
         'code.required' => 'Internal code wajib diisi.',
         'code.unique' => 'Internal code ini sudah digunakan.',
-        'category_id.required' => 'Kategori solder wajib diisi.',
+        'category_id.required' => 'Kategori chemical wajib diisi.',
         'category_id.exists' => 'Kategori yang dipilih tidak valid.',
     ];
 
     public function render()
     {
-        return view('livewire.sample-solder-submission.components.material', [
-            'solders' => Material::with('category')
+        return view('livewire.sample-chemical-submission.chemical', [
+            'chemicals' => Material::with('category')
                 ->whereHas('category', function($q) {
-                    $q->where('type', 'solder');
+                    $q->where('type', 'chemical');
                 })
                 ->paginate(10),
-        ])->layout('layouts.app')->title('Solders');
+        ])->layout('layouts.app')->title('Chemicals');
     }
 
     public function openAddModal()
     {
         // Check if categories are available
         if ($this->categories->isEmpty()) {
-            session()->flash('error', 'Tidak dapat menambah solder. Silakan tambahkan kategori terlebih dahulu.');
+            session()->flash('error', 'Tidak dapat menambah chemical. Silakan tambahkan kategori terlebih dahulu.');
             return;
         }
 
@@ -135,9 +135,9 @@ class Solder extends Component
             ]);
 
             $this->closeAddModal();
-            session()->flash('success', 'Solder berhasil dibuat.');
+            session()->flash('success', 'Chemical berhasil dibuat.');
         } catch (\Exception $e) {
-            $this->addError('name', 'Terjadi kesalahan saat menyimpan solder.');
+            $this->addError('name', 'Terjadi kesalahan saat menyimpan chemical.');
         } finally {
             $this->isSubmitting = false;
         }
@@ -148,17 +148,17 @@ class Solder extends Component
         $this->isSubmitting = true;
         $this->validate();
         try {
-            $solder = Material::find($this->editingId);
-            $solder->update([
+            $chemical = Material::find($this->editingId);
+            $chemical->update([
                 'name' => $this->name,
                 'code' => $this->code,
                 'category_id' => $this->category_id,
             ]);
 
             $this->closeEditModal();
-            session()->flash('success', 'Solder berhasil diperbarui.');
+            session()->flash('success', 'Chemical berhasil diperbarui.');
         } catch (\Exception $e) {
-            $this->addError('name', 'Terjadi kesalahan saat memperbarui solder.');
+            $this->addError('name', 'Terjadi kesalahan saat memperbarui chemical.');
         } finally {
             $this->isSubmitting = false;
         }
@@ -167,11 +167,11 @@ class Solder extends Component
     public function delete($id)
     {
         try {
-            $solder = Material::findOrFail($id);
-            $solder->delete();
-            session()->flash('success', 'Solder berhasil dihapus');
+            $chemical = Material::findOrFail($id);
+            $chemical->delete();
+            session()->flash('success', 'Chemical berhasil dihapus');
         } catch (\Exception $e) {
-            session()->flash('error', 'Terjadi kesalahan saat menghapus solder');
+            session()->flash('error', 'Terjadi kesalahan saat menghapus chemical');
         }
     }
 

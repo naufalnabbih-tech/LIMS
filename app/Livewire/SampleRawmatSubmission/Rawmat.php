@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire;
+namespace App\Livewire\SampleRawmatSubmission;
 
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -67,7 +67,7 @@ class Rawmat extends Component
 
     public function render()
     {
-        return view('livewire.sample-rawmat-submission.components.material', [
+        return view('livewire.sample-rawmat-submission.rawmat', [
             'rawmat' => Material::with('category')
                 ->whereHas('category', function($q) {
                     $q->where('type', 'raw_material');

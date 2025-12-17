@@ -26,9 +26,9 @@
 
          <!-- Sample Submission Dropdown -->
          @anypermission('manage_samples', 'view_samples')
-        <div class="cursor-pointer" x-data="{ open: {{ request()->routeIs('sample-rawmat-submissions', 'sample-solder-submissions', 'sample-chemical-submissions') ? 'true' : 'false' }} }">
+        <div class="cursor-pointer" x-data="{ open: {{ request()->routeIs(['sample-rawmat-submissions', 'sample-solder-submissions', 'sample-chemical-submissions']) ? 'true' : 'false' }} }">
             <button @click="open = !open"
-                class="w-full flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md cursor-pointer {{ request()->routeIs('sample-rawmat-submissions', 'sample-solder-submissions', 'sample-chemical-submissions') ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
+                class="w-full flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md cursor-pointer {{ request()->routeIs(['sample-rawmat-submissions', 'sample-solder-submissions', 'sample-chemical-submissions']) ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
                 <div class="flex items-center">
                     <svg class="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -80,9 +80,9 @@
 
          <!-- Materials Dropdown -->
          @anypermission('manage_raw_materials', 'view_raw_materials', 'manage_raw_material_specifications', 'view_raw_material_specifications', 'manage_raw_material_references', 'view_raw_material_references', 'manage_raw_material_categories', 'view_raw_material_categories')
-         <div class="pt-4 cursor-pointer" x-data="{ open: {{ request()->routeIs('rawmat-categories', 'rawmats', 'specifications', 'references') ? 'true' : 'false' }} }">
+         <div class="pt-4 cursor-pointer" x-data="{ open: {{ request()->routeIs(['rawmat-categories', 'rawmats', 'specifications', 'references']) ? 'true' : 'false' }} }">
              <button @click="open = !open"
-                 class="w-full flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md cursor-pointer {{ request()->routeIs('rawmat-categories', 'rawmats', 'specifications', 'references') ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
+                 class="w-full flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md cursor-pointer {{ request()->routeIs(['rawmat-categories', 'rawmats', 'specifications', 'references']) ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
                  <div class="flex items-center">
                      <svg class="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -151,9 +151,9 @@
 
          <!-- Solder Databook Dropdown -->
          @anypermission('manage_solders', 'view_solders', 'manage_solder_specifications', 'view_solder_specifications', 'manage_solder_references', 'view_solder_references', 'manage_solder_categories', 'view_solder_categories')
-         <div class="pt-4 cursor-pointer" x-data="{ open: {{ request()->routeIs('solder-categories', 'solder', 'solder-specifications', 'solder-references') ? 'true' : 'false' }} }">
+         <div class="pt-4 cursor-pointer" x-data="{ open: {{ request()->routeIs(['solder-categories', 'solder', 'solder-specifications', 'solder-references']) ? 'true' : 'false' }} }">
              <button @click="open = !open"
-                 class="w-full flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md cursor-pointer {{ request()->routeIs('solder-categories', 'solder', 'solder-specifications', 'solder-references') ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
+                 class="w-full flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md cursor-pointer {{ request()->routeIs(['solder-categories', 'solder', 'solder-specifications', 'solder-references']) ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
                  <div class="flex items-center">
                      <svg class="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -223,9 +223,9 @@
 
          <!-- Chemical Databook Dropdown -->
          @anypermission('manage_chemicals', 'view_chemicals', 'manage_chemical_specifications', 'view_chemical_specifications', 'manage_chemical_references', 'view_chemical_references', 'manage_chemical_categories', 'view_chemical_categories')
-         <div class="pt-4 cursor-pointer" x-data="{ open: {{ request()->routeIs('chemical-categories', 'chemicals', 'chemical-specifications', 'chemical-references') ? 'true' : 'false' }} }">
+         <div class="pt-4 cursor-pointer" x-data="{ open: {{ request()->routeIs(['chemical-categories', 'chemicals', 'chemical-specifications', 'chemical-references']) ? 'true' : 'false' }} }">
              <button @click="open = !open"
-                 class="w-full flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md cursor-pointer {{ request()->routeIs('chemical-categories', 'chemicals', 'chemical-specifications', 'chemical-references') ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
+                 class="w-full flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md cursor-pointer {{ request()->routeIs(['chemical-categories', 'chemicals', 'chemical-specifications', 'chemical-references']) ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
                  <div class="flex items-center">
                      <svg class="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -295,9 +295,9 @@
 
          <!-- CoA Management Dropdown -->
          @anypermission('manage_coas', 'view_coas')
-         <div class="pt-4 cursor-pointer" x-data="{ open: {{ request()->routeIs('coa-management', 'coa-templates', 'coa-document-formats') ? 'true' : 'false' }} }">
+         <div class="pt-4 cursor-pointer" x-data="{ open: {{ request()->routeIs(['coa-management', 'coa-templates', 'coa-document-formats']) ? 'true' : 'false' }} }">
              <button @click="open = !open"
-                 class="w-full flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md cursor-pointer {{ request()->routeIs('coa-management', 'coa-templates', 'coa-document-formats') ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
+                 class="w-full flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md cursor-pointer {{ request()->routeIs(['coa-management', 'coa-templates', 'coa-document-formats']) ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
                  <div class="flex items-center">
                      <svg class="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -356,9 +356,9 @@
 
          <!-- System Management Dropdown -->
          @anypermission('manage_users', 'view_users', 'manage_roles', 'manage_instruments', 'view_instruments')
-         <div class="pt-4 cursor-pointer" x-data="{ open: {{ request()->routeIs('users', 'roles', 'instruments', 'thermohygrometers') ? 'true' : 'false' }} }">
+         <div class="pt-4 cursor-pointer" x-data="{ open: {{ request()->routeIs(['users', 'roles', 'instruments', 'thermohygrometers']) ? 'true' : 'false' }} }">
              <button @click="open = !open"
-                 class="w-full flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md cursor-pointer {{ request()->routeIs('users', 'roles', 'instruments', 'thermohygrometers') ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
+                 class="w-full flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md cursor-pointer {{ request()->routeIs(['users', 'roles', 'instruments', 'thermohygrometers']) ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
                  <div class="flex items-center">
                      <svg class="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -433,9 +433,9 @@
 
          <!-- Condition Dropdown -->
          @anypermission('manage_instrument_conditions', 'view_instrument_conditions', 'manage_thermohygrometer_conditions', 'view_thermohygrometer_conditions')
-         <div class="pt-4 cursor-pointer" x-data="{ open: {{ request()->routeIs('instrument-conditions', 'thermohygrometer-conditions') ? 'true' : 'false' }} }">
+         <div class="pt-4 cursor-pointer" x-data="{ open: {{ request()->routeIs(['instrument-conditions', 'thermohygrometer-conditions']) ? 'true' : 'false' }} }">
              <button @click="open = !open"
-                 class="w-full flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md cursor-pointer {{ request()->routeIs('instrument-conditions', 'thermohygrometer-conditions') ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
+                 class="w-full flex items-center justify-between px-2 py-2 text-sm font-medium rounded-md cursor-pointer {{ request()->routeIs(['instrument-conditions', 'thermohygrometer-conditions']) ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }} transition-all duration-150">
                  <div class="flex items-center">
                      <svg class="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
