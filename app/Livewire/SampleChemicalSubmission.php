@@ -256,6 +256,12 @@ class SampleChemicalSubmission extends Component
     // CoA Methods
     public function openCoAForm($sampleId)
     {
+        // Check permission
+        if (!auth()->user()->hasPermission('create_coa')) {
+            session()->flash('error', 'You do not have permission to create CoA.');
+            return;
+        }
+
         // Fetch test results directly from database
         $testResults = \DB::table('test_results')->where('sample_id', $sampleId)->get();
         \Log::info('SampleChemicalSubmission: Found ' . $testResults->count() . ' test results for sample ' . $sampleId);
@@ -412,6 +418,13 @@ class SampleChemicalSubmission extends Component
 
     public function createCoA()
     {
+        // Check permission
+        if (!auth()->user()->hasPermission('create_coa')) {
+            session()->flash('error', 'You do not have permission to create CoA.');
+            $this->closeCoAModal();
+            return;
+        }
+
         // Validate
         // For draft status, allow duplicate document numbers
         // Unique constraint only applies when changing status to approved/printed
@@ -535,6 +548,7 @@ class SampleChemicalSubmission extends Component
             'canReview' => auth()->user()->hasPermission('review_samples'),
             'canApprove' => auth()->user()->hasPermission('approve_samples'),
             'canDelete' => auth()->user()->hasPermission('manage_samples'),
+            'canCreateCoA' => auth()->user()->hasPermission('create_coa'),
         ];
 
         return view('livewire.sample-chemical-submission', [

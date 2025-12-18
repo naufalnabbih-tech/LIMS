@@ -338,7 +338,7 @@
                         canCompleteAnalysis: ['in_progress', 'analysis_started'].includes(data.status),
                         canReview: data.userCanReview && ['analysis_completed', 'pending_review', 'reviewed', 'approved'].includes(data.status),
                         canApprove: data.userCanApprove && ['reviewed'].includes(data.status),
-                        canCreateCoA: ['approved', 'completed'].includes(data.status),
+                        canCreateCoA: data.userCanCreateCoA && ['approved', 'completed'].includes(data.status),
                         canDelete: data.userCanDelete && !['approved', 'completed'].includes(data.status)
                     };
 
