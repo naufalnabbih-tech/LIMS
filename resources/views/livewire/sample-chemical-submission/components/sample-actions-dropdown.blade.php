@@ -12,6 +12,7 @@
             :style="{
                 top: (sampleData.position?.top || 200) + 'px',
                 left: (sampleData.position?.left || 300) + 'px',
+                height: (sampleData.position?.height || 400) + 'px',
                 maxHeight: '85vh',
                 overflowY: 'auto'
             }"
@@ -310,7 +311,9 @@
 
                 config: {
                     dropdownWidth: 320,
-                    dropdownHeight: 400,
+                    dropdownHeight: 400, // Default, will be calculated dynamically
+                    baseActionHeight: 60, // Height per action item
+                    headerHeight: 70, // Header section height
                     margin: 8,
                     viewportMargin: 10,
                     transitionDuration: 150
@@ -318,7 +321,7 @@
 
                 openDropdown(sampleId, data) {
                     this.sampleData = this.createSampleData(sampleId, data);
-                    if (data.buttonRect) this.calculatePosition(data.buttonRect);
+                    this.calculatePosition(data.buttonRect);
                     this.showDropdown();
                 },
 
@@ -342,10 +345,16 @@
                         canDelete: data.userCanDelete && !['approved', 'completed'].includes(data.status)
                     };
 
+                    // Count visible actions (including "View Details" which is always visible)
+                    // View Details is always visible, so we start with 1
+                    const actionPermissionsCount = Object.values(statusPermissions).filter(Boolean).length;
+                    const visibleActionsCount = 1 + actionPermissionsCount; // 1 for View Details + other actions
+
                     return {
                         sampleId,
                         ...data,
                         ...statusPermissions,
+                        visibleActionsCount,
                         position: {
                             left: 300,
                             top: 200
@@ -353,41 +362,101 @@
                     };
                 },
 
+                calculateDynamicHeight() {
+                    const { baseActionHeight, headerHeight } = this.config;
+                    const visibleCount = this.sampleData.visibleActionsCount || 1;
+
+                    // Calculate: header + (number of actions * height per action) + padding
+                    const calculatedHeight = headerHeight + (visibleCount * baseActionHeight) + 40;
+
+                    // Cap between min 150px and max 500px
+                    return Math.max(150, Math.min(calculatedHeight, 500));
+                },
+
                 calculatePosition(buttonRect) {
+                    if (!buttonRect) {
+                        console.warn('buttonRect is missing');
+                        return;
+                    }
+
                     const {
                         dropdownWidth,
-                        dropdownHeight,
                         margin,
                         viewportMargin
                     } = this.config;
+
+                    // Calculate dynamic height based on visible actions
+                    const dropdownHeight = this.calculateDynamicHeight();
+
                     const viewport = {
                         width: window.innerWidth,
                         height: window.innerHeight
                     };
 
-                    const space = {
-                        left: buttonRect.left,
-                        right: viewport.width - buttonRect.right,
-                        above: buttonRect.top,
-                        below: viewport.height - buttonRect.bottom
-                    };
+                    // Smart positioning based on visible actions count
+                    const fewActions = this.sampleData.visibleActionsCount < 3;
+                    let left, top;
 
-                    const left = space.left >= dropdownWidth ?
-                        buttonRect.left - dropdownWidth - margin :
-                        space.right >= dropdownWidth ?
-                        buttonRect.right + margin :
-                        (viewport.width - dropdownWidth) / 2;
+                    console.log('Sample ID:', this.sampleData.sampleId, 'Visible Actions:', this.sampleData.visibleActionsCount, 'Dynamic Height:', dropdownHeight);
 
-                    const top = space.below >= dropdownHeight ?
-                        buttonRect.bottom + margin :
-                        space.above >= dropdownHeight ?
-                        buttonRect.top - dropdownHeight - margin :
-                        (viewport.height - dropdownHeight) / 2;
+                    // HORIZONTAL POSITIONING
+                    if (fewActions) {
+                        // For few actions: position dropdown to the RIGHT of button
+                        left = buttonRect.right + margin;
+
+                        // Check if dropdown would go off-screen to the right
+                        if (left + dropdownWidth > viewport.width - viewportMargin) {
+                            // Position to the LEFT of button instead
+                            left = buttonRect.left - dropdownWidth - margin;
+                        }
+
+                        console.log('Few actions - positioning near button. Left:', left);
+                    } else {
+                        // For many actions: position dropdown to the LEFT of button
+                        left = buttonRect.left - dropdownWidth - margin;
+
+                        // Check if dropdown would go off-screen to the left
+                        if (left < viewportMargin) {
+                            // Position to the RIGHT of button instead
+                            left = buttonRect.right + margin;
+                        }
+
+                        console.log('Many actions - positioning near button. Left:', left);
+                    }
+
+                    // Ensure dropdown stays within viewport bounds horizontally
+                    left = Math.max(viewportMargin, Math.min(left, viewport.width - dropdownWidth - viewportMargin));
+
+                    // VERTICAL POSITIONING - Always prefer below button first
+                    const spaceBelow = viewport.height - buttonRect.bottom - viewportMargin;
+                    const spaceAbove = buttonRect.top - viewportMargin;
+
+                    console.log('Space below:', spaceBelow, 'Space above:', spaceAbove, 'Dropdown height:', dropdownHeight);
+
+                    if (spaceBelow >= dropdownHeight || spaceBelow >= spaceAbove) {
+                        // Position below button (preferred)
+                        top = buttonRect.bottom + margin;
+                        console.log('Positioning BELOW button');
+                    } else if (spaceAbove >= dropdownHeight) {
+                        // Position above button
+                        top = buttonRect.top - dropdownHeight - margin;
+                        console.log('Positioning ABOVE button');
+                    } else {
+                        // Not enough space either way, position below and let it scroll
+                        top = buttonRect.bottom + margin;
+                        console.log('Not enough space, forcing BELOW and allowing scroll');
+                    }
+
+                    // Ensure dropdown stays within viewport bounds vertically
+                    top = Math.max(viewportMargin, Math.min(top, viewport.height - dropdownHeight - viewportMargin));
 
                     this.sampleData.position = {
-                        left: Math.max(viewportMargin, Math.min(left, viewport.width - dropdownWidth - viewportMargin)),
-                        top: Math.max(viewportMargin, Math.min(top, viewport.height - dropdownHeight - viewportMargin))
+                        left: left,
+                        top: top,
+                        height: dropdownHeight
                     };
+
+                    console.log('Final position:', this.sampleData.position);
                 },
 
                 showDropdown() {
