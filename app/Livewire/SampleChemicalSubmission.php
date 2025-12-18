@@ -60,6 +60,12 @@ class SampleChemicalSubmission extends Component
 
     public function editSample($sampleId)
     {
+        // Check permission
+        if (!auth()->user()->hasPermission('manage_samples')) {
+            session()->flash('error', 'You do not have permission to edit samples.');
+            return;
+        }
+
         $this->dispatch('editSample', sampleId: $sampleId);
     }
 
@@ -545,6 +551,7 @@ class SampleChemicalSubmission extends Component
 
         // Get user permissions for frontend
         $userPermissions = [
+            'canEdit' => auth()->user()->hasPermission('manage_samples'),
             'canReview' => auth()->user()->hasPermission('review_samples'),
             'canApprove' => auth()->user()->hasPermission('approve_samples'),
             'canDelete' => auth()->user()->hasPermission('manage_samples'),

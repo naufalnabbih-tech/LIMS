@@ -332,7 +332,7 @@
 
                 createSampleData(sampleId, data) {
                     const statusPermissions = {
-                        canEdit: ['submitted', 'pending'].includes(data.status),
+                        canEdit: data.userCanEdit && ['submitted', 'pending'].includes(data.status),
                         canStartAnalysis: ['submitted', 'pending'].includes(data.status),
                         canContinueAnalysis: ['in_progress'].includes(data.status),
                         canHandOver: ['in_progress'].includes(data.status),
