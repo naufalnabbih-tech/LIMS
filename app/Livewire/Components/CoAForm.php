@@ -77,13 +77,38 @@ class CoAForm extends Component
             if (is_numeric($testValue) && strpos($testValue, '.') !== false) {
                 $testValue = rtrim(rtrim($testValue, '0'), '.');
             }
-            $tests[] = [
+
+            $testData = [
                 'name' => $result->parameter_name ?? 'N/A',
-                'spec' => $result->spec_operator === '-'
-                    ? '-'
-                    : ($result->spec_operator . ' ' . $result->spec_min_value . ($result->spec_max_value ? ' - ' . $result->spec_max_value : '')),
-                'result' => $testValue
+                'result' => $testValue,
             ];
+
+            if ($result->spec_operator === '-') {
+                // Check if min/max values exist
+                if ($result->spec_min_value !== null && $result->spec_max_value !== null) {
+                    $testData['operator'] = 'range';
+                    $testData['min'] = $result->spec_min_value;
+                    $testData['max'] = $result->spec_max_value;
+                    $testData['spec'] = $result->spec_min_value . ' - ' . $result->spec_max_value;
+                } else {
+                    $testData['operator'] = 'none';
+                    $testData['spec'] = '-';
+                }
+            } elseif ($result->spec_operator === 'should_be') {
+                $testData['operator'] = 'should_be';
+                $testData['value'] = $result->test_value_text ?? '-';
+                $testData['spec'] = $result->test_value_text ?? '-';
+            } elseif ($result->spec_operator === 'range') {
+                $testData['operator'] = 'range';
+                $testData['min'] = $result->spec_min_value ?? '-';
+                $testData['max'] = $result->spec_max_value ?? '-';
+                $testData['spec'] = ($result->spec_min_value ?? '-') . ' - ' . ($result->spec_max_value ?? '-');
+            } else {
+                $testData['operator'] = $result->spec_operator;
+                $testData['spec'] = $result->spec_operator . ' ' . ($result->spec_min_value ?? '') . ($result->spec_max_value ? ' - ' . $result->spec_max_value : '');
+            }
+
+            $tests[] = $testData;
         }
 
         // Pre-populate data from sample

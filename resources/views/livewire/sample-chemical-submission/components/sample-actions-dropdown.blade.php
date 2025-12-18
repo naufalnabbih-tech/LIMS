@@ -183,12 +183,12 @@
                 <!-- Review & Approval Actions -->
                 <div class="p-3">
                     <div class="px-2 py-1.5"
-                        x-show="['analysis_completed', 'review', 'reviewed', 'approved'].includes(sampleData.status)">
+                        x-show="(sampleData.canReview || sampleData.canApprove) && ['analysis_completed', 'review', 'reviewed', 'approved'].includes(sampleData.status)">
                         <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Review & Approval</h4>
                     </div>
                     <div class="space-y-1">
                         <button
-                            x-show="['analysis_completed', 'review', 'reviewed', 'approved'].includes(sampleData.status)"
+                            x-show="sampleData.canReview && ['analysis_completed', 'review', 'reviewed', 'approved'].includes(sampleData.status)"
                             @click="
                                 callLivewireMethod('reviewResults', sampleData.sampleId);
                                 setTimeout(() => {
@@ -210,7 +210,7 @@
                             </div>
                         </button>
 
-                        <button x-show="sampleData.canApprove"
+                        <button x-show="sampleData.canApprove && sampleData.userCanApprove"
                             @click="
                                 if (confirm('Are you sure you want to approve this sample? This action cannot be undone.')) {
                                     callLivewireMethod('approveSample', sampleData.sampleId);
@@ -268,12 +268,13 @@
                     x-show="['approved', 'completed'].includes(sampleData.status) && sampleData.canCreateCoA"></div>
 
                 <!-- Delete Actions -->
-                <div class="p-3">
+                <div class="p-3" x-show="sampleData.canDelete">
                     <div class="px-2 py-1.5">
                         <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Danger Zone</h4>
                     </div>
                     <div class="space-y-1">
                         <button
+                            x-show="sampleData.canDelete"
                             @click="
                         if (confirm('Are you sure you want to delete this sample? This action cannot be undone.')) {
                             callLivewireMethod('deleteSample', sampleData.sampleId);
@@ -335,10 +336,10 @@
                         canTakeOver: ['hand_over', 'hand over'].includes(data.status?.toLowerCase()) &&
                             data.handoverFromAnalystId != data.currentUserId,
                         canCompleteAnalysis: ['in_progress', 'analysis_started'].includes(data.status),
-                        canReview: ['analysis_completed', 'pending_review'].includes(data.status),
-                        canApprove: ['reviewed'].includes(data.status),
+                        canReview: data.userCanReview && ['analysis_completed', 'pending_review', 'reviewed', 'approved'].includes(data.status),
+                        canApprove: data.userCanApprove && ['reviewed'].includes(data.status),
                         canCreateCoA: ['approved', 'completed'].includes(data.status),
-                        canDelete: !['approved', 'completed'].includes(data.status)
+                        canDelete: data.userCanDelete && !['approved', 'completed'].includes(data.status)
                     };
 
                     return {

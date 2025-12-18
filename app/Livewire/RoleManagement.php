@@ -79,6 +79,12 @@ class RoleManagement extends Component
         'view_samples' => 'View Sample Submissions',
         'manage_sample_analysis' => 'Manage Sample Analysis',
         'view_sample_analysis' => 'View Sample Analysis',
+        'submit_samples' => 'Submit Samples',
+        'handover_samples' => 'Hand Over Samples',
+        'takeover_samples' => 'Take Over Samples',
+        'analyze_samples' => 'Analyze Samples',
+        'review_samples' => 'Review Sample Results',
+        'approve_samples' => 'Approve Sample Results',
         'edit_analysis' => 'Edit Analysis Results',
 
         // Instrument Management
@@ -110,6 +116,9 @@ class RoleManagement extends Component
         'edit_coa' => 'Edit CoA',
         'approve_coa' => 'Approve CoA',
         'delete_coa' => 'Delete CoA',
+
+        // Settings
+        'manage_settings' => 'Manage Settings',
     ];
 
     public function updatingSearch()

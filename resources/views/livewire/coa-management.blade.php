@@ -461,7 +461,39 @@
                                                 @forelse ($tests as $test)
                                                     <tr>
                                                         <td class="border border-gray-400 px-1 py-0.5 text-left text-[8px]">{{ $test['name'] ?? '-' }}</td>
-                                                        <td class="border border-gray-400 px-1 py-0.5 text-[8px]">{{ $test['spec'] ?? '-' }}</td>
+                                                        <td class="border border-gray-400 px-1 py-0.5 text-[8px]">
+                                                            @php
+                                                                $specDisplay = '-';
+                                                                $operator = $test['operator'] ?? null;
+
+                                                                if($operator === 'should_be') {
+                                                                    // New format: use value field
+                                                                    $specDisplay = $test['value'] ?? '-';
+                                                                } elseif($operator === 'range') {
+                                                                    // New format: use min and max
+                                                                    $specDisplay = ($test['min'] ?? '-') . ' - ' . ($test['max'] ?? '-');
+                                                                } elseif($operator === 'none') {
+                                                                    $specDisplay = '-';
+                                                                } else {
+                                                                    // Old data format: parse spec string
+                                                                    $spec = trim($test['spec'] ?? '');
+
+                                                                    // Check if spec contains " - " for range format
+                                                                    if(strpos($spec, ' - ') !== false) {
+                                                                        $specDisplay = $spec; // e.g., "1 - 2"
+                                                                    } elseif($spec === 'should_be' || $spec === 'should_be ') {
+                                                                        // If operator string with no value, try to get from result
+                                                                        $specDisplay = $test['result'] ?? '-';
+                                                                    } elseif($spec === '-' || $spec === '') {
+                                                                        $specDisplay = '-';
+                                                                    } else {
+                                                                        // Otherwise use spec as-is
+                                                                        $specDisplay = $spec;
+                                                                    }
+                                                                }
+                                                            @endphp
+                                                            {{ $specDisplay }}
+                                                        </td>
                                                         <td class="border border-gray-400 px-1 py-0.5 text-[8px]">{{ $test['result'] ?? '-' }}</td>
                                                     </tr>
                                                 @empty

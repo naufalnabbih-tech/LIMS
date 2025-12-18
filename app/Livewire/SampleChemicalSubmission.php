@@ -137,6 +137,12 @@ class SampleChemicalSubmission extends Component
 
     public function reviewResults($sampleId)
     {
+        // Check permission
+        if (!auth()->user()->hasPermission('review_samples')) {
+            session()->flash('error', 'You do not have permission to review samples.');
+            return;
+        }
+
         $sample = Sample::with('status')->findOrFail($sampleId);
 
         $currentStatusName = $sample->status ? $sample->status->name : '';
@@ -158,6 +164,12 @@ class SampleChemicalSubmission extends Component
 
     public function approveSample($sampleId)
     {
+        // Check permission
+        if (!auth()->user()->hasPermission('approve_samples')) {
+            session()->flash('error', 'You do not have permission to approve samples.');
+            return;
+        }
+
         $sample = Sample::with('status')->findOrFail($sampleId);
         $approvedStatus = Status::where('name', 'approved')->first();
 
@@ -179,6 +191,12 @@ class SampleChemicalSubmission extends Component
 
     public function deleteSample($sampleId)
     {
+        // Check permission
+        if (!auth()->user()->hasPermission('manage_samples')) {
+            session()->flash('error', 'You do not have permission to delete samples.');
+            return;
+        }
+
         $sample = Sample::with('status')->findOrFail($sampleId);
 
         // Delete associated CoA file if exists
@@ -238,6 +256,10 @@ class SampleChemicalSubmission extends Component
     // CoA Methods
     public function openCoAForm($sampleId)
     {
+        // Fetch test results directly from database
+        $testResults = \DB::table('test_results')->where('sample_id', $sampleId)->get();
+        \Log::info('SampleChemicalSubmission: Found ' . $testResults->count() . ' test results for sample ' . $sampleId);
+
         $sample = Sample::with('testResults')->findOrFail($sampleId);
 
         // Load active formats
@@ -257,21 +279,57 @@ class SampleChemicalSubmission extends Component
         // Initialize custom field values
         $this->initializeCustomFields($selectedFormat);
 
-        // Prepare test results
+        // Prepare test results - USE DIRECT DB QUERY
         $tests = [];
-        foreach ($sample->testResults as $result) {
+        foreach ($testResults as $result) {
+            \Log::info('Processing test', [
+                'name' => $result->parameter_name,
+                'operator' => $result->spec_operator,
+                'min' => $result->spec_min_value,
+                'max' => $result->spec_max_value,
+                'min_is_null' => ($result->spec_min_value === null),
+                'max_is_null' => ($result->spec_max_value === null),
+            ]);
+
             $testValue = $result->test_value ?? $result->test_value_text ?? 'N/A';
             // Format numeric values to remove trailing zeros
             if (is_numeric($testValue) && strpos($testValue, '.') !== false) {
                 $testValue = rtrim(rtrim($testValue, '0'), '.');
             }
-            $tests[] = [
+
+            $testData = [
                 'name' => $result->parameter_name ?? 'N/A',
-                'spec' => $result->spec_operator === '-'
-                    ? '-'
-                    : ($result->spec_operator . ' ' . $result->spec_min_value . ($result->spec_max_value ? ' - ' . $result->spec_max_value : '')),
-                'result' => $testValue
+                'result' => $testValue,
+                'spec_operator' => $result->spec_operator ?? '-',
             ];
+
+            if ($result->spec_operator === '-') {
+                // Check if min/max values exist
+                if ($result->spec_min_value !== null && $result->spec_max_value !== null) {
+                    \Log::info('CREATING RANGE DATA for ' . $result->parameter_name);
+                    $testData['operator'] = 'range';
+                    $testData['min'] = $result->spec_min_value;
+                    $testData['max'] = $result->spec_max_value;
+                    $testData['spec'] = $result->spec_min_value . ' - ' . $result->spec_max_value;
+                } else {
+                    $testData['operator'] = 'none';
+                    $testData['spec'] = '-';
+                }
+            } elseif ($result->spec_operator === 'should_be') {
+                $testData['operator'] = 'should_be';
+                $testData['value'] = $result->test_value_text ?? '-';
+                $testData['spec'] = $result->test_value_text ?? '-';
+            } elseif ($result->spec_operator === 'range') {
+                $testData['operator'] = 'range';
+                $testData['min'] = $result->spec_min_value ?? '-';
+                $testData['max'] = $result->spec_max_value ?? '-';
+                $testData['spec'] = ($result->spec_min_value ?? '-') . ' - ' . ($result->spec_max_value ?? '-');
+            } else {
+                $testData['operator'] = $result->spec_operator;
+                $testData['spec'] = $result->spec_operator . ' ' . ($result->spec_min_value ?? '') . ($result->spec_max_value ? ' - ' . $result->spec_max_value : '');
+            }
+
+            $tests[] = $testData;
         }
 
         // Pre-populate data from sample
@@ -367,11 +425,16 @@ class SampleChemicalSubmission extends Component
         // Prepare data with custom fields definition
         $dataToSave = array_merge($this->coaData, $this->customFieldValues);
 
+        \Log::info('createCoA: coaData', ['coaData' => $this->coaData]);
+        \Log::info('createCoA: dataToSave before format', ['dataToSave' => $dataToSave]);
+
         // Include custom fields definition from format
         $format = \App\Models\CoaDocumentFormat::find($this->coaFormatId);
         if ($format && $format->custom_fields) {
             $dataToSave['_custom_fields_definition'] = $format->custom_fields;
         }
+
+        \Log::info('createCoA: Final dataToSave', ['dataToSave' => $dataToSave]);
 
         // Create CoA
         \App\Models\CoA::create([
@@ -467,10 +530,18 @@ class SampleChemicalSubmission extends Component
             ->latest()
             ->get();
 
+        // Get user permissions for frontend
+        $userPermissions = [
+            'canReview' => auth()->user()->hasPermission('review_samples'),
+            'canApprove' => auth()->user()->hasPermission('approve_samples'),
+            'canDelete' => auth()->user()->hasPermission('manage_samples'),
+        ];
+
         return view('livewire.sample-chemical-submission', [
             'samples' => $samples,
             'pendingHandovers' => $pendingHandovers,
             'myHandovers' => $myHandovers,
+            'userPermissions' => $userPermissions,
         ]);
     }
 }

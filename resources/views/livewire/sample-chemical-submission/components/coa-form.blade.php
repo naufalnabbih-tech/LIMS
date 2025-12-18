@@ -98,6 +98,46 @@
                     }
                 @endphp
 
+                <!-- Test Specifications (Editable) -->
+                @if(!empty($coaData['tests']))
+                    <div class="border-t border-gray-200 pt-4 mt-4">
+                        <p class="text-sm font-medium text-gray-700 mb-3">Test Specifications</p>
+                        <div class="space-y-3 max-h-64 overflow-y-auto">
+                            @foreach($coaData['tests'] as $index => $test)
+                                <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <p class="font-medium text-gray-900">{{ $test['name'] ?? 'Test' }}</p>
+                                        <p class="text-xs text-gray-500">Result: {{ $test['result'] ?? '-' }}</p>
+                                    </div>
+
+                                    @if(($test['operator'] ?? null) === 'range' || (isset($test['min']) && isset($test['max'])))
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <div>
+                                                <label class="block text-xs font-medium text-gray-600 mb-1">Min</label>
+                                                <input type="number" step="0.01" wire:model="coaData.tests.{{ $index }}.min"
+                                                    class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-medium text-gray-600 mb-1">Max</label>
+                                                <input type="number" step="0.01" wire:model="coaData.tests.{{ $index }}.max"
+                                                    class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                            </div>
+                                        </div>
+                                    @elseif(($test['operator'] ?? null) === 'should_be')
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-600 mb-1">Specification</label>
+                                            <input type="text" wire:model="coaData.tests.{{ $index }}.value"
+                                                class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                    @else
+                                        <p class="text-xs text-gray-600">Spec: {{ $test['spec'] ?? '-' }}</p>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
                 @if(!empty($customFields))
                     <div class="border-t border-gray-200 pt-4 mt-2">
                         <p class="text-sm font-medium text-gray-700 mb-3">Custom Fields</p>

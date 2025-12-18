@@ -69,21 +69,70 @@ class CoAForm extends Component
         // Initialize custom field values
         $this->initializeCustomFields($selectedFormat);
 
-        // Prepare test results
+        // Prepare test results - explicitly fetch from database
         $tests = [];
-        foreach ($sample->testResults as $result) {
+        $testResults = \DB::table('test_results')
+            ->where('sample_id', $sample->id)
+            ->get();
+
+        \Log::info('CoAForm: Sample ID ' . $sample->id . ', found ' . $testResults->count() . ' test results');
+
+        foreach ($testResults as $result) {
+            \Log::info('CoAForm: Processing test', [
+                'name' => $result->parameter_name,
+                'operator' => $result->spec_operator,
+                'min' => $result->spec_min_value,
+                'max' => $result->spec_max_value,
+                'min_not_null' => ($result->spec_min_value !== null),
+                'max_not_null' => ($result->spec_max_value !== null),
+            ]);
+
             $testValue = $result->test_value ?? $result->test_value_text ?? 'N/A';
             // Format numeric values to remove trailing zeros
             if (is_numeric($testValue) && strpos($testValue, '.') !== false) {
                 $testValue = rtrim(rtrim($testValue, '0'), '.');
             }
-            $tests[] = [
+
+            // Determine operator type and structure test data accordingly
+            $testData = [
                 'name' => $result->parameter_name ?? 'N/A',
-                'spec' => $result->spec_operator === '-'
-                    ? '-'
-                    : ($result->spec_operator . ' ' . $result->spec_min_value . ($result->spec_max_value ? ' - ' . $result->spec_max_value : '')),
-                'result' => $testValue
+                'result' => $testValue,
+                'spec_operator' => $result->spec_operator ?? '-',
             ];
+
+            if ($result->spec_operator === '-') {
+                // Check if min/max values exist (must use explicit null check, not truthy check)
+                if ($result->spec_min_value !== null && $result->spec_max_value !== null) {
+                    \Log::info('CoAForm: Setting as RANGE', ['min' => $result->spec_min_value, 'max' => $result->spec_max_value]);
+                    $testData['operator'] = 'range';
+                    $testData['min'] = $result->spec_min_value;
+                    $testData['max'] = $result->spec_max_value;
+                    $testData['spec'] = $result->spec_min_value . ' - ' . $result->spec_max_value;
+                } else {
+                    \Log::info('CoAForm: Setting as NONE (no min/max)');
+                    $testData['spec'] = '-';
+                    $testData['operator'] = 'none';
+                    $testData['value'] = '-';
+                }
+            } elseif ($result->spec_operator === 'should_be') {
+                // For should_be, the specification is the expected text value
+                $testData['operator'] = 'should_be';
+                $testData['value'] = $result->test_value_text ?? '-';
+                $testData['spec'] = $result->test_value_text ?? '-';
+            } elseif ($result->spec_operator === 'range') {
+                // For range operator
+                $testData['operator'] = 'range';
+                $testData['min'] = $result->spec_min_value ?? '-';
+                $testData['max'] = $result->spec_max_value ?? '-';
+                $testData['spec'] = ($result->spec_min_value ?? '-') . ' - ' . ($result->spec_max_value ?? '-');
+            } else {
+                // Fallback for other operators
+                $testData['operator'] = $result->spec_operator;
+                $testData['value'] = $result->spec_min_value ?? '-';
+                $testData['spec'] = $result->spec_operator . ' ' . ($result->spec_min_value ?? '') . ($result->spec_max_value ? ' - ' . $result->spec_max_value : '');
+            }
+
+            $tests[] = $testData;
         }
 
         // Pre-populate data from sample
@@ -168,6 +217,16 @@ class CoAForm extends Component
     {
         // Validate
         $this->validate();
+
+        // Update spec field from min/max if they were edited by user
+        foreach ($this->coaData['tests'] as $key => $test) {
+            if (isset($test['min']) && isset($test['max']) && $test['min'] !== '-' && $test['max'] !== '-') {
+                $this->coaData['tests'][$key]['spec'] = $test['min'] . ' - ' . $test['max'];
+                $this->coaData['tests'][$key]['operator'] = 'range';
+            } elseif (isset($test['value']) && $test['operator'] === 'should_be') {
+                $this->coaData['tests'][$key]['spec'] = $test['value'];
+            }
+        }
 
         // Prepare data with custom fields definition
         $dataToSave = array_merge($this->coaData, $this->customFieldValues);

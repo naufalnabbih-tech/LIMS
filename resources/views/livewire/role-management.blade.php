@@ -300,7 +300,7 @@
                                 <div>
                                     <label for="name" class="block text-sm font-bold mb-2">Role Name</label>
                                     <input type="text" id="name" wire:model="name"
-                                        class="shadow-sm border @error('name') border-red-500 @else border-gray-300 @enderror rounded-lg w-full py-3 px-4 cursor-pointer"
+                                        class="shadow-sm border @error('name') border-red-500 @else border-gray-300 @enderror rounded-lg w-full py-3 px-4 "
                                         required>
                                     @error('name')
                                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
@@ -311,7 +311,7 @@
                                     <label for="display_name" class="block text-sm font-bold mb-2">Display
                                         Name</label>
                                     <input type="text" id="display_name" wire:model="display_name"
-                                        class="shadow-sm border @error('display_name') border-red-500 @else border-gray-300 @enderror rounded-lg w-full py-3 px-4 cursor-pointer"
+                                        class="shadow-sm border @error('display_name') border-red-500 @else border-gray-300 @enderror rounded-lg w-full py-3 px-4 "
                                         required>
                                     @error('display_name')
                                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
@@ -322,7 +322,7 @@
                             <div class="mb-5">
                                 <label for="description" class="block text-sm font-bold mb-2">Description</label>
                                 <textarea id="description" wire:model="description"
-                                    class="shadow-sm border @error('description') border-red-500 @else border-gray-300 @enderror rounded-lg w-full py-3 px-4 cursor-pointer"
+                                    class="shadow-sm border @error('description') border-red-500 @else border-gray-300 @enderror rounded-lg w-full py-3 px-4"
                                     rows="3"></textarea>
                                 @error('description')
                                     <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
@@ -392,6 +392,12 @@
                                                         'view_samples',
                                                         'manage_sample_analysis',
                                                         'view_sample_analysis',
+                                                        'submit_samples',
+                                                        'handover_samples',
+                                                        'takeover_samples',
+                                                        'analyze_samples',
+                                                        'review_samples',
+                                                        'approve_samples',
                                                         'edit_analysis',
                                                     ],
                                                     'Instruments' => [
@@ -420,6 +426,9 @@
                                                         'edit_coa',
                                                         'approve_coa',
                                                         'delete_coa',
+                                                    ],
+                                                    'Settings' => [
+                                                        'manage_settings',
                                                     ],
                                                 ];
                                             @endphp

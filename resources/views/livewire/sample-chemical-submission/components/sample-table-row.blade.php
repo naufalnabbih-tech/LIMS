@@ -45,6 +45,9 @@
                     status: @js($statusName),
                     handoverFromAnalystId: @js($handoverFromAnalystId),
                     currentUserId: @js(auth()->id()),
+                    userCanReview: @js($userPermissions['canReview'] ?? false),
+                    userCanApprove: @js($userPermissions['canApprove'] ?? false),
+                    userCanDelete: @js($userPermissions['canDelete'] ?? false),
                     buttonRect: $el.getBoundingClientRect()
                 });
             } else {
