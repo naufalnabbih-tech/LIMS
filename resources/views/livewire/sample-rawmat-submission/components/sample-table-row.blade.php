@@ -73,15 +73,25 @@
         <!-- Sample Action Button -->
         <button
             @click="
-            window.globalDropdown?.open({{ $sample->id }}, {
-                batch: @js($sample->batch_lot ?? 'N/A'),
-                status: @js($statusName),
-                supplier: @js($sample->supplier ?? 'N/A'),
-                material: @js($sample->material->name ?? 'N/A'),
-                handoverFromAnalystId: @js($handoverFromAnalystId),
-                currentUserId: @js(auth()->id()),
-                buttonRect: $el.getBoundingClientRect()
-            })
+            if (window.globalDropdown && typeof window.globalDropdown.open === 'function') {
+                window.globalDropdown.open({{ $sample->id }}, {
+                    batch: @js($sample->batch_lot ?? 'N/A'),
+                    status: @js($statusName),
+                    supplier: @js($sample->supplier ?? 'N/A'),
+                    material: @js($sample->material->name ?? 'N/A'),
+                    handoverFromAnalystId: @js($handoverFromAnalystId),
+                    currentUserId: @js(auth()->id()),
+                    userCanEdit: @js($userPermissions['canEdit'] ?? false),
+                    userCanAnalyze: @js($userPermissions['canAnalyze'] ?? false),
+                    userCanReview: @js($userPermissions['canReview'] ?? false),
+                    userCanApprove: @js($userPermissions['canApprove'] ?? false),
+                    userCanDelete: @js($userPermissions['canDelete'] ?? false),
+                    userCanCreateCoA: @js($userPermissions['canCreateCoA'] ?? false),
+                    buttonRect: $el.getBoundingClientRect()
+                });
+            } else {
+                alert('Dropdown not ready. Please refresh the page.');
+            }
         "
             type="button"
             class="inline-flex items-center gap-1.5 px-3 py-2 text-sm text-gray-600 hover:text-gray-800 bg-white hover:bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500 transition-all duration-150 cursor-pointer shadow-sm hover:shadow-md"

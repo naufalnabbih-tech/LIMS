@@ -117,6 +117,7 @@
                         @forelse ($samples as $sample)
                             @include('livewire.sample-chemical-submission.components.sample-table-row', [
                                 'sample' => $sample,
+                                'userPermissions' => $userPermissions,
                             ])
                         @empty
                             <tr>

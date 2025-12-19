@@ -245,15 +245,17 @@ class AnalysisPage extends Component
 
                         // Handle data storage based on operator type
                         if ($result['operator'] === 'should_be') {
-                            // For text-based should_be: store text in test_value_text, spec values as NULL
+                            // For text-based should_be: store text in test_value_text and spec_text_value
                             $testData['test_value_text'] = $reading['value'];
                             $testData['test_value'] = null;
+                            $testData['spec_text_value'] = $result['text_value'] ?? null; // Store spec text value
                             $testData['spec_min_value'] = null; // Can't store text in FLOAT column
                             $testData['spec_max_value'] = null;
                         } else {
                             // For numeric operators: store numbers in test_value, spec values as floats
                             $testData['test_value'] = $reading['value'];
                             $testData['test_value_text'] = null;
+                            $testData['spec_text_value'] = null;
                             $testData['spec_min_value'] = $result['target_value'] ?? null;
                             $testData['spec_max_value'] = $result['max_value'] ?? null;
                         }
@@ -506,15 +508,17 @@ class AnalysisPage extends Component
 
                         // Handle data storage based on operator type
                         if ($result['operator'] === 'should_be') {
-                            // For text-based should_be: store text in test_value_text, spec values as NULL
+                            // For text-based should_be: store text in test_value_text and spec_text_value
                             $testData['test_value_text'] = $reading['value'];
                             $testData['test_value'] = null;
+                            $testData['spec_text_value'] = $result['text_value'] ?? null; // Store spec text value
                             $testData['spec_min_value'] = null;
                             $testData['spec_max_value'] = null;
                         } else {
                             // For numeric operators: store numbers in test_value, spec values as floats
                             $testData['test_value'] = floatval($reading['value']);
                             $testData['test_value_text'] = null;
+                            $testData['spec_text_value'] = null;
                             $testData['spec_min_value'] = $result['target_value'] ?? null;
                             $testData['spec_max_value'] = $result['max_value'] ?? null;
                         }

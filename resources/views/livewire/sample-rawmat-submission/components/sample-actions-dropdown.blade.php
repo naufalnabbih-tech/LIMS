@@ -12,6 +12,7 @@
             :style="{
                 top: (sampleData.position?.top || 200) + 'px',
                 left: (sampleData.position?.left || 300) + 'px',
+                height: (sampleData.position?.height || 400) + 'px',
                 maxHeight: '85vh',
                 overflowY: 'auto'
             }"
@@ -182,12 +183,12 @@
                 <!-- Review & Approval Actions -->
                 <div class="p-3">
                     <div class="px-2 py-1.5"
-                        x-show="['analysis_completed', 'review', 'reviewed', 'approved'].includes(sampleData.status)">
+                        x-show="(sampleData.canReview || sampleData.canApprove) && ['analysis_completed', 'review', 'reviewed', 'approved'].includes(sampleData.status)">
                         <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Review & Approval</h4>
                     </div>
                     <div class="space-y-1">
                         <button
-                            x-show="['analysis_completed', 'review', 'reviewed', 'approved'].includes(sampleData.status)"
+                            x-show="sampleData.canReview && ['analysis_completed', 'review', 'reviewed', 'approved'].includes(sampleData.status)"
                             @click="
                                 callLivewireMethod('reviewResults', sampleData.sampleId);
                                 setTimeout(() => {
@@ -209,7 +210,7 @@
                             </div>
                         </button>
 
-                        <button x-show="sampleData.canApprove"
+                        <button x-show="sampleData.canApprove && sampleData.userCanApprove"
                             @click="
                                 if (confirm('Are you sure you want to approve this sample? This action cannot be undone.')) {
                                     callLivewireMethod('approveSample', sampleData.sampleId);
@@ -234,42 +235,16 @@
                 </div>
 
                 <!-- Divider -->
-                <div class="border-t border-gray-100" x-show="['approved', 'completed'].includes(sampleData.status) && sampleData.canCreateCoA"></div>
-
-                <!-- CoA Actions -->
-                <div class="p-3" x-show="['approved', 'completed'].includes(sampleData.status) && sampleData.canCreateCoA">
-                    <div class="px-2 py-1.5">
-                        <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Certificate of Analysis</h4>
-                    </div>
-                    <div class="space-y-1">
-                        <button @click="$wire.dispatch('openCoAForm', [sampleData.sampleId]); closeDropdown();"
-                            class="flex items-center w-full px-3 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700 rounded-lg transition-colors duration-150 group cursor-pointer">
-                            <div
-                                class="flex-shrink-0 w-9 h-9 bg-orange-100 group-hover:bg-orange-200 rounded-lg flex items-center justify-center mr-3 transition-colors">
-                                <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                            </div>
-                            <div class="flex-1 text-left">
-                                <span class="font-medium block">Create CoA</span>
-                                <span class="text-xs text-gray-500">Generate Certificate of Analysis</span>
-                            </div>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Divider -->
                 <div class="border-t border-gray-100"></div>
 
                 <!-- Delete Actions -->
-                <div class="p-3">
+                <div class="p-3" x-show="sampleData.canDelete">
                     <div class="px-2 py-1.5">
                         <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Danger Zone</h4>
                     </div>
                     <div class="space-y-1">
                         <button
+                            x-show="sampleData.canDelete"
                             @click="
                         if (confirm('Are you sure you want to delete this sample? This action cannot be undone.')) {
                             callLivewireMethod('deleteSample', sampleData.sampleId);
@@ -305,7 +280,9 @@
 
                 config: {
                     dropdownWidth: 320,
-                    dropdownHeight: 400,
+                    dropdownHeight: 400, // Default, will be calculated dynamically
+                    baseActionHeight: 60, // Height per action item
+                    headerHeight: 70, // Header section height
                     margin: 8,
                     viewportMargin: 10,
                     transitionDuration: 150
@@ -313,7 +290,7 @@
 
                 openDropdown(sampleId, data) {
                     this.sampleData = this.createSampleData(sampleId, data);
-                    if (data.buttonRect) this.calculatePosition(data.buttonRect);
+                    this.calculatePosition(data.buttonRect);
                     this.showDropdown();
                 },
 
@@ -324,23 +301,27 @@
 
                 createSampleData(sampleId, data) {
                     const statusPermissions = {
-                        canEdit: ['submitted', 'pending'].includes(data.status),
-                        canStartAnalysis: ['submitted', 'pending'].includes(data.status),
-                        canContinueAnalysis: ['in_progress'].includes(data.status),
-                        canHandOver: ['in_progress'].includes(data.status),
-                        canTakeOver: ['hand_over', 'hand over'].includes(data.status?.toLowerCase()) &&
+                        canEdit: data.userCanEdit && ['submitted', 'pending'].includes(data.status),
+                        canStartAnalysis: data.userCanAnalyze && ['submitted', 'pending'].includes(data.status),
+                        canContinueAnalysis: data.userCanAnalyze && ['in_progress'].includes(data.status),
+                        canHandOver: data.userCanAnalyze && ['in_progress'].includes(data.status),
+                        canTakeOver: data.userCanAnalyze && ['hand_over', 'hand over'].includes(data.status?.toLowerCase()) &&
                             data.handoverFromAnalystId != data.currentUserId,
-                        canCompleteAnalysis: ['in_progress', 'analysis_started'].includes(data.status),
-                        canReview: ['analysis_completed', 'pending_review'].includes(data.status),
-                        canApprove: ['reviewed'].includes(data.status),
-                        canCreateCoA: ['approved', 'completed'].includes(data.status),
-                        canDelete: !['approved', 'completed'].includes(data.status)
+                        canCompleteAnalysis: data.userCanAnalyze && ['in_progress', 'analysis_started'].includes(data.status),
+                        canReview: data.userCanReview && ['analysis_completed', 'pending_review', 'reviewed', 'approved'].includes(data.status),
+                        canApprove: data.userCanApprove && ['reviewed'].includes(data.status),
+                        canDelete: data.userCanDelete && !['approved', 'completed'].includes(data.status)
                     };
+
+                    // Count visible actions (including "View Details" which is always visible)
+                    const actionPermissionsCount = Object.values(statusPermissions).filter(Boolean).length;
+                    const visibleActionsCount = 1 + actionPermissionsCount; // 1 for View Details + other actions
 
                     return {
                         sampleId,
                         ...data,
                         ...statusPermissions,
+                        visibleActionsCount,
                         position: {
                             left: 300,
                             top: 200
@@ -348,41 +329,101 @@
                     };
                 },
 
+                calculateDynamicHeight() {
+                    const { baseActionHeight, headerHeight } = this.config;
+                    const visibleCount = this.sampleData.visibleActionsCount || 1;
+
+                    // Calculate: header + (number of actions * height per action) + padding
+                    const calculatedHeight = headerHeight + (visibleCount * baseActionHeight) + 40;
+
+                    // Cap between min 150px and max 500px
+                    return Math.max(150, Math.min(calculatedHeight, 500));
+                },
+
                 calculatePosition(buttonRect) {
+                    if (!buttonRect) {
+                        console.warn('buttonRect is missing');
+                        return;
+                    }
+
                     const {
                         dropdownWidth,
-                        dropdownHeight,
                         margin,
                         viewportMargin
                     } = this.config;
+
+                    // Calculate dynamic height based on visible actions
+                    const dropdownHeight = this.calculateDynamicHeight();
+
                     const viewport = {
                         width: window.innerWidth,
                         height: window.innerHeight
                     };
 
-                    const space = {
-                        left: buttonRect.left,
-                        right: viewport.width - buttonRect.right,
-                        above: buttonRect.top,
-                        below: viewport.height - buttonRect.bottom
-                    };
+                    // Smart positioning based on visible actions count
+                    const fewActions = this.sampleData.visibleActionsCount < 3;
+                    let left, top;
 
-                    const left = space.left >= dropdownWidth ?
-                        buttonRect.left - dropdownWidth - margin :
-                        space.right >= dropdownWidth ?
-                        buttonRect.right + margin :
-                        (viewport.width - dropdownWidth) / 2;
+                    console.log('Sample ID:', this.sampleData.sampleId, 'Visible Actions:', this.sampleData.visibleActionsCount, 'Dynamic Height:', dropdownHeight);
 
-                    const top = space.below >= dropdownHeight ?
-                        buttonRect.bottom + margin :
-                        space.above >= dropdownHeight ?
-                        buttonRect.top - dropdownHeight - margin :
-                        (viewport.height - dropdownHeight) / 2;
+                    // HORIZONTAL POSITIONING
+                    if (fewActions) {
+                        // For few actions: position dropdown to the RIGHT of button
+                        left = buttonRect.right + margin;
+
+                        // Check if dropdown would go off-screen to the right
+                        if (left + dropdownWidth > viewport.width - viewportMargin) {
+                            // Position to the LEFT of button instead
+                            left = buttonRect.left - dropdownWidth - margin;
+                        }
+
+                        console.log('Few actions - positioning near button. Left:', left);
+                    } else {
+                        // For many actions: position dropdown to the LEFT of button
+                        left = buttonRect.left - dropdownWidth - margin;
+
+                        // Check if dropdown would go off-screen to the left
+                        if (left < viewportMargin) {
+                            // Position to the RIGHT of button instead
+                            left = buttonRect.right + margin;
+                        }
+
+                        console.log('Many actions - positioning near button. Left:', left);
+                    }
+
+                    // Ensure dropdown stays within viewport bounds horizontally
+                    left = Math.max(viewportMargin, Math.min(left, viewport.width - dropdownWidth - viewportMargin));
+
+                    // VERTICAL POSITIONING - Always prefer below button first
+                    const spaceBelow = viewport.height - buttonRect.bottom - viewportMargin;
+                    const spaceAbove = buttonRect.top - viewportMargin;
+
+                    console.log('Space below:', spaceBelow, 'Space above:', spaceAbove, 'Dropdown height:', dropdownHeight);
+
+                    if (spaceBelow >= dropdownHeight || spaceBelow >= spaceAbove) {
+                        // Position below button (preferred)
+                        top = buttonRect.bottom + margin;
+                        console.log('Positioning BELOW button');
+                    } else if (spaceAbove >= dropdownHeight) {
+                        // Position above button
+                        top = buttonRect.top - dropdownHeight - margin;
+                        console.log('Positioning ABOVE button');
+                    } else {
+                        // Not enough space either way, position below and let it scroll
+                        top = buttonRect.bottom + margin;
+                        console.log('Not enough space, forcing BELOW and allowing scroll');
+                    }
+
+                    // Ensure dropdown stays within viewport bounds vertically
+                    top = Math.max(viewportMargin, Math.min(top, viewport.height - dropdownHeight - viewportMargin));
 
                     this.sampleData.position = {
-                        left: Math.max(viewportMargin, Math.min(left, viewport.width - dropdownWidth - viewportMargin)),
-                        top: Math.max(viewportMargin, Math.min(top, viewport.height - dropdownHeight - viewportMargin))
+                        left: left,
+                        top: top,
+                        height: dropdownHeight
                     };
+
+                    console.log('Final position:', this.sampleData.position);
                 },
 
                 showDropdown() {
@@ -393,6 +434,7 @@
 
                 resetData() {
                     this.sampleData = {};
+                    this.justOpened = false;
                 },
 
                 handleClickAway() {

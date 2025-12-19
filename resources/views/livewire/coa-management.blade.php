@@ -467,8 +467,8 @@
                                                                 $operator = $test['operator'] ?? null;
 
                                                                 if($operator === 'should_be') {
-                                                                    // New format: use value field
-                                                                    $specDisplay = $test['value'] ?? '-';
+                                                                    // New format: use spec field (expected value)
+                                                                    $specDisplay = $test['spec'] ?? '-';
                                                                 } elseif($operator === 'range') {
                                                                     // New format: use min and max
                                                                     $specDisplay = ($test['min'] ?? '-') . ' - ' . ($test['max'] ?? '-');

@@ -64,11 +64,23 @@ class CoAManagement extends Component
                 if (is_numeric($testValue) && strpos($testValue, '.') !== false) {
                     $testValue = rtrim(rtrim($testValue, '0'), '.');
                 }
+
+                // Build spec text based on operator
+                $specText = 'N/A';
+                if ($result->spec_operator === '-') {
+                    // Range operator
+                    $specText = $result->spec_min_value . ' - ' . $result->spec_max_value;
+                } elseif ($result->spec_operator === 'should_be') {
+                    // Should_be operator: use spec_text_value
+                    $specText = $result->spec_text_value ?? 'N/A';
+                } elseif ($result->spec_min_value !== null) {
+                    // Other numeric operators
+                    $specText = $result->spec_operator . ' ' . $result->spec_min_value;
+                }
+
                 $tests[] = [
                     'name' => $result->parameter_name ?? 'N/A',
-                    'spec' => $result->spec_operator === '-'
-                        ? '-'
-                        : ($result->spec_operator . ' ' . $result->spec_min_value . ($result->spec_max_value ? ' - ' . $result->spec_max_value : '')),
+                    'spec' => $specText,
                     'result' => $testValue
                 ];
             }

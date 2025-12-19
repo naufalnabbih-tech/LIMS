@@ -251,10 +251,20 @@ class SampleRawmatSubmission extends Component
             ->latest()
             ->get();
 
+        // Get user permissions for frontend
+        $userPermissions = [
+            'canEdit' => auth()->user()->hasPermission('manage_samples'),
+            'canAnalyze' => auth()->user()->hasPermission('analyze_samples'),
+            'canReview' => auth()->user()->hasPermission('review_samples'),
+            'canApprove' => auth()->user()->hasPermission('approve_samples'),
+            'canDelete' => auth()->user()->hasPermission('manage_samples'),
+        ];
+
         return view('livewire.sample-rawmat-submission', [
             'samples' => $samples,
             'pendingHandovers' => $pendingHandovers,
             'myHandovers' => $myHandovers,
+            'userPermissions' => $userPermissions,
         ])->layout('layouts.app')->title('Sample Raw Material Submission');
     }
 }

@@ -97,7 +97,7 @@ class CoAForm extends Component
             } elseif ($result->spec_operator === 'should_be') {
                 $testData['operator'] = 'should_be';
                 $testData['value'] = $result->test_value_text ?? '-';
-                $testData['spec'] = $result->test_value_text ?? '-';
+                $testData['spec'] = $result->spec_text_value ?? '-';
             } elseif ($result->spec_operator === 'range') {
                 $testData['operator'] = 'range';
                 $testData['min'] = $result->spec_min_value ?? '-';

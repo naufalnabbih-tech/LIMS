@@ -50,7 +50,10 @@
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         @forelse ($samples as $sample)
-                            @include('livewire.sample-rawmat-submission.components.sample-table-row', ['sample' => $sample])
+                            @include('livewire.sample-rawmat-submission.components.sample-table-row', [
+                                'sample' => $sample,
+                                'userPermissions' => $userPermissions,
+                            ])
                         @empty
                             <tr>
                                 <td colspan="6" class="px-6 py-12 text-center">

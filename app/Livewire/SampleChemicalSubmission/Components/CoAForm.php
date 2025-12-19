@@ -118,7 +118,7 @@ class CoAForm extends Component
                 // For should_be, the specification is the expected text value
                 $testData['operator'] = 'should_be';
                 $testData['value'] = $result->test_value_text ?? '-';
-                $testData['spec'] = $result->test_value_text ?? '-';
+                $testData['spec'] = $result->spec_text_value ?? '-';
             } elseif ($result->spec_operator === 'range') {
                 // For range operator
                 $testData['operator'] = 'range';
