@@ -1,5 +1,4 @@
 <div x-data="{
-    showConfirmation: false,
     scrollToError() {
         this.$nextTick(() => {
             const errorElement = this.$el.querySelector('.border-red-500, .ring-red-500, [aria-invalid=true]');
@@ -562,20 +561,21 @@
                                     </svg>
                                     <span>Cancel</span>
                                 </button>
-                                <button type="button" @click="showConfirmation = true" wire:loading.attr="disabled"
+                                <button type="button" wire:click="validateBeforeConfirm"
+                                    wire:loading.attr="disabled"
                                     class="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-medium rounded-xl hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 flex items-center space-x-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                        wire:loading.remove>
+                                        wire:loading.remove wire:target="validateBeforeConfirm">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                     </svg>
                                     <svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24" wire:loading>
+                                        viewBox="0 0 24 24" wire:loading wire:target="validateBeforeConfirm">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.49 8.49l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.49-8.49l2.83-2.83" />
                                     </svg>
-                                    <span wire:loading.remove>Submit Sample</span>
-                                    <span wire:loading>Submitting...</span>
+                                    <span wire:loading.remove wire:target="validateBeforeConfirm">Submit Sample</span>
+                                    <span wire:loading wire:target="validateBeforeConfirm">Validating...</span>
                                 </button>
                             </div>
                         </form>
@@ -585,13 +585,15 @@
         </div>
 
         <!-- Confirmation Modal -->
-        <div x-show="showConfirmation" x-transition:enter="transition ease-out duration-300"
-            x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-            x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
-            x-transition:leave-end="opacity-0" class="fixed inset-0 z-[9999] overflow-y-auto" style="display: none;">
+        @if ($showConfirmation)
+            <div x-show="true" x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0" class="fixed inset-0 z-[9999] overflow-y-auto" x-cloak>
 
-            <!-- Background overlay -->
-            <div class="fixed inset-0 transition-opacity" @click="showConfirmation = false" aria-hidden="true">
+                <!-- Background overlay -->
+                <div class="fixed inset-0 transition-opacity" wire:click="$set('showConfirmation', false)"
+                    aria-hidden="true">
                 <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
             </div>
 
@@ -681,18 +683,18 @@
                     </div>
 
                     <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                        <button wire:click="submit" @click="showConfirmation = false" wire:loading.attr="disabled"
+                        <button wire:click="submit" wire:loading.attr="disabled"
                             class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-                            <span wire:loading.remove>Submit Sample</span>
-                            <span wire:loading>Submitting...</span>
+                            <span wire:loading.remove wire:target="submit">Submit Sample</span>
+                            <span wire:loading wire:target="submit">Submitting...</span>
                         </button>
-                        <button @click="showConfirmation = false"
+                        <button wire:click="$set('showConfirmation', false)"
                             class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm cursor-pointer">
                             Cancel
                         </button>
                     </div>
                 </div>
             </div>
-        </div>
+        @endif
     @endif
 </div>

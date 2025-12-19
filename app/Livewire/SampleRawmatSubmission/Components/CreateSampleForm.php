@@ -17,6 +17,7 @@ class CreateSampleForm extends Component
 
     // Form visibility
     public $showForm = false;
+    public $showConfirmation = false;
 
     // Form fields
     public $category_id = '';
@@ -141,12 +142,28 @@ class CreateSampleForm extends Component
         $this->notes = '';
         $this->materials = collect();
         $this->references = collect();
+        $this->showConfirmation = false;
         $this->resetErrorBag();
     }
 
     public function removeCOAFile()
     {
         $this->coa_file = null;
+    }
+
+    public function validateBeforeConfirm()
+    {
+        try {
+            $this->validate();
+
+            // If validation passes, set property to show modal
+            $this->showConfirmation = true;
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Dispatch event to scroll to first error
+            $this->dispatch('scroll-to-error');
+            throw $e;
+        }
     }
 
     public function submit()
