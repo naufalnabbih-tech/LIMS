@@ -24,46 +24,21 @@
     <!-- Content Section - Full Height -->
     <div class="flex-1 bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden flex flex-col">
 
-        <!-- Warnings -->
-        @if ($solders->isEmpty())
-            <div class="bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 p-4 m-4 rounded-r-lg">
-                <div class="flex">
-                    <div class="flex-shrink-0">
-                        <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd"
-                                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                                clip-rule="evenodd" />
-                        </svg>
+        @if ($solders->isEmpty() || $specifications->isEmpty())
+            <div
+                class="bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 p-4 m-4 rounded-r-lg space-y-4 divide-y divide-yellow-400/50">
+                @if ($solders->isEmpty())
+                    <div class="pb-[1%]">
+                        Tidak ada solder yang tersedia. Silakan tambahkan solder terlebih dahulu sebelum menambah
+                        reference.
                     </div>
-                    <div class="ml-3">
-                        <p class="text-sm">
-                            Tidak ada solder yang tersedia. Silakan tambahkan solder terlebih dahulu sebelum
-                            menambah reference.
-                        </p>
+                @endif
+                @if ($specifications->isEmpty())
+                    <div>
+                        Tidak ada specification yang tersedia! Silakan tambahkan specification terlebih dahulu sebelum
+                        menambah reference.
                     </div>
-                </div>
-            </div>
-        @endif
-
-        @if ($specifications->isEmpty())
-            <div class="bg-red-50 border-l-4 border-red-400 text-red-700 p-4 m-4 rounded-r-lg">
-                <div class="flex">
-                    <div class="flex-shrink-0">
-                        <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd"
-                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                                clip-rule="evenodd" />
-                        </svg>
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium">
-                            Tidak ada specification yang tersedia!
-                        </p>
-                        <p class="text-sm mt-1">
-                            Silakan tambahkan specification terlebih dahulu sebelum menambah reference.
-                        </p>
-                    </div>
-                </div>
+                @endif
             </div>
         @endif
 
@@ -209,29 +184,9 @@
             </div>
         </div>
 
-        <!-- Pagination Footer -->
         @if ($references->hasPages())
             <div class="bg-white px-4 py-3 border-t border-gray-200">
-                <div class="flex items-center justify-between">
-                    <div class="hidden sm:block">
-                        <p class="text-sm text-gray-700">
-                            Showing
-                            <span class="font-medium">{{ $references->firstItem() ?? 0 }}</span>
-                            to
-                            <span class="font-medium">{{ $references->lastItem() ?? 0 }}</span>
-                            of
-                            <span class="font-medium">{{ $references->total() }}</span>
-                            results
-                        </p>
-                    </div>
-                    <div class="sm:hidden">
-                        <p class="text-sm text-gray-700">
-                            Page {{ $references->currentPage() }} of {{ $references->lastPage() }}
-                            ({{ $references->total() }} total)
-                        </p>
-                    </div>
-                    <div>{{ $references->links() }}</div>
-                </div>
+                {{ $references->links() }}
             </div>
         @endif
     </div>

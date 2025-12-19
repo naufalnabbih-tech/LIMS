@@ -14,12 +14,6 @@
                         class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 cursor-pointer">
                         ← Back to Samples
                     </button>
-                    @if ($canReview)
-                        <button wire:click="reviewSample"
-                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200">
-                            Mark as Reviewed
-                        </button>
-                    @endif
                     @if ($canApprove)
                         <button @click="showApproveModal = true"
                             class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 cursor-pointer">

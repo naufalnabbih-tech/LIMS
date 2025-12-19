@@ -1,9 +1,8 @@
 <div class="flex flex-col h-[calc(100vh-8rem)]">
-    <!-- Header Section -->
     <div class="bg-white shadow-sm rounded-lg border border-gray-200 mb-4">
         <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
             <div>
-                <h2 class="text-xl font-semibold text-gray-900">Reference</h2>
+                <h2 class="text-xl font-semibold text-gray-900">Raw Material Reference</h2>
                 <p class="text-sm text-gray-600 mt-1">Manage reference specifications for raw materials</p>
             </div>
             <div>
@@ -21,53 +20,26 @@
         </div>
     </div>
 
-    <!-- Content Section - Full Height -->
     <div class="flex-1 bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden flex flex-col">
 
-        <!-- Warnings -->
-        @if ($materials->isEmpty())
-            <div class="bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 p-4 m-4 rounded-r-lg">
-                <div class="flex">
-                    <div class="flex-shrink-0">
-                        <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd"
-                                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                                clip-rule="evenodd" />
-                        </svg>
+        @if ($materials->isEmpty() || $specifications->isEmpty())
+            <div
+                class="bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 p-4 m-4 rounded-r-lg space-y-4 divide-y divide-yellow-400/50">
+                @if ($materials->isEmpty())
+                    <div class="pb-[1%]">
+                        Tidak ada raw material yang tersedia. Silakan tambahkan raw material terlebih dahulu sebelum menambah
+                        reference.
                     </div>
-                    <div class="ml-3">
-                        <p class="text-sm">
-                            Tidak ada raw material yang tersedia. Silakan tambahkan raw material terlebih dahulu sebelum
-                            menambah reference.
-                        </p>
+                @endif
+                @if ($specifications->isEmpty())
+                    <div>
+                        Tidak ada specification yang tersedia! Silakan tambahkan specification terlebih dahulu sebelum
+                        menambah reference.
                     </div>
-                </div>
+                @endif
             </div>
         @endif
 
-        @if ($specifications->isEmpty())
-            <div class="bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 p-4 m-4 rounded-r-lg">
-                <div class="flex">
-                    <div class="flex-shrink-0">
-                        <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd"
-                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                                clip-rule="evenodd" />
-                        </svg>
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium">
-                            Tidak ada specification yang tersedia!
-                        </p>
-                        <p class="text-sm mt-1">
-                            Silakan tambahkan specification terlebih dahulu sebelum menambah reference.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        @endif
-
-        <!-- Content Container - Scrollable -->
         <div class="flex-1 overflow-hidden">
             <div class="h-full overflow-y-auto p-6">
                 @if ($groupedReferences->isEmpty())
@@ -84,7 +56,7 @@
                         <p class="text-sm text-gray-500 mb-4">Get started by adding your first reference</p>
                         <button wire:click="openAddModal()"
                             class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 cursor-pointer
-                                       {{ $materials->isEmpty() || $specifications->isEmpty() ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                   {{ $materials->isEmpty() || $specifications->isEmpty() ? 'opacity-50 cursor-not-allowed' : '' }}"
                             {{ $materials->isEmpty() || $specifications->isEmpty() ? 'disabled' : '' }}>
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -96,13 +68,11 @@
                 @else
                     @foreach ($groupedReferences as $materialName => $referencesInGroup)
                         <div class="mb-8">
-                            <!-- Raw Material Header -->
                             <div class="mb-4 sticky top-0 bg-white z-10 border-b border-gray-200 pb-2">
                                 <h2 class="text-xl font-bold text-gray-800 border-b-2 border-blue-500 pb-2">
                                     {{ $materialName }}</h2>
                             </div>
 
-                            <!-- References for this Raw Material -->
                             @foreach ($referencesInGroup as $reference)
                                 <div class="mb-6 ml-4">
                                     <div class="mb-3 flex items-center justify-between">
@@ -176,16 +146,13 @@
                                                                     </span>
                                                                 @elseif ($spec->pivot->operator === 'should_be')
                                                                     <span
-                                                                        class="inline-flex items-center rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-1 text-xs font-medium">
-                                                                        {{ $spec->pivot->text_value ?? 'N/A' }}
-                                                                    </span>
+                                                                        class="inline-flex items-center rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-1 text-xs font-medium">{{ $spec->pivot->text_value ?? 'N/A' }}</span>
                                                                 @else
                                                                     <span
                                                                         class="inline-flex items-center rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-1 text-xs font-medium">{{ $spec->pivot->value ?? 'N/A' }}</span>
                                                                 @endif
                                                             </td>
-                                                            <td
-                                                                class="whitespace-nowrap px-6 py-4 text-sm font-medium">
+                                                            <td class="whitespace-nowrap px-6 py-4 text-sm font-medium">
                                                                 <span
                                                                     class="inline-flex items-center rounded-md bg-amber-50 text-amber-700 border border-amber-200 px-2 py-1 text-xs font-medium">{{ $spec->pivot->unit ?? '-' }}</span>
                                                             </td>
@@ -211,475 +178,370 @@
             </div>
         </div>
 
-        <!-- Pagination Footer -->
         @if ($references->hasPages())
             <div class="bg-white px-4 py-3 border-t border-gray-200">
-                <div class="flex items-center justify-between">
-                    <div class="hidden sm:block">
-                        <p class="text-sm text-gray-700">
-                            Showing
-                            <span class="font-medium">{{ $references->firstItem() ?? 0 }}</span>
-                            to
-                            <span class="font-medium">{{ $references->lastItem() ?? 0 }}</span>
-                            of
-                            <span class="font-medium">{{ $references->total() }}</span>
-                            results
-                        </p>
-                    </div>
-                    <div class="sm:hidden">
-                        <p class="text-sm text-gray-700">
-                            Page {{ $references->currentPage() }} of {{ $references->lastPage() }}
-                            ({{ $references->total() }} total)
-                        </p>
-                    </div>
-                    <div>{{ $references->links() }}</div>
-                </div>
+                {{ $references->links() }}
             </div>
         @endif
     </div>
 
-    <!-- Add Modal -->
-    @if ($isAddModalOpen)
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/75 p-4">
-            <div class="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-8 shadow-2xl">
-                <div class="flex items-center justify-between border-b pb-4">
-                    <h3 class="text-2xl font-bold">Add New Reference</h3>
-                    <button wire:click="closeAddModal()" class="cursor-pointer rounded-full p-2 hover:bg-gray-100">
-                        <svg class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-                <div class="mt-6">
-                    <!-- Error Display -->
+    {{-- SHARED MODAL CONTENT LOGIC --}}
+    @foreach (['Add' => $isAddModalOpen, 'Edit' => $isEditModalOpen] as $mode => $isOpen)
+        @if ($isOpen)
+            <div class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/75 p-4 transition-opacity">
+                <div class="relative max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white p-8 shadow-2xl">
+
+                    <div class="flex items-center justify-between border-b pb-4 mb-6">
+                        <div>
+                            <h3 class="text-2xl font-bold text-gray-900">{{ $mode }} Raw Material Reference</h3>
+                            <p class="text-sm text-gray-500 mt-1">Manage details and specifications</p>
+                        </div>
+                        <button wire:click="close{{ $mode }}Modal()"
+                            class="cursor-pointer rounded-full p-2 hover:bg-gray-100 transition-colors">
+                            <svg class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
                     @if ($errors->any())
-                        <div class="mb-4 rounded-r-lg border-l-4 border-red-500 bg-red-100 p-4 text-red-700">
-                            <ul class="list-inside list-disc">
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
+                        <div class="mb-6 rounded-lg border-l-4 border-red-500 bg-red-50 p-4 text-red-700">
+                            <div class="flex">
+                                <svg class="h-5 w-5 text-red-400 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd"
+                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                                <ul class="list-inside list-disc text-sm">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
                         </div>
                     @endif
 
-                    <form wire:submit="store">
-                        <div class="mb-5">
-                            <label for="add-name" class="mb-2 block text-sm font-bold">Reference Name</label>
-                            <input type="text" id="add-name" wire:model="name"
-                                class="@error('name') border-red-500 @else border-gray-300 @enderror w-full rounded-lg border px-4 py-3 shadow-sm">
-                            @error('name')
-                                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                            @enderror
-                        </div>
+                    <form wire:submit="{{ $mode === 'Add' ? 'store' : 'update' }}">
 
-                        <div class="relative mb-5">
-                            <label for="add-material" class="mb-2 block text-sm font-bold">Raw Material</label>
-                            <div class="relative" x-data @click.away="$wire.closeMaterialDropdown()">
-                                <input type="text" wire:model.live.debounce.1000ms="materialSearch"
-                                    wire:click="openMaterialDropdown" placeholder="Search raw material..."
-                                    class="@error('material_id') border-red-500 @else border-gray-300 @enderror w-full rounded-lg border px-4 py-3 pr-10 shadow-sm"
-                                    autocomplete="off">
-
-                                <!-- Dropdown icon -->
-                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                                    <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M19 9l-7 7-7-7"></path>
-                                    </svg>
-                                </div>
-
-                                <!-- Dropdown List -->
-                                @if ($showMaterialDropdown && count($this->filteredMaterials) > 0)
-                                    <div
-                                        class="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                                        @foreach ($this->filteredMaterials as $material)
-                                            <div wire:click="selectMaterial({{ $material->id }}, '{{ $material->name }}')"
-                                                class="px-4 py-3 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0">
-                                                {{ $material->name }}
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                @elseif($showMaterialDropdown && empty($this->materialSearch))
-                                    <div
-                                        class="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                                        @foreach ($materials as $material)
-                                            <div wire:click="selectMaterial({{ $material->id }}, '{{ $material->name }}')"
-                                                class="px-4 py-3 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0">
-                                                {{ $material->name }}
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                @elseif($showMaterialDropdown)
-                                    <div
-                                        class="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg">
-                                        <div class="px-4 py-3 text-gray-500">No raw materials found</div>
-                                    </div>
-                                @endif
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div>
+                                <label class="mb-2 block text-sm font-bold text-gray-700">Reference Name</label>
+                                <input type="text" wire:model="name" placeholder="e.g. Standard A"
+                                    class="@error('name') border-red-500 @else border-gray-300 @enderror w-full rounded-lg border px-4 py-2.5 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+                                @error('name')
+                                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                                @enderror
                             </div>
-                            @error('material_id')
-                                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                            @enderror
+
+                            <div class="relative" x-data="{ dropdownOpen: @entangle('showMaterialDropdown') }" @click.away="dropdownOpen = false">
+                                <label class="mb-2 block text-sm font-bold text-gray-700">Raw Material</label>
+                                <div class="relative">
+                                    <input type="text" wire:model.live.debounce.300ms="materialSearch"
+                                        @click="$wire.openMaterialDropdown()" placeholder="Search raw material..."
+                                        class="@error('material_id') border-red-500 @else border-gray-300 @enderror w-full rounded-lg border px-4 py-2.5 pr-10 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                        autocomplete="off">
+
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                                        <svg class="h-4 w-4 text-gray-400 transition-transform duration-200"
+                                            :class="dropdownOpen ? 'transform rotate-180' : ''"
+                                            fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 9l-7 7-7-7"></path>
+                                        </svg>
+                                    </div>
+
+                                    <div x-show="dropdownOpen"
+                                        x-transition:enter="transition ease-out duration-100"
+                                        x-transition:enter-start="opacity-0 scale-95 -translate-y-2"
+                                        x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                                        x-transition:leave="transition ease-in duration-75"
+                                        x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                                        x-transition:leave-end="opacity-0 scale-95 -translate-y-2"
+                                        class="absolute z-50 mt-1 w-full bg-white border border-gray-100 rounded-lg shadow-xl max-h-60 overflow-y-auto custom-scrollbar"
+                                        style="display: none;">
+
+                                        <ul class="py-1 text-base text-gray-700">
+                                            @if (count($this->filteredMaterials) > 0)
+                                                @foreach ($this->filteredMaterials as $material)
+                                                    <li>
+                                                        <button type="button"
+                                                            wire:click="selectMaterial({{ $material->id }}, '{{ $material->name }}')"
+                                                            @click="dropdownOpen = false"
+                                                            class="w-full px-4 py-2.5 text-sm text-left hover:bg-gray-50 hover:text-gray-700 cursor-pointer transition-colors">
+                                                            {{ $material->name }}
+                                                        </button>
+                                                    </li>
+                                                @endforeach
+                                            @elseif(empty($this->materialSearch))
+                                                @foreach ($materials as $material)
+                                                    <li>
+                                                        <button type="button"
+                                                            wire:click="selectMaterial({{ $material->id }}, '{{ $material->name }}')"
+                                                            @click="dropdownOpen = false"
+                                                            class="w-full px-4 py-2.5 text-sm text-left hover:bg-gray-50 hover:text-gray-700 cursor-pointer transition-colors">
+                                                            {{ $material->name }}
+                                                        </button>
+                                                    </li>
+                                                @endforeach
+                                            @else
+                                                <li>
+                                                    <div class="px-4 py-3 text-sm text-gray-500 text-center">No raw materials found</div>
+                                                </li>
+                                            @endif
+                                        </ul>
+                                    </div>
+                                </div>
+                                @error('material_id')
+                                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                                @enderror
+                            </div>
                         </div>
 
-                        <div class="mb-5">
-                            <label class="mb-2 block text-sm font-bold">Specifications (Optional)</label>
+                        <hr class="border-gray-100 mb-6">
+
+                        <div class="mb-6">
+                            <label class="mb-3 block text-sm font-bold text-gray-700">Select Specifications</label>
+
                             @if ($specifications->isEmpty())
-                                <p class="text-sm text-gray-500">No specifications available</p>
+                                <div
+                                    class="p-4 bg-gray-50 rounded-lg text-sm text-gray-500 text-center border border-gray-200">
+                                    No specifications data available.
+                                </div>
                             @else
-                                <div class="max-h-48 overflow-y-auto rounded-lg border border-gray-300 p-3">
-                                    @foreach ($specifications as $specification)
-                                        <label class="mb-2 flex cursor-pointer items-center space-x-2">
-                                            <input type="checkbox"
-                                                wire:click="toggleSpecification({{ $specification->id }})"
-                                                {{ in_array($specification->id, $selectedSpecifications) ? 'checked' : '' }}
-                                                class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-                                            <span class="text-sm">{{ $specification->name }}</span>
-                                        </label>
-                                    @endforeach
+                                <div
+                                    class="max-h-64 overflow-y-auto rounded-xl border border-gray-200 p-4 bg-gray-50/50 custom-scrollbar">
+                                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                                        @foreach ($specifications as $specification)
+                                            <label
+                                                class="group relative flex items-center justify-center p-2 text-sm border rounded-lg cursor-pointer select-none transition-all duration-200
+                                                {{ in_array($specification->id, $selectedSpecifications)
+                                                    ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-200'
+                                                    : 'bg-white border-gray-200 text-gray-600 hover:border-blue-400 hover:text-blue-600' }}">
+
+                                                <input type="checkbox"
+                                                    wire:click="toggleSpecification({{ $specification->id }})"
+                                                    class="absolute opacity-0 w-0 h-0"
+                                                    {{ in_array($specification->id, $selectedSpecifications) ? 'checked' : '' }}>
+
+                                                <span class="truncate px-1 font-medium"
+                                                    title="{{ $specification->name }}">
+                                                    {{ $specification->name }}
+                                                </span>
+
+                                                @if (in_array($specification->id, $selectedSpecifications))
+                                                    <svg class="w-3 h-3 absolute -top-1 -right-1 bg-white text-blue-600 rounded-full border border-blue-600"
+                                                        fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                                        stroke-width="4">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                @endif
+                                            </label>
+                                        @endforeach
+                                    </div>
                                 </div>
                             @endif
                             @error('selectedSpecifications')
-                                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                                <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                             @enderror
                         </div>
 
-                        <!-- Dynamic Specification Value Inputs -->
-                        <!-- Specification Values Section for Add Modal -->
                         @if (!empty($selectedSpecifications))
-                            <div class="mb-5">
-                                <label class="mb-2 block text-sm font-bold">Specification Values</label>
-                                @foreach ($selectedSpecifications as $specId)
-                                    @php
-                                        $spec = $specifications->find($specId);
-                                    @endphp
-                                    @if ($spec)
-                                        <div class="mb-3">
-                                            <div class="mb-2 flex  items-center space-x-2">
-                                                <div
-                                                    class="inline-flex items-center  rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
-                                                    {{ $spec->name }}
-                                                </div>
+                            <div class="space-y-4 bg-gray-50 p-5 rounded-xl border border-gray-200 mb-6">
+                                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Set
+                                    Specification Values</h4>
 
-                                                <div class="w-20 relative">
-                                                    <select
-                                                        wire:model.live="specificationOperators.{{ $specId }}"
-                                                        class="@error('specificationOperators.' . $specId) border-red-500 @else border-gray-300 @enderror w-full cursor-pointer appearance-none rounded-lg border px-2 py-2 pr-7 text-sm shadow-sm">
-                                                        <option value=">=">&gt;=</option>
-                                                        <option value="<=">&lt;=</option>
-                                                        <option value="==">==</option>
-                                                        <option value="-">Range</option>
-                                                        <option value="should_be">Should be</option>
-                                                    </select>
-                                                    <div
-                                                        class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                                        <svg class="w-4 h-4 text-gray-400" fill="none"
-                                                            stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                                stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                                        </svg>
+                                <div class="space-y-3">
+                                    @foreach ($selectedSpecifications as $specId)
+                                        @php $spec = $specifications->find($specId); @endphp
+                                        @if ($spec)
+                                            <div
+                                                class="bg-white p-3 sm:p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                                                <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+
+                                                    <div class="sm:w-1/4 min-w-[120px]">
+                                                        <span
+                                                            class="text-sm font-bold text-gray-800 break-words">{{ $spec->name }}</span>
                                                     </div>
-                                                    @error('specificationOperators.' . $specId)
-                                                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                                                    @enderror
-                                                </div>
 
-                                                @if (isset($specificationOperators[$specId]) && $specificationOperators[$specId] === '-')
-                                                    <div class="flex-1">
-                                                        <div class="flex items-center space-x-2">
-                                                            <input type="number" step="any"
-                                                                wire:model="specificationRanges.{{ $specId }}.0.min"
-                                                                placeholder="Min"
-                                                                class="@error('specificationRanges.' . $specId . '.0.min') border-red-500 @else border-gray-300 @enderror w-24 rounded-lg border px-2 py-2 text-sm shadow-sm">
-                                                            <span class="text-gray-500">-</span>
-                                                            <input type="number" step="any"
-                                                                wire:model="specificationRanges.{{ $specId }}.0.max"
-                                                                placeholder="Max"
-                                                                class="@error('specificationRanges.' . $specId . '.0.max') border-red-500 @else border-gray-300 @enderror w-24 rounded-lg border px-2 py-2 text-sm shadow-sm">
+                                                    <div class="flex-1 flex flex-col sm:flex-row gap-2">
+
+                                                        <div class="sm:w-1/3 min-w-[110px]" x-data="{
+                                                            open: false,
+                                                            openUpward: false,
+                                                            operator: @entangle('specificationOperators.' . $specId).live,
+                                                            labels: {
+                                                                '>=': 'Greater (>=)',
+                                                                '<=': 'Less (<=)',
+                                                                '==': 'Equal (==)',
+                                                                '-': 'Range',
+                                                                'should_be': 'Should Be'
+                                                            },
+                                                            toggle() {
+                                                                if (!this.open) {
+                                                                    // Check available space before opening
+                                                                    const button = this.$refs.button;
+                                                                    const rect = button.getBoundingClientRect();
+                                                                    const spaceBelow = window.innerHeight - rect.bottom;
+                                                                    const spaceAbove = rect.top;
+                                                                    const dropdownHeight = 280; // Estimated dropdown height
+
+                                                                    // Open upward if not enough space below
+                                                                    this.openUpward = spaceBelow < dropdownHeight;
+                                                                }
+                                                                this.open = !this.open;
+                                                            },
+                                                            close() { this.open = false }
+                                                        }" @click.away="close()">
+                                                            <div class="relative">
+                                                                <button type="button" @click="toggle()" x-ref="button"
+                                                                    class="relative w-full py-2 px-3 text-left border rounded-lg shadow-sm cursor-pointer focus:outline-none transition-all duration-200 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 bg-white text-gray-700">
+                                                                    <span class="block truncate text-xs font-medium"
+                                                                        x-text="labels[operator] || 'Greater (>=)'"></span>
+
+                                                                    <span
+                                                                        class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                                                        <svg class="w-4 h-4 text-gray-400 transition-transform duration-200"
+                                                                            :class="open ? 'transform rotate-180' : ''"
+                                                                            fill="none" stroke="currentColor"
+                                                                            viewBox="0 0 24 24">
+                                                                            <path stroke-linecap="round"
+                                                                                stroke-linejoin="round" stroke-width="2"
+                                                                                d="M19 9l-7 7-7-7"></path>
+                                                                        </svg>
+                                                                    </span>
+                                                                </button>
+
+                                                                <div x-show="open"
+                                                                    x-transition:enter="transition ease-out duration-100"
+                                                                    x-transition:enter-start="opacity-0 scale-95"
+                                                                    x-transition:enter-end="opacity-100 scale-100"
+                                                                    x-transition:leave="transition ease-in duration-75"
+                                                                    x-transition:leave-start="opacity-100 scale-100"
+                                                                    x-transition:leave-end="opacity-0 scale-95"
+                                                                    style="display: none;"
+                                                                    :class="openUpward ? 'absolute z-50 w-full bottom-full mb-2 bg-white border border-gray-100 rounded-lg shadow-xl max-h-60 overflow-y-auto custom-scrollbar' : 'absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-lg shadow-xl max-h-60 overflow-y-auto custom-scrollbar'">
+
+                                                                    <ul class="py-1 text-base text-gray-700">
+                                                                        @foreach (['>=' => 'Greater (>=)', '<=' => 'Less (<=)', '==' => 'Equal (==)', '-' => 'Range', 'should_be' => 'Should Be'] as $val => $label)
+                                                                            <li>
+                                                                                <button type="button"
+                                                                                    @click="operator = '{{ $val }}'; close()"
+                                                                                    class="group flex items-center justify-between w-full px-4 py-3 text-xs text-left hover:bg-gray-50 hover:text-gray-700 transition-colors cursor-pointer"
+                                                                                    :class="operator == '{{ $val }}' ?
+                                                                                        'bg-indigo-50 text-gray-700 font-semibold' :
+                                                                                        ''">
+
+                                                                                    <span>{{ $label }}</span>
+
+                                                                                    <svg x-show="operator == '{{ $val }}'"
+                                                                                        class="w-4 h-4 text-gray-600"
+                                                                                        fill="none" viewBox="0 0 24 24"
+                                                                                        stroke="currentColor">
+                                                                                        <path stroke-linecap="round"
+                                                                                            stroke-linejoin="round"
+                                                                                            stroke-width="2"
+                                                                                            d="M5 13l4 4L19 7" />
+                                                                                    </svg>
+                                                                                </button>
+                                                                            </li>
+                                                                        @endforeach
+                                                                    </ul>
+                                                                </div>
+                                                            </div>
                                                         </div>
-                                                        @error('specificationRanges.' . $specId . '.0.min')
-                                                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                                                        @enderror
-                                                        @error('specificationRanges.' . $specId . '.0.max')
-                                                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                                                        @enderror
-                                                    </div>
-                                                @else
-                                                    <div class="flex-1">
-                                                        @if (isset($specificationOperators[$specId]) && $specificationOperators[$specId] === 'should_be')
+
+                                                        <div class="flex-1">
+                                                            @if (isset($specificationOperators[$specId]) && $specificationOperators[$specId] === '-')
+                                                                <div class="space-y-2">
+                                                                    @if (isset($specificationRanges[$specId]))
+                                                                        @foreach ($specificationRanges[$specId] as $index => $range)
+                                                                            <div class="flex items-center gap-1">
+                                                                                <input type="number" step="any"
+                                                                                    wire:model="specificationRanges.{{ $specId }}.{{ $index }}.min"
+                                                                                    placeholder="Min"
+                                                                                    class="w-full px-2 py-2 border border-gray-300 rounded-lg text-xs focus:ring-1 focus:ring-blue-500">
+                                                                                <span
+                                                                                    class="text-gray-400 text-xs">-</span>
+                                                                                <input type="number" step="any"
+                                                                                    wire:model="specificationRanges.{{ $specId }}.{{ $index }}.max"
+                                                                                    placeholder="Max"
+                                                                                    class="w-full px-2 py-2 border border-gray-300 rounded-lg text-xs focus:ring-1 focus:ring-blue-500">
+
+                                                                                @if ($index > 0)
+                                                                                    <button type="button"
+                                                                                        wire:click="removeRangeRow({{ $specId }}, {{ $index }})"
+                                                                                        class="text-gray-400 hover:text-red-500">
+                                                                                        <svg class="w-4 h-4"
+                                                                                            fill="none"
+                                                                                            viewBox="0 0 24 24"
+                                                                                            stroke="currentColor">
+                                                                                            <path
+                                                                                                stroke-linecap="round"
+                                                                                                stroke-linejoin="round"
+                                                                                                stroke-width="2"
+                                                                                                d="M6 18L18 6M6 6l12 12" />
+                                                                                        </svg>
+                                                                                    </button>
+                                                                                @endif
+                                                                            </div>
+                                                                        @endforeach
+                                                                    @endif
+                                                                </div>
+                                                            @elseif (isset($specificationOperators[$specId]) && $specificationOperators[$specId] === 'should_be')
+                                                                <input type="text"
+                                                                    wire:model="specificationTextValues.{{ $specId }}"
+                                                                    placeholder="Text (e.g. Clear)"
+                                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500">
+                                                            @else
+                                                                <input type="number" step="any"
+                                                                    wire:model="specificationValues.{{ $specId }}"
+                                                                    placeholder="Value"
+                                                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500">
+                                                            @endif
+                                                            @error("specificationValues.$specId")
+                                                                <span
+                                                                    class="text-[10px] text-red-500">{{ $message }}</span>
+                                                            @enderror
+                                                            @error("specificationRanges.$specId.*")
+                                                                <span class="text-[10px] text-red-500">Invalid range</span>
+                                                            @enderror
+                                                        </div>
+
+                                                        <div class="sm:w-20 w-full">
                                                             <input type="text"
-                                                                wire:model="specificationTextValues.{{ $specId }}"
-                                                                placeholder="Enter text value for {{ $spec->name }}"
-                                                                class="@error('specificationTextValues.' . $specId) border-red-500 @else border-gray-300 @enderror w-full rounded-lg border px-3 py-2 text-sm shadow-sm">
-                                                            @error('specificationTextValues.' . $specId)
-                                                                <p class="mt-1 text-xs text-red-500">{{ $message }}
-                                                                </p>
-                                                            @enderror
-                                                        @else
-                                                            <input type="number" step="any"
-                                                                wire:model="specificationValues.{{ $specId }}"
-                                                                placeholder="Enter numeric value for {{ $spec->name }}"
-                                                                class="@error('specificationValues.' . $specId) border-red-500 @else border-gray-300 @enderror w-full rounded-lg border px-3 py-2 text-sm shadow-sm">
-                                                            @error('specificationValues.' . $specId)
-                                                                <p class="mt-1 text-xs text-red-500">{{ $message }}
-                                                                </p>
-                                                            @enderror
-                                                        @endif
+                                                                wire:model="specificationUnits.{{ $specId }}"
+                                                                placeholder="Unit"
+                                                                class="w-full px-2 py-2 border border-gray-300 rounded-lg text-xs bg-gray-50 text-gray-600 focus:ring-2 focus:ring-blue-500 text-center">
+                                                        </div>
                                                     </div>
-                                                @endif
-
-
-
-                                                <input type="text"
-                                                    wire:model="specificationUnits.{{ $specId }}"
-                                                    placeholder="e.g., %, ppm, mg/L"
-                                                    class="@error('specificationUnits.' . $specId) border-red-500 @else border-gray-300 @enderror w-full sm:w-48 rounded-lg border px-3 py-2 text-sm shadow-sm">
-
+                                                </div>
                                             </div>
-
-                                        </div>
-                                    @endif
-                                @endforeach
-                            </div>
-                        @endif
-
-                        <div class="mt-6 flex justify-end border-t pt-5">
-                            <button type="button" wire:click="closeAddModal()"
-                                class="mr-3 cursor-pointer rounded-lg bg-gray-100 px-6 py-2 text-gray-700 hover:bg-gray-200">
-                                Cancel
-                            </button>
-                            <button type="submit" wire:loading.attr="disabled" wire:target="store"
-                                class="{{ $materials->isEmpty() || $specifications->isEmpty() ? 'opacity-50 cursor-not-allowed' : '' }} cursor-pointer rounded-lg bg-blue-500 px-6 py-2 text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
-                                {{ $materials->isEmpty() || $specifications->isEmpty() ? 'disabled' : '' }}>
-                                <span wire:loading.remove wire:target="store">Save Reference</span>
-                                <span wire:loading wire:target="store">Saving...</span>
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    @endif
-
-    <!-- Edit Modal -->
-    @if ($isEditModalOpen)
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/75 p-4">
-            <div class="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-8 shadow-2xl">
-                <div class="flex items-center justify-between border-b pb-4">
-                    <h3 class="text-2xl font-bold">Edit Reference</h3>
-                    <button wire:click="closeEditModal()" class="cursor-pointer rounded-full p-2 hover:bg-gray-100">
-                        <svg class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-                <div class="mt-6">
-                    <!-- Error Display -->
-                    @if ($errors->any())
-                        <div class="mb-4 rounded-r-lg border-l-4 border-red-500 bg-red-100 p-4 text-red-700">
-                            <ul class="list-inside list-disc">
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    @endif
-
-                    <form wire:submit="update">
-                        <div class="mb-5">
-                            <label for="edit-name" class="mb-2 block text-sm font-bold">Reference Name</label>
-                            <input type="text" id="edit-name" wire:model="name"
-                                class="@error('name') border-red-500 @else border-gray-300 @enderror w-full rounded-lg border px-4 py-3 shadow-sm"
-                                required>
-                            @error('name')
-                                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div class="relative mb-5">
-                            <label for="edit-material" class="mb-2 block text-sm font-bold">Raw Material</label>
-                            <div class="relative" x-data @click.away="$wire.closeMaterialDropdown()">
-                                <input type="text" wire:model.live.debounce.1000ms="materialSearch"
-                                    wire:click="openMaterialDropdown" placeholder="Search raw material..."
-                                    class="@error('material_id') border-red-500 @else border-gray-300 @enderror w-full rounded-lg border px-4 py-3 pr-10 shadow-sm"
-                                    autocomplete="off">
-
-                                <!-- Dropdown icon -->
-                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                                    <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M19 9l-7 7-7-7"></path>
-                                    </svg>
-                                </div>
-
-                                <!-- Dropdown List -->
-                                @if ($showMaterialDropdown && count($this->filteredMaterials) > 0)
-                                    <div
-                                        class="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                                        @foreach ($this->filteredMaterials as $material)
-                                            <div wire:click="selectMaterial({{ $material->id }}, '{{ $material->name }}')"
-                                                class="px-4 py-3 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0">
-                                                {{ $material->name }}
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                @elseif($showMaterialDropdown && empty($this->materialSearch))
-                                    <div
-                                        class="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                                        @foreach ($materials as $material)
-                                            <div wire:click="selectMaterial({{ $material->id }}, '{{ $material->name }}')"
-                                                class="px-4 py-3 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0">
-                                                {{ $material->name }}
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                @elseif($showMaterialDropdown)
-                                    <div
-                                        class="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg">
-                                        <div class="px-4 py-3 text-gray-500">No raw materials found</div>
-                                    </div>
-                                @endif
-                            </div>
-                            @error('material_id')
-                                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                            @enderror
-                        </div>
-                        <div class="mb-5">
-                            <label class="mb-2 block text-sm font-bold">Specifications (Optional)</label>
-                            @if ($specifications->isEmpty())
-                                <p class="text-sm text-gray-500">No specifications available</p>
-                            @else
-                                <div class="max-h-48 overflow-y-auto rounded-lg border border-gray-300 p-3">
-                                    @foreach ($specifications as $specification)
-                                        <label class="mb-2 flex cursor-pointer items-center space-x-2">
-                                            <input type="checkbox"
-                                                wire:click="toggleSpecification({{ $specification->id }})"
-                                                {{ in_array($specification->id, $selectedSpecifications) ? 'checked' : '' }}
-                                                class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-                                            <span class="text-sm">{{ $specification->name }}</span>
-                                        </label>
+                                        @endif
                                     @endforeach
                                 </div>
-                            @endif
-                            @error('selectedSpecifications')
-                                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <!-- Dynamic Specification Value Inputs -->
-                        <!-- Specification Values Section for Edit Modal -->
-                        @if (!empty($selectedSpecifications))
-                            <div class="mb-5">
-                                <label class="mb-2 block text-sm font-bold">Specification Values</label>
-                                @foreach ($selectedSpecifications as $specId)
-                                    @php
-                                        $spec = $specifications->find($specId);
-                                    @endphp
-                                    @if ($spec)
-                                        <div class="mb-3">
-                                            <div class="mb-2 flex items-center space-x-2">
-                                                <div
-                                                    class="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
-                                                    {{ $spec->name }}
-                                                </div>
-                                                <div class="w-24 relative">
-                                                    <select
-                                                        wire:model.live="specificationOperators.{{ $specId }}"
-                                                        class="@error('specificationOperators.' . $specId) border-red-500 @else border-gray-300 @enderror w-full cursor-pointer appearance-none rounded-lg border px-2 py-2 pr-7 text-sm shadow-sm">
-                                                        <option value=">=">>=</option>
-                                                        <option value="<=">&lt;=</option>
-                                                        <option value="==">==</option>
-                                                        <option value="-">Range</option>
-                                                        <option value="should_be">Should be</option>
-                                                    </select>
-                                                    <div
-                                                        class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                                        <svg class="w-4 h-4 text-gray-400" fill="none"
-                                                            stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                                stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                                        </svg>
-                                                    </div>
-                                                    @error('specificationOperators.' . $specId)
-                                                        <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                                                    @enderror
-                                                </div>
-
-                                                @if (isset($specificationOperators[$specId]) && $specificationOperators[$specId] === '-')
-                                                    <div class="flex-1">
-                                                        <div class="flex items-center space-x-2">
-                                                            <input type="number" step="any"
-                                                                wire:model="specificationRanges.{{ $specId }}.0.min"
-                                                                placeholder="Min"
-                                                                class="@error('specificationRanges.' . $specId . '.0.min') border-red-500 @else border-gray-300 @enderror w-24 rounded-lg border px-3 py-2 text-sm shadow-sm">
-                                                            <span class="text-gray-500">-</span>
-                                                            <input type="number" step="any"
-                                                                wire:model="specificationRanges.{{ $specId }}.0.max"
-                                                                placeholder="Max"
-                                                                class="@error('specificationRanges.' . $specId . '.0.max') border-red-500 @else border-gray-300 @enderror w-24 rounded-lg border px-3 py-2 text-sm shadow-sm">
-                                                        </div>
-                                                        @error('specificationRanges.' . $specId . '.0.min')
-                                                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                                                        @enderror
-                                                        @error('specificationRanges.' . $specId . '.0.max')
-                                                            <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
-                                                        @enderror
-                                                    </div>
-                                                @else
-                                                    <div class="flex-1">
-                                                        @if (isset($specificationOperators[$specId]) && $specificationOperators[$specId] === 'should_be')
-                                                            <input type="text"
-                                                                wire:model="specificationTextValues.{{ $specId }}"
-                                                                placeholder="Enter text value for {{ $spec->name }}"
-                                                                class="@error('specificationTextValues.' . $specId) border-red-500 @else border-gray-300 @enderror w-full rounded-lg border px-3 py-2 text-sm shadow-sm">
-                                                            @error('specificationTextValues.' . $specId)
-                                                                <p class="mt-1 text-xs text-red-500">{{ $message }}
-                                                                </p>
-                                                            @enderror
-                                                        @else
-                                                            <input type="number" step="any"
-                                                                wire:model="specificationValues.{{ $specId }}"
-                                                                placeholder="Enter numeric value for {{ $spec->name }}"
-                                                                class="@error('specificationValues.' . $specId) border-red-500 @else border-gray-300 @enderror w-full rounded-lg border px-3 py-2 text-sm shadow-sm">
-                                                            @error('specificationValues.' . $specId)
-                                                                <p class="mt-1 text-xs text-red-500">{{ $message }}
-                                                                </p>
-                                                            @enderror
-                                                        @endif
-                                                    </div>
-                                                @endif
-
-
-                                                    <input type="text"
-                                                        wire:model="specificationUnits.{{ $specId }}"
-                                                        placeholder="e.g., %, ppm, mg/L"
-                                                        class="w-full sm:w-48 rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm">
-
-
-                                            </div>
-                                        </div>
-                                    @endif
-                                @endforeach
                             </div>
                         @endif
 
-                        <div class="mt-6 flex justify-end border-t pt-5">
-                            <button type="button" wire:click="closeEditModal()"
-                                class="mr-3 cursor-pointer rounded-lg bg-gray-100 px-6 py-2 text-gray-700 hover:bg-gray-200">
+                        <div class="mt-8 flex justify-end gap-3 border-t pt-5">
+                            <button type="button" wire:click="close{{ $mode }}Modal()"
+                                class="px-5 py-2.5 rounded-lg bg-white border border-gray-300 text-gray-700 font-medium text-sm hover:bg-gray-50 transition-all shadow-sm cursor-pointer">
                                 Cancel
                             </button>
-                            <button type="submit" wire:loading.attr="disabled" wire:target="update"
-                                class="cursor-pointer rounded-lg bg-blue-500 px-6 py-2 text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50">
-                                <span wire:loading.remove wire:target="update">Update Reference</span>
-                                <span wire:loading wire:target="update">Updating...</span>
+                            <button type="submit" wire:loading.attr="disabled"
+                                class="px-5 py-2.5 rounded-lg bg-blue-600 text-white font-medium text-sm hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
+                                <span wire:loading.remove>{{ $mode === 'Add' ? 'Save Data' : 'Update Data' }}</span>
+                                <span wire:loading>Saving...</span>
                             </button>
                         </div>
+
                     </form>
                 </div>
             </div>
-        </div>
-    @endif
+        @endif
+    @endforeach
+
 </div>

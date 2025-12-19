@@ -333,12 +333,12 @@
                 createSampleData(sampleId, data) {
                     const statusPermissions = {
                         canEdit: data.userCanEdit && ['submitted', 'pending'].includes(data.status),
-                        canStartAnalysis: ['submitted', 'pending'].includes(data.status),
-                        canContinueAnalysis: ['in_progress'].includes(data.status),
-                        canHandOver: ['in_progress'].includes(data.status),
-                        canTakeOver: ['hand_over', 'hand over'].includes(data.status?.toLowerCase()) &&
+                        canStartAnalysis: data.userCanAnalyze && ['submitted', 'pending'].includes(data.status),
+                        canContinueAnalysis: data.userCanAnalyze && ['in_progress'].includes(data.status),
+                        canHandOver: data.userCanAnalyze && ['in_progress'].includes(data.status),
+                        canTakeOver: data.userCanAnalyze && ['hand_over', 'hand over'].includes(data.status?.toLowerCase()) &&
                             data.handoverFromAnalystId != data.currentUserId,
-                        canCompleteAnalysis: ['in_progress', 'analysis_started'].includes(data.status),
+                        canCompleteAnalysis: data.userCanAnalyze && ['in_progress', 'analysis_started'].includes(data.status),
                         canReview: data.userCanReview && ['analysis_completed', 'pending_review', 'reviewed', 'approved'].includes(data.status),
                         canApprove: data.userCanApprove && ['reviewed'].includes(data.status),
                         canCreateCoA: data.userCanCreateCoA && ['approved', 'completed'].includes(data.status),

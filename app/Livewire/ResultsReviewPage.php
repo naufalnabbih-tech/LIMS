@@ -306,18 +306,23 @@ class ResultsReviewPage extends Component
     public function checkPermissions()
     {
         // Check if current user can review or approve
-        // This is a basic implementation - you should adapt it to your role system
         $user = auth()->user();
 
         $statusName = $this->sample->status ? strtolower($this->sample->status->name) : null;
 
-        $this->canReview = in_array($statusName, ['analysis_completed', 'reviewed']) &&
-            $user && $user->id !== $this->sample->primary_analyst_id;
+        // Review permission: user must have review_samples permission, appropriate status, and not be the primary analyst
+        $this->canReview = $user
+            && $user->hasPermission('review_samples')
+            && in_array($statusName, ['analysis_completed', 'reviewed'])
+            && $user->id !== $this->sample->primary_analyst_id;
 
-        $this->canApprove = in_array($statusName, ['review', 'reviewed', 'analysis_completed']) && $user;
+        // Approve permission: user must have approve_samples permission and appropriate status
+        $this->canApprove = $user
+            && $user->hasPermission('approve_samples')
+            && in_array($statusName, ['review', 'reviewed', 'analysis_completed']);
 
         // Edit permission: user must have explicit `edit_analysis` permission AND status must be 'reviewed'
-        $this->canEdit = $user && method_exists($user, 'hasPermission') && $user->hasPermission('edit_analysis') && $statusName === 'reviewed';
+        $this->canEdit = $user && $user->hasPermission('edit_analysis') && $statusName === 'reviewed';
     }
 
     public function openApprovalForm($action)
@@ -336,6 +341,12 @@ class ResultsReviewPage extends Component
 
     public function submitReview()
     {
+        // Permission check
+        if (!auth()->user()->hasPermission('approve_samples')) {
+            session()->flash('error', 'You do not have permission to approve or reject samples.');
+            return;
+        }
+
         $this->validate([
             'reviewNotes' => 'required|string|max:1000'
         ]);
@@ -405,6 +416,12 @@ class ResultsReviewPage extends Component
 
     public function approveSample()
     {
+        // Permission check
+        if (!auth()->user()->hasPermission('approve_samples')) {
+            session()->flash('error', 'You do not have permission to approve samples.');
+            return;
+        }
+
         // Get approved status ID
         $approvedStatus = \App\Models\Status::where('name', 'approved')->first();
 
@@ -432,6 +449,12 @@ class ResultsReviewPage extends Component
 
     public function rejectSample()
     {
+        // Permission check
+        if (!auth()->user()->hasPermission('approve_samples')) {
+            session()->flash('error', 'You do not have permission to reject samples.');
+            return;
+        }
+
         // Get rejected status ID
         $rejectedStatus = \App\Models\Status::where('name', 'rejected')->first();
 

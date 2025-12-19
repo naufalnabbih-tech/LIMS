@@ -105,11 +105,23 @@ class SampleChemicalSubmission extends Component
     // Analysis form methods - now dispatches to AnalysisForm component
     public function openAnalysisForm($sampleId)
     {
+        // Check permission
+        if (!auth()->user()->hasPermission('analyze_samples')) {
+            session()->flash('error', 'You do not have permission to analyze samples.');
+            return;
+        }
+
         $this->dispatch('openAnalysisForm', sampleId: $sampleId);
     }
 
     public function startAnalysis($sampleId)
     {
+        // Check permission
+        if (!auth()->user()->hasPermission('analyze_samples')) {
+            session()->flash('error', 'You do not have permission to start analysis.');
+            return;
+        }
+
         $sample = Sample::with('status')->findOrFail($sampleId);
         $inProgressStatus = Status::where('name', 'in_progress')->first();
 
@@ -126,6 +138,12 @@ class SampleChemicalSubmission extends Component
 
     public function continueAnalysis($sampleId)
     {
+        // Check permission
+        if (!auth()->user()->hasPermission('analyze_samples')) {
+            session()->flash('error', 'You do not have permission to continue analysis.');
+            return;
+        }
+
         return redirect()->route('analysis-page', ['sampleId' => $sampleId]);
     }
 
@@ -552,6 +570,7 @@ class SampleChemicalSubmission extends Component
         // Get user permissions for frontend
         $userPermissions = [
             'canEdit' => auth()->user()->hasPermission('manage_samples'),
+            'canAnalyze' => auth()->user()->hasPermission('analyze_samples'),
             'canReview' => auth()->user()->hasPermission('review_samples'),
             'canApprove' => auth()->user()->hasPermission('approve_samples'),
             'canDelete' => auth()->user()->hasPermission('manage_samples'),

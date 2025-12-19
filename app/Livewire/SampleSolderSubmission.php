@@ -61,6 +61,12 @@ class SampleSolderSubmission extends Component
 
     public function editSample($sampleId)
     {
+        // Check permission
+        if (!auth()->user()->hasPermission('manage_samples')) {
+            session()->flash('error', 'You do not have permission to edit samples.');
+            return;
+        }
+
         $this->dispatch('editSample', sampleId: $sampleId);
     }
 
@@ -100,11 +106,23 @@ class SampleSolderSubmission extends Component
     // Analysis form methods - now dispatches to AnalysisForm component
     public function openAnalysisForm($sampleId)
     {
+        // Check permission
+        if (!auth()->user()->hasPermission('analyze_samples')) {
+            session()->flash('error', 'You do not have permission to analyze samples.');
+            return;
+        }
+
         $this->dispatch('openAnalysisForm', sampleId: $sampleId);
     }
 
     public function startAnalysis($sampleId)
     {
+        // Check permission
+        if (!auth()->user()->hasPermission('analyze_samples')) {
+            session()->flash('error', 'You do not have permission to start analysis.');
+            return;
+        }
+
         $sample = Sample::with('status')->findOrFail($sampleId);
         $inProgressStatus = Status::where('name', 'in_progress')->first();
 
@@ -121,6 +139,12 @@ class SampleSolderSubmission extends Component
 
     public function continueAnalysis($sampleId)
     {
+        // Check permission
+        if (!auth()->user()->hasPermission('analyze_samples')) {
+            session()->flash('error', 'You do not have permission to continue analysis.');
+            return;
+        }
+
         return redirect()->route('analysis-page', ['sampleId' => $sampleId]);
     }
 
@@ -138,6 +162,12 @@ class SampleSolderSubmission extends Component
 
     public function reviewResults($sampleId)
     {
+        // Check permission
+        if (!auth()->user()->hasPermission('review_samples')) {
+            session()->flash('error', 'You do not have permission to review samples.');
+            return;
+        }
+
         $sample = Sample::with('status')->findOrFail($sampleId);
 
         $currentStatusName = $sample->status ? $sample->status->name : '';
@@ -159,6 +189,12 @@ class SampleSolderSubmission extends Component
 
     public function approveSample($sampleId)
     {
+        // Check permission
+        if (!auth()->user()->hasPermission('approve_samples')) {
+            session()->flash('error', 'You do not have permission to approve samples.');
+            return;
+        }
+
         $sample = Sample::with('status')->findOrFail($sampleId);
         $approvedStatus = Status::where('name', 'approved')->first();
 
@@ -180,6 +216,12 @@ class SampleSolderSubmission extends Component
 
     public function deleteSample($sampleId)
     {
+        // Check permission
+        if (!auth()->user()->hasPermission('manage_samples')) {
+            session()->flash('error', 'You do not have permission to delete samples.');
+            return;
+        }
+
         $sample = Sample::with('status')->findOrFail($sampleId);
 
         // Delete associated CoA file if exists
@@ -239,6 +281,12 @@ class SampleSolderSubmission extends Component
     // CoA Methods
     public function openCoAForm($sampleId)
     {
+        // Check permission
+        if (!auth()->user()->hasPermission('create_coa')) {
+            session()->flash('error', 'You do not have permission to create CoA.');
+            return;
+        }
+
         $sample = Sample::with('material', 'category', 'reference')->findOrFail($sampleId);
 
         // Load active formats
@@ -332,6 +380,13 @@ class SampleSolderSubmission extends Component
 
     public function createCoA()
     {
+        // Check permission
+        if (!auth()->user()->hasPermission('create_coa')) {
+            session()->flash('error', 'You do not have permission to create CoA.');
+            $this->closeCoAModal();
+            return;
+        }
+
         // Validate
         // For draft status, allow duplicate document numbers
         // Unique constraint only applies when changing status to approved/printed
@@ -441,10 +496,21 @@ class SampleSolderSubmission extends Component
             ->latest()
             ->get();
 
+        // Get user permissions for frontend
+        $userPermissions = [
+            'canEdit' => auth()->user()->hasPermission('manage_samples'),
+            'canAnalyze' => auth()->user()->hasPermission('analyze_samples'),
+            'canReview' => auth()->user()->hasPermission('review_samples'),
+            'canApprove' => auth()->user()->hasPermission('approve_samples'),
+            'canDelete' => auth()->user()->hasPermission('manage_samples'),
+            'canCreateCoA' => auth()->user()->hasPermission('create_coa'),
+        ];
+
         return view('livewire.sample-solder-submission', [
             'samples' => $samples,
             'pendingHandovers' => $pendingHandovers,
             'myHandovers' => $myHandovers,
+            'userPermissions' => $userPermissions,
         ]);
     }
 }

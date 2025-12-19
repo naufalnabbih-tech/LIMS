@@ -46,6 +46,7 @@
                     handoverFromAnalystId: @js($handoverFromAnalystId),
                     currentUserId: @js(auth()->id()),
                     userCanEdit: @js($userPermissions['canEdit'] ?? false),
+                    userCanAnalyze: @js($userPermissions['canAnalyze'] ?? false),
                     userCanReview: @js($userPermissions['canReview'] ?? false),
                     userCanApprove: @js($userPermissions['canApprove'] ?? false),
                     userCanDelete: @js($userPermissions['canDelete'] ?? false),

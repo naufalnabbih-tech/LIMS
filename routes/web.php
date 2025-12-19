@@ -102,8 +102,12 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Analysis Routes
-    Route::middleware('permission:manage_sample_analysis,view_sample_analysis')->group(function () {
+    Route::middleware('permission:manage_sample_analysis,view_sample_analysis,analyze_samples')->group(function () {
         Route::get('/analysis/{sampleId}', AnalysisPage::class)->name('analysis-page');
+    });
+
+    // Results Review Routes
+    Route::middleware('permission:review_samples,manage_sample_analysis,view_sample_analysis')->group(function () {
         Route::get('/results-review/{sampleId}', ResultsReviewPage::class)->name('results-review');
     });
 
