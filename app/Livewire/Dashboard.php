@@ -7,6 +7,7 @@ use App\Models\Sample;
 use App\Models\Category;
 use App\Models\Material;
 use App\Models\Status;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -23,11 +24,26 @@ class Dashboard extends Component
     public $approvalData = []; // Data per sample type (solder, rawmat, chemical)
     public $chartPeriod = 'month'; // week, month, year
 
+    // Operator data
+    public $selectedMonth;
+    public $selectedYear;
+    public $solderOperators = [];
+    public $chemicalOperators = [];
+
+    // Modal data
+    public $showModal = false;
+    public $selectedOperator = null;
+    public $operatorSamples = [];
+    public $modalSampleType = '';
+
     public function mount()
     {
+        $this->selectedMonth = now()->month;
+        $this->selectedYear = now()->year;
         $this->loadStatistics();
         $this->loadRecentActivities();
         $this->loadChartData();
+        $this->loadOperatorData();
     }
 
     public function loadStatistics()
@@ -290,6 +306,173 @@ class Dashboard extends Component
         ];
 
         return $colors[$statusName] ?? '#6b7280'; // gray default
+    }
+
+    public function loadOperatorData()
+    {
+        // Get only operators
+        $analysts = User::whereHas('role', function($q) {
+            $q->where('name', 'operator');
+        })->get();
+
+        $this->solderOperators = [];
+        $this->chemicalOperators = [];
+
+        foreach ($analysts as $analyst) {
+            // Calculate solder data
+            $solderData = $this->calculateOperatorStats($analyst->id, 'solder');
+            if ($solderData['jumlah_sample'] > 0 || true) { // Show all operators
+                $this->solderOperators[] = array_merge(['operator' => $analyst], $solderData);
+            }
+
+            // Calculate chemical data
+            $chemicalData = $this->calculateOperatorStats($analyst->id, 'chemical');
+            if ($chemicalData['jumlah_sample'] > 0 || true) { // Show all operators
+                $this->chemicalOperators[] = array_merge(['operator' => $analyst], $chemicalData);
+            }
+        }
+    }
+
+    private function calculateOperatorStats($operatorId, $sampleType)
+    {
+        // Build query for samples
+        $query = Sample::where('sample_type', $sampleType)
+            ->where(function($q) use ($operatorId) {
+                $q->where('primary_analyst_id', $operatorId)
+                  ->orWhere('secondary_analyst_id', $operatorId);
+            })
+            ->whereNotNull('analysis_started_at');
+
+        // Filter by month if selected
+        if ($this->selectedMonth) {
+            $startOfMonth = Carbon::create($this->selectedYear, $this->selectedMonth, 1)->startOfMonth();
+            $endOfMonth = Carbon::create($this->selectedYear, $this->selectedMonth, 1)->endOfMonth();
+            $query->whereBetween('analysis_started_at', [$startOfMonth, $endOfMonth]);
+        } else {
+            // If no month selected, filter by year only
+            $query->whereYear('analysis_started_at', $this->selectedYear);
+        }
+
+        $samples = $query->with('handovers')->get();
+
+        $jumlahSample = $samples->count();
+
+        // Calculate total waktu based on actual work periods
+        $totalSeconds = 0;
+
+        foreach ($samples as $sample) {
+            $operatorWorkTime = $this->calculateOperatorWorkTime($sample, $operatorId);
+            $totalSeconds += $operatorWorkTime;
+        }
+
+        $hours = floor($totalSeconds / 3600);
+        $minutes = floor(($totalSeconds % 3600) / 60);
+        $totalWaktu = "{$hours} Jam {$minutes} Menit";
+
+        return [
+            'jumlah_sample' => $jumlahSample,
+            'total_waktu' => $totalWaktu,
+            'total_seconds' => $totalSeconds
+        ];
+    }
+
+    private function calculateOperatorWorkTime($sample, $operatorId)
+    {
+        $workTime = 0;
+
+        // Get accepted handovers for this sample, ordered by taken_at
+        $handovers = $sample->handovers()
+            ->where('status', 'accepted')
+            ->orderBy('taken_at', 'asc')
+            ->get();
+
+        // Case 1: Operator started the analysis (and was NOT handed over TO)
+        // Check if there's any handover TO this operator - if yes, they didn't start it
+        $wasHandedOverTo = $handovers->where('to_analyst_id', $operatorId)->first();
+
+        if ($sample->analysis_started_at && !$wasHandedOverTo) {
+            // This operator truly started the analysis (no one handed over to them)
+            // Check if there's a handover FROM this operator
+            $handoverOut = $handovers->where('from_analyst_id', $operatorId)->first();
+
+            if ($handoverOut && $handoverOut->submitted_at) {
+                // Operator worked from start until handover
+                $workTime += $sample->analysis_started_at->diffInSeconds($handoverOut->submitted_at);
+            } elseif ($sample->analysis_completed_at) {
+                // No handover, operator completed the analysis
+                $workTime += $sample->analysis_started_at->diffInSeconds($sample->analysis_completed_at);
+            }
+        }
+
+        // Case 2: Operator received handover(s)
+        $handoversToOperator = $handovers->where('to_analyst_id', $operatorId);
+
+        foreach ($handoversToOperator as $handoverIn) {
+            if (!$handoverIn->taken_at) continue;
+
+            // Check if operator handed over again
+            $handoverOut = $handovers
+                ->where('from_analyst_id', $operatorId)
+                ->where('submitted_at', '>', $handoverIn->taken_at)
+                ->first();
+
+            if ($handoverOut && $handoverOut->submitted_at) {
+                // Operator worked from taken_at until next handover
+                $workTime += $handoverIn->taken_at->diffInSeconds($handoverOut->submitted_at);
+            } elseif ($sample->analysis_completed_at && $sample->analysis_completed_at > $handoverIn->taken_at) {
+                // Operator completed the analysis after taking over
+                $workTime += $handoverIn->taken_at->diffInSeconds($sample->analysis_completed_at);
+            }
+        }
+
+        return abs($workTime);
+    }
+
+    public function updatedSelectedMonth()
+    {
+        $this->loadOperatorData();
+    }
+
+    public function openDetailModal($operatorId, $sampleType)
+    {
+        $this->selectedOperator = User::find($operatorId);
+        $this->modalSampleType = $sampleType;
+
+        // Build query for samples - show ALL samples worked by operator (including approved)
+        $query = Sample::where('sample_type', $sampleType)
+            ->where(function($q) use ($operatorId) {
+                $q->where('primary_analyst_id', $operatorId)
+                  ->orWhere('secondary_analyst_id', $operatorId);
+            })
+            ->whereNotNull('analysis_started_at') // Only samples that have started analysis
+            ->with(['material', 'handovers']);
+
+        // Filter by month if selected - consistent with calculateOperatorStats
+        if ($this->selectedMonth) {
+            $startOfMonth = Carbon::create($this->selectedYear, $this->selectedMonth, 1)->startOfMonth();
+            $endOfMonth = Carbon::create($this->selectedYear, $this->selectedMonth, 1)->endOfMonth();
+            $query->whereBetween('analysis_started_at', [$startOfMonth, $endOfMonth]);
+        } else {
+            // If no month selected, filter by year only
+            $query->whereYear('analysis_started_at', $this->selectedYear);
+        }
+
+        $this->operatorSamples = $query->orderBy('analysis_started_at', 'desc')->get();
+
+        // Calculate actual work time for each sample for this specific operator
+        foreach ($this->operatorSamples as $sample) {
+            $sample->operator_work_time = $this->calculateOperatorWorkTime($sample, $operatorId);
+        }
+
+        $this->showModal = true;
+    }
+
+    public function closeModal()
+    {
+        $this->showModal = false;
+        $this->selectedOperator = null;
+        $this->operatorSamples = [];
+        $this->modalSampleType = '';
     }
 
     public function render()

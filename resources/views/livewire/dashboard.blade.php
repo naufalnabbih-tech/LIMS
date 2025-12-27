@@ -170,151 +170,231 @@
         </div>
     </div>
 
-    <!-- Main Content Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Recent Activity - Takes 2/3 width -->
-        <div class="lg:col-span-2">
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200">
-                <div class="px-6 py-4 border-b border-gray-200">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-lg font-semibold text-gray-900">Recent Activity</h3>
-                        <a href="{{ route('sample-rawmat-submissions') }}" wire:navigate
-                            class="text-sm text-blue-600 hover:text-blue-700 font-medium">View All</a>
-                    </div>
+    <!-- Data Operator Laboratorium Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <!-- Data Operator Laboratorium - Solder -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">Data Operator Laboratorium - Solder</h3>
+                <div class="flex items-center gap-2">
+                    <label class="text-sm text-gray-600">Pilih Bulan:</label>
+                    <select wire:model.live="selectedMonth"
+                        class="text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">-- Semua Bulan --</option>
+                        <option value="1">Januari</option>
+                        <option value="2">Februari</option>
+                        <option value="3">Maret</option>
+                        <option value="4">April</option>
+                        <option value="5">Mei</option>
+                        <option value="6">Juni</option>
+                        <option value="7">Juli</option>
+                        <option value="8">Agustus</option>
+                        <option value="9">September</option>
+                        <option value="10">Oktober</option>
+                        <option value="11">November</option>
+                        <option value="12">Desember</option>
+                    </select>
                 </div>
-                <div class="pt-5 pb-10  px-6">
-                    @if (count($recentActivities) > 0)
-                        <div class="flow-root">
-                            <ul class="-mb-8 space-y-6">
-                                @foreach ($recentActivities as $activity)
-                                    <li class="relative">
-                                        <div class="flex items-start space-x-3">
-                                            <div class="flex-shrink-0">
-                                                <div
-                                                    class="w-8 h-8 bg-{{ $activity['color'] }}-100 rounded-full flex items-center justify-center">
-                                                    @if ($activity['icon'] === 'check-circle')
-                                                        <svg class="w-4 h-4 text-{{ $activity['color'] }}-600"
-                                                            fill="currentColor" viewBox="0 0 20 20">
-                                                            <path fill-rule="evenodd"
-                                                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                                                clip-rule="evenodd" />
-                                                        </svg>
-                                                    @elseif($activity['icon'] === 'clipboard-list')
-                                                        <svg class="w-4 h-4 text-{{ $activity['color'] }}-600"
-                                                            fill="currentColor" viewBox="0 0 20 20">
-                                                            <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-                                                            <path fill-rule="evenodd"
-                                                                d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z"
-                                                                clip-rule="evenodd" />
-                                                        </svg>
-                                                    @else
-                                                        <svg class="w-4 h-4 text-{{ $activity['color'] }}-600"
-                                                            fill="currentColor" viewBox="0 0 20 20">
-                                                            <path fill-rule="evenodd"
-                                                                d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                                                                clip-rule="evenodd" />
-                                                        </svg>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                            <div class="flex-1 min-w-0">
-                                                <p class="text-sm font-medium text-gray-900">{{ $activity['title'] }}
-                                                </p>
-                                                <p class="text-sm text-gray-500">{{ $activity['description'] }}</p>
-                                                <p class="text-xs text-gray-400 mt-1">{{ $activity['time_human'] }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    @else
-                        <div class="text-center py-12">
-                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                            </svg>
-                            <p class="mt-4 text-sm text-gray-500">No recent activity</p>
-                        </div>
-                    @endif
-                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Waktu</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah Sample</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @forelse($solderOperators as $index => $data)
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{{ $index + 1 }}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">{{ $data['operator']->name }}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{{ $data['total_waktu'] }}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{{ $data['jumlah_sample'] }}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm">
+                                <button wire:click="openDetailModal({{ $data['operator']->id }}, 'solder')"
+                                    class="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition-colors">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                    Detail
+                                </button>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="5" class="px-4 py-8 text-center text-sm text-gray-500">
+                                Tidak ada data operator untuk bulan ini
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
         </div>
 
-        <!-- Quick Actions Sidebar -->
-        <div class="lg:col-span-1">
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200">
-                <div class="px-6 py-4 border-b border-gray-200">
-                    <h3 class="text-lg font-semibold text-gray-900">Quick Actions</h3>
+        <!-- Data Operator Laboratorium - Chemical -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">Data Operator Laboratorium - Chemical</h3>
+                <div class="flex items-center gap-2">
+                    <label class="text-sm text-gray-600">Pilih Bulan:</label>
+                    <select wire:model.live="selectedMonth"
+                        class="text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">-- Semua Bulan --</option>
+                        <option value="1">Januari</option>
+                        <option value="2">Februari</option>
+                        <option value="3">Maret</option>
+                        <option value="4">April</option>
+                        <option value="5">Mei</option>
+                        <option value="6">Juni</option>
+                        <option value="7">Juli</option>
+                        <option value="8">Agustus</option>
+                        <option value="9">September</option>
+                        <option value="10">Oktober</option>
+                        <option value="11">November</option>
+                        <option value="12">Desember</option>
+                    </select>
                 </div>
-                <div class="p-6">
-                    <div class="space-y-3">
-                        <a href="{{ route('rawmats') }}" wire:navigate
-                            class="group block p-4 rounded-lg bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 border border-blue-200 transition-all duration-200">
-                            <div class="flex items-center">
-                                <div class="flex-shrink-0">
-                                    <div
-                                        class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center group-hover:bg-blue-700 transition-colors">
-                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                        </svg>
-                                    </div>
-                                </div>
-                                <div class="ml-3">
-                                    <p class="text-sm font-semibold text-gray-900">Add Raw Material</p>
-                                    <p class="text-xs text-gray-600">Register new material</p>
-                                </div>
-                            </div>
-                        </a>
-
-                        <a href="{{ route('sample-rawmat-submissions') }}" wire:navigate
-                            class="group block p-4 rounded-lg bg-gradient-to-r from-emerald-50 to-emerald-100 hover:from-emerald-100 hover:to-emerald-200 border border-emerald-200 transition-all duration-200">
-                            <div class="flex items-center">
-                                <div class="flex-shrink-0">
-                                    <div
-                                        class="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center group-hover:bg-emerald-700 transition-colors">
-                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                                        </svg>
-                                    </div>
-                                </div>
-                                <div class="ml-3">
-                                    <p class="text-sm font-semibold text-gray-900">Submit Sample</p>
-                                    <p class="text-xs text-gray-600">New sample submission</p>
-                                </div>
-                            </div>
-                        </a>
-
-                        <a href="{{ route('rawmat-categories') }}" wire:navigate
-                            class="group block p-4 rounded-lg bg-gradient-to-r from-amber-50 to-amber-100 hover:from-amber-100 hover:to-amber-200 border border-amber-200 transition-all duration-200">
-                            <div class="flex items-center">
-                                <div class="flex-shrink-0">
-                                    <div
-                                        class="w-10 h-10 bg-amber-600 rounded-lg flex items-center justify-center group-hover:bg-amber-700 transition-colors">
-                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                                        </svg>
-                                    </div>
-                                </div>
-                                <div class="ml-3">
-                                    <p class="text-sm font-semibold text-gray-900">Manage Categories</p>
-                                    <p class="text-xs text-gray-600">Organize materials</p>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
-                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Waktu</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah Sample</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @forelse($chemicalOperators as $index => $data)
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{{ $index + 1 }}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">{{ $data['operator']->name }}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{{ $data['total_waktu'] }}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{{ $data['jumlah_sample'] }}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm">
+                                <button wire:click="openDetailModal({{ $data['operator']->id }}, 'chemical')"
+                                    class="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition-colors">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                    Detail
+                                </button>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="5" class="px-4 py-8 text-center text-sm text-gray-500">
+                                Tidak ada data operator untuk bulan ini
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
+
+    <!-- Modal Detail Sample Per Operator -->
+    @if($showModal)
+    <div class="fixed inset-0 bg-gray-600/50 overflow-y-auto h-full w-full z-50" wire:click="closeModal">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-5xl shadow-lg rounded-lg bg-white"
+            wire:click.stop>
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between pb-3 border-b border-gray-200">
+                <h3 class="text-xl font-semibold text-gray-900">
+                    Detail Sample - {{ $selectedOperator?->name }}
+                    ({{ ucfirst($modalSampleType) }})
+                    @if($selectedMonth)
+                        - {{ \Carbon\Carbon::create($selectedYear, $selectedMonth, 1)->format('F Y') }}
+                    @endif
+                </h3>
+                <button wire:click="closeModal"
+                    class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="mt-4 max-h-96 overflow-y-auto">
+                @if($operatorSamples->count() > 0)
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50 sticky top-0">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batch/Lot</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Material</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Waktu Analysis</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @foreach($operatorSamples as $index => $sample)
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{{ $index + 1 }}</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                                {{ $sample->batch_lot ?? '-' }}
+                            </td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                                {{ $sample->material->name ?? '-' }}
+                            </td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                                @php
+                                    // Use operator's actual work time calculated from handovers
+                                    $seconds = $sample->operator_work_time ?? 0;
+                                    $hours = floor($seconds / 3600);
+                                    $minutes = floor(($seconds % 3600) / 60);
+                                @endphp
+                                @if($seconds > 0)
+                                    {{ $hours > 0 ? $hours . ' jam ' : '' }}{{ $minutes }} menit
+                                @else
+                                    -
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                                {{ $sample->analysis_started_at ? $sample->analysis_started_at->format('d M Y') : '-' }}
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+                @else
+                <div class="text-center py-12">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <p class="mt-4 text-sm text-gray-500">Tidak ada sample untuk ditampilkan</p>
+                </div>
+                @endif
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="flex justify-end pt-4 border-t border-gray-200 mt-4">
+                <button wire:click="closeModal"
+                    class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-medium rounded-lg transition-colors">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+    @endif
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
