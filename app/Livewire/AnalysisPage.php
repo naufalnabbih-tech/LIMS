@@ -3,8 +3,8 @@
 namespace App\Livewire;
 
 
+use App\Actions\Analysis\SaveAnalysisResultsAction;
 use App\Models\Sample;
-use App\Models\TestResult;
 use App\Services\AnalysisCalculationService;
 use App\Services\SpecificationEvaluationService;
 use Livewire\Component;
@@ -24,6 +24,8 @@ class AnalysisPage extends Component
 
     protected SpecificationEvaluationService $evaluationService;
     protected AnalysisCalculationService $calculationService;
+
+    protected SaveAnalysisResultsAction $saveAnalysisAction;
 
     private function evaluateReading(array $result, $readingValue): bool
     {
@@ -210,62 +212,12 @@ class AnalysisPage extends Component
         $this->isSaving = true;
 
         try {
-            // Clear existing test results for this sample
-            $this->sample->testResults()->delete();
-
-            // Save individual test results to database
-            foreach ($this->analysisResults as $parameter => $result) {
-                foreach ($result['readings'] as $readingType => $reading) {
-                    // Only save if there's a value
-                    if (!empty($reading['value'])) {
-                        // Map reading type to reading number
-                        $readingNumbers = ['initial' => 1, 'middle' => 2, 'final' => 3];
-                        $readingNumber = $readingNumbers[$readingType] ?? 1;
-
-                        // Evaluate if this specific reading passes
-                        $passes = false;
-                        if (isset($result['spec_id']) && $result['target_value'] !== null && $result['operator']) {
-                            $passes = $this->evaluateReading(
-                                $result,
-                                $reading['value']
-                            );
-                        }
-
-                        // Build base test data
-                        $testData = [
-                            'sample_id' => $this->sample->id,
-                            'specification_id' => $result['spec_id'],
-                            'parameter_name' => $result['spec_name'],
-                            'reading_number' => $readingNumber,
-                            'tested_at' => $reading['timestamp'] ?? Carbon::now('Asia/Jakarta'),
-                            'tested_by' => auth()->id(),
-                            'notes' => $this->notes,
-                            'status' => $passes ? 'pass' : 'fail',
-                            'spec_operator' => $result['operator'] ?? null,
-                            'spec_unit' => $result['unit'] ?? null
-                        ];
-
-                        // Handle data storage based on operator type
-                        if ($result['operator'] === 'should_be') {
-                            // For text-based should_be: store text in test_value_text and spec_text_value
-                            $testData['test_value_text'] = $reading['value'];
-                            $testData['test_value'] = null;
-                            $testData['spec_text_value'] = $result['text_value'] ?? null; // Store spec text value
-                            $testData['spec_min_value'] = null; // Can't store text in FLOAT column
-                            $testData['spec_max_value'] = null;
-                        } else {
-                            // For numeric operators: store numbers in test_value, spec values as floats
-                            $testData['test_value'] = $reading['value'];
-                            $testData['test_value_text'] = null;
-                            $testData['spec_text_value'] = null;
-                            $testData['spec_min_value'] = $result['target_value'] ?? null;
-                            $testData['spec_max_value'] = $result['max_value'] ?? null;
-                        }
-
-                        TestResult::create($testData);
-                    }
-                }
-            }
+            $this->saveAnalysisAction->execute(
+                $this->sample,
+                $this->analysisResults,
+                $this->notes,
+                fn(array $result, $value) => $this->evaluateReading($result, $value)
+            );
 
             $this->lastSavedAt = now()->format('H:i:s');
         } catch (\Exception $e) {
@@ -402,67 +354,12 @@ class AnalysisPage extends Component
             return;
         }
 
-        // Clear existing test results for this sample to replace with new data
-        $this->sample->testResults()->delete();
-
-        // Save individual test results to database
-        foreach ($this->analysisResults as $parameter => $result) {
-            if ($result['average_value'] !== null) {
-                foreach ($result['readings'] as $readingType => $reading) {
-                    // Only save if there's a value (numeric OR text)
-                    if (!empty($reading['value'])) {
-                        // Map reading type to reading number
-                        $readingNumbers = ['initial' => 1, 'middle' => 2, 'final' => 3];
-                        $readingNumber = $readingNumbers[$readingType] ?? 1;
-
-                        // Evaluate if this specific reading passes
-                        $passes = false;
-                        if (isset($result['spec_id']) && $result['target_value'] !== null && $result['operator']) {
-                            // Handle should_be operator for text values
-                            $passes = $this->evaluateReading(
-                                $result,
-                                $reading['value']
-                            );
-                        }
-
-                        // Build base test data
-                        $testData = [
-                            'sample_id' => $this->sample->id,
-                            'specification_id' => $result['spec_id'],
-                            'parameter_name' => $result['spec_name'],
-                            'reading_number' => $readingNumber,
-                            'tested_at' => $reading['timestamp'] ?? Carbon::now('Asia/Jakarta'),
-                            'tested_by' => auth()->id(),
-                            'notes' => $this->notes,
-                            'status' => $passes ? 'pass' : 'fail',
-                            'spec_operator' => $result['operator'] ?? null,
-                            'spec_unit' => $result['unit'] ?? null
-                        ];
-
-                        // Handle data storage based on operator type
-                        if ($result['operator'] === 'should_be') {
-                            // For text-based should_be: store text in test_value_text and spec_text_value
-                            $testData['test_value_text'] = $reading['value'];
-                            $testData['test_value'] = null;
-                            $testData['spec_text_value'] = $result['text_value'] ?? null; // Store spec text value
-                            $testData['spec_min_value'] = null;
-                            $testData['spec_max_value'] = null;
-                        } else {
-                            // For numeric operators: store numbers in test_value, spec values as floats
-                            $testData['test_value'] = floatval($reading['value']);
-                            $testData['test_value_text'] = null;
-                            $testData['spec_text_value'] = null;
-                            $testData['spec_min_value'] = $result['target_value'] ?? null;
-                            $testData['spec_max_value'] = $result['max_value'] ?? null;
-                        }
-
-                        TestResult::create($testData);
-
-                        $totalTestResults++;
-                    }
-                }
-            }
-        }
+        $totalTestResults = $this->saveAnalysisAction->execute(
+            $this->sample,
+            $this->analysisResults,
+            $this->notes,
+            fn($result, $value) => $this->evaluateReading($result, $value)
+        );
 
         // Check if sample has pending handover - cannot complete if handover is pending
         if ($this->sample->hasActiveHandover()) {
@@ -497,10 +394,12 @@ class AnalysisPage extends Component
 
     public function boot(
         SpecificationEvaluationService $evaluationService,
-        AnalysisCalculationService $calculationService
+        AnalysisCalculationService $calculationService,
+        SaveAnalysisResultsAction $saveAnalysisAction
     ) {
         $this->evaluationService = $evaluationService;
         $this->calculationService = $calculationService;
+        $this->saveAnalysisAction = $saveAnalysisAction;
     }
 
     public function completeAnalysis()
