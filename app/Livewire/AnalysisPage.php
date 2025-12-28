@@ -5,6 +5,7 @@ namespace App\Livewire;
 
 use App\Models\Sample;
 use App\Models\TestResult;
+use App\Services\AnalysisCalculationService;
 use App\Services\SpecificationEvaluationService;
 use Livewire\Component;
 use Carbon\Carbon;
@@ -22,6 +23,7 @@ class AnalysisPage extends Component
     public $lastSavedAt = null; // Track last save time
 
     protected SpecificationEvaluationService $evaluationService;
+    protected AnalysisCalculationService $calculationService;
 
     private function evaluateReading(array $result, $readingValue): bool
     {
@@ -278,62 +280,16 @@ class AnalysisPage extends Component
         $readings = $this->analysisResults[$parameter]['readings'];
         $operator = $this->analysisResults[$parameter]['operator'] ?? null;
 
-        // For "should_be" operator, handle as text values
-        if ($operator === 'should_be') {
-            $textValues = [];
-            foreach ($readings as $reading) {
-                if (!empty($reading['value'])) {
-                    $textValues[] = $reading['value'];
-                }
-            }
+        // Use service to calculate values
+        $calculated = $this->calculationService->calculateParameterValues($readings, $operator);
 
-            if (!empty($textValues)) {
-                // For text values, just use the last reading as final value
-                $this->analysisResults[$parameter]['final_value'] = end($textValues);
-                $this->analysisResults[$parameter]['average_value'] = end($textValues); // Use final as average for display
-            } else {
-                $this->analysisResults[$parameter]['average_value'] = null;
-                $this->analysisResults[$parameter]['final_value'] = null;
-            }
-            return;
-        }
+        // Update analysis results with calculated values
+        $this->analysisResults[$parameter]['average_value'] = $calculated['average_value'];
+        $this->analysisResults[$parameter]['final_value'] = $calculated['final_value'];
 
-        // For numeric operators, calculate as before
-        $values = [];
-        foreach ($readings as $reading) {
-            if (!empty($reading['value']) && is_numeric($reading['value'])) {
-                $values[] = floatval($reading['value']);
-            }
-        }
-
-        if (!empty($values)) {
-            $this->analysisResults[$parameter]['average_value'] = array_sum($values) / count($values);
-            $this->analysisResults[$parameter]['final_value'] = end($values);
-
-            // Add reading variance validation
-            if (count($values) > 1) {
-                $variance = $this->calculateVariance($values);
-                $this->analysisResults[$parameter]['variance'] = $variance;
-                $this->analysisResults[$parameter]['high_variance'] = $variance > ($this->analysisResults[$parameter]['average_value'] * 0.05); // 5% threshold
-            }
-        } else {
-            $this->analysisResults[$parameter]['average_value'] = null;
-            $this->analysisResults[$parameter]['final_value'] = null;
-            $this->analysisResults[$parameter]['variance'] = null;
-            $this->analysisResults[$parameter]['high_variance'] = false;
-        }
-    }
-
-    private function calculateVariance($values)
-    {
-        $mean = array_sum($values) / count($values);
-        $variance = 0;
-
-        foreach ($values as $value) {
-            $variance += pow($value - $mean, 2);
-        }
-
-        return sqrt($variance / count($values)); // Standard deviation
+        // Set variance values (will be null for text operators)
+        $this->analysisResults[$parameter]['variance'] = $calculated['variance'] ?? null;
+        $this->analysisResults[$parameter]['high_variance'] = $calculated['high_variance'] ?? false;
     }
 
     public function addReading($parameter)
@@ -539,9 +495,12 @@ class AnalysisPage extends Component
         session()->flash('message', $message);
     }
 
-    public function boot(SpecificationEvaluationService $evaluationService)
-    {
+    public function boot(
+        SpecificationEvaluationService $evaluationService,
+        AnalysisCalculationService $calculationService
+    ) {
         $this->evaluationService = $evaluationService;
+        $this->calculationService = $calculationService;
     }
 
     public function completeAnalysis()
