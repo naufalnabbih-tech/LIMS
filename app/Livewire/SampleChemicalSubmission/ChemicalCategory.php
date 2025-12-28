@@ -94,7 +94,6 @@ class ChemicalCategory extends Component
     public function store()
     {
         $this->isSubmitting = true;
-
         $this->validate();
 
         try {

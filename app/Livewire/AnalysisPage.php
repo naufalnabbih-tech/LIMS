@@ -2,12 +2,10 @@
 
 namespace App\Livewire;
 
+
 use App\Models\Sample;
-use App\Models\Category;
-use App\Models\Material;
-use App\Models\Reference;
 use App\Models\TestResult;
-use App\Models\User;
+use App\Services\SpecificationEvaluationService;
 use Livewire\Component;
 use Carbon\Carbon;
 
@@ -22,6 +20,22 @@ class AnalysisPage extends Component
     public $activeReadings = []; // Track which readings are active per parameter
     public $isSaving = false; // Track auto-save state
     public $lastSavedAt = null; // Track last save time
+
+    protected SpecificationEvaluationService $evaluationService;
+
+    private function evaluateReading(array $result, $readingValue): bool
+    {
+        if (!isset($result['spec_id'], $result['target_value'], $result['operator'])) {
+            return false;
+        }
+
+        return $this->evaluationService->evaluate(
+            $readingValue,
+            $result['target_value'],
+            $result['operator'],
+            $result['max_value'] ?? null
+        );
+    }
 
     public function mount($sampleId)
     {
@@ -209,24 +223,10 @@ class AnalysisPage extends Component
                         // Evaluate if this specific reading passes
                         $passes = false;
                         if (isset($result['spec_id']) && $result['target_value'] !== null && $result['operator']) {
-                            // Handle should_be operator for text values
-                            if ($result['operator'] === 'should_be') {
-                                $passes = $this->evaluateSpecification(
-                                    $reading['value'],
-                                    $result['target_value'],
-                                    $result['operator'],
-                                    null
-                                );
-                            } else {
-                                // For numeric operators
-                                $maxValue = isset($result['max_value']) ? floatval($result['max_value']) : null;
-                                $passes = $this->evaluateSpecification(
-                                    floatval($reading['value']),
-                                    floatval($result['target_value']),
-                                    $result['operator'],
-                                    $maxValue
-                                );
-                            }
+                            $passes = $this->evaluateReading(
+                                $result,
+                                $reading['value']
+                            );
                         }
 
                         // Build base test data
@@ -429,17 +429,7 @@ class AnalysisPage extends Component
 
                 // Check if result meets specification
                 if (isset($result['spec_id']) && $result['target_value'] !== null && $result['operator'] && $testValue !== null) {
-                    $operator = $result['operator'];
-
-                    // For should_be operator, use text comparison
-                    if ($operator === 'should_be') {
-                        $passes = $this->evaluateSpecification($testValue, $result['target_value'], $operator, null);
-                    } else {
-                        // For numeric operators
-                        $targetValue = floatval($result['target_value']);
-                        $maxValue = isset($result['max_value']) ? floatval($result['max_value']) : null;
-                        $passes = $this->evaluateSpecification($testValue, $targetValue, $operator, $maxValue);
-                    }
+                    $passes = $this->evaluateReading($result, $testValue);
 
                     if ($passes) {
                         $passedSpecs++;
@@ -473,23 +463,10 @@ class AnalysisPage extends Component
                         $passes = false;
                         if (isset($result['spec_id']) && $result['target_value'] !== null && $result['operator']) {
                             // Handle should_be operator for text values
-                            if ($result['operator'] === 'should_be') {
-                                $passes = $this->evaluateSpecification(
-                                    $reading['value'],
-                                    $result['target_value'],
-                                    $result['operator'],
-                                    null
-                                );
-                            } else {
-                                // For numeric operators
-                                $maxValue = isset($result['max_value']) ? floatval($result['max_value']) : null;
-                                $passes = $this->evaluateSpecification(
-                                    floatval($reading['value']),
-                                    floatval($result['target_value']),
-                                    $result['operator'],
-                                    $maxValue
-                                );
-                            }
+                            $passes = $this->evaluateReading(
+                                $result,
+                                $reading['value']
+                            );
                         }
 
                         // Build base test data
@@ -562,32 +539,9 @@ class AnalysisPage extends Component
         session()->flash('message', $message);
     }
 
-    private function evaluateSpecification($testValue, $targetValue, $operator, $maxValue = null)
+    public function boot(SpecificationEvaluationService $evaluationService)
     {
-        switch ($operator) {
-            case 'should_be':
-                // Case-insensitive text comparison
-                return strcasecmp(trim($testValue), trim($targetValue)) === 0;
-            case '>=':
-                return $testValue >= $targetValue;
-            case '>':
-                return $testValue > $targetValue;
-            case '<=':
-                return $testValue <= $targetValue;
-            case '<':
-                return $testValue < $targetValue;
-            case '=':
-            case '==':
-                return abs($testValue - $targetValue) < 0.001; // Small tolerance for float comparison
-            case '-':
-                // Range operator: check if test value is within min-max range
-                if ($maxValue !== null) {
-                    return $testValue >= $targetValue && $testValue <= $maxValue;
-                }
-                return true; // If no max value, assume pass
-            default:
-                return true; // Unknown operator, assume pass
-        }
+        $this->evaluationService = $evaluationService;
     }
 
     public function completeAnalysis()
