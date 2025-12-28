@@ -4,11 +4,11 @@ namespace App\Livewire;
 
 
 use App\Actions\Analysis\SaveAnalysisResultsAction;
-use App\Models\Sample;
+use App\Repositories\SampleRepository;
+use App\Repositories\StatusRepository;
 use App\Services\AnalysisCalculationService;
 use App\Services\SpecificationEvaluationService;
 use Livewire\Component;
-use Carbon\Carbon;
 
 class AnalysisPage extends Component
 {
@@ -24,8 +24,9 @@ class AnalysisPage extends Component
 
     protected SpecificationEvaluationService $evaluationService;
     protected AnalysisCalculationService $calculationService;
-
     protected SaveAnalysisResultsAction $saveAnalysisAction;
+    protected SampleRepository $sampleRepository;
+    protected StatusRepository $statusRepository;
 
     private function evaluateReading(array $result, $readingValue): bool
     {
@@ -44,15 +45,11 @@ class AnalysisPage extends Component
     public function mount($sampleId)
     {
         $this->sampleId = $sampleId;
-        $this->sample = Sample::with([
-            'category',
-            'material',
-            'reference.specificationsManytoMany',
-            'submittedBy',
-            'primaryAnalyst',
-            'secondaryAnalyst',
-            'testResults'
-        ])->findOrFail($sampleId);
+        $this->sample = $this->sampleRepository->findWithCompleteAnalysisData($sampleId);
+
+        if (!$this->sample) {
+            abort(404, 'Sample not found');
+        }
 
         $this->reference = $this->sample->reference;
         $this->isCompleted = $this->sample->status === 'analysis_completed';
@@ -362,14 +359,13 @@ class AnalysisPage extends Component
         );
 
         // Check if sample has pending handover - cannot complete if handover is pending
-        if ($this->sample->hasActiveHandover()) {
+        if ($this->sampleRepository->hasActiveHandover($this->sample)) {
             $this->dispatch('save-error', 'Cannot complete analysis. This sample has a pending handover. Please wait for the handover to be accepted or cancelled first.');
             session()->flash('error', 'Cannot complete analysis. This sample has a pending handover.');
             return;
         }
 
-        // Save analysis completion status
-        $status = 'analysis_completed';
+
         $message = "Analysis results saved successfully! $totalTestResults test readings recorded.";
 
         if ($failedSpecs > 0) {
@@ -378,14 +374,9 @@ class AnalysisPage extends Component
             $message .= " All $passedSpecs parameters passed.";
         }
 
-        // Get analysis_completed status ID
-        $analysisCompletedStatus = \App\Models\Status::where('name', 'analysis_completed')->first();
-
-        $this->sample->update([
-            'status_id' => $analysisCompletedStatus ? $analysisCompletedStatus->id : null,
-            'status' => 'analysis_completed', // Keep for backward compatibility
-            'analysis_completed_at' => Carbon::now('Asia/Jakarta'),
-        ]);
+        // Get analysis_completed status ID and update sample
+        $statusId = $this->statusRepository->getAnalysisCompletedStatusId();
+        $this->sampleRepository->markAsAnalysisCompleted($this->sample, $statusId);
 
         $this->isCompleted = true;
         $this->dispatch('save-success', $message);
@@ -395,29 +386,29 @@ class AnalysisPage extends Component
     public function boot(
         SpecificationEvaluationService $evaluationService,
         AnalysisCalculationService $calculationService,
-        SaveAnalysisResultsAction $saveAnalysisAction
+        SaveAnalysisResultsAction $saveAnalysisAction,
+        StatusRepository $statusRepository,
+        SampleRepository $sampleRepository
     ) {
         $this->evaluationService = $evaluationService;
         $this->calculationService = $calculationService;
         $this->saveAnalysisAction = $saveAnalysisAction;
+        $this->statusRepository = $statusRepository;
+        $this->sampleRepository = $sampleRepository;
     }
 
     public function completeAnalysis()
     {
         // Check if sample has pending handover - cannot complete if handover is pending
-        if ($this->sample->hasActiveHandover()) {
+        if ($this->sampleRepository->hasActiveHandover($this->sample)) {
             session()->flash('error', 'Cannot complete analysis. This sample has a pending handover. Please wait for the handover to be accepted or cancelled first.');
             return;
         }
 
-        // Get analysis_completed status ID
-        $analysisCompletedStatus = \App\Models\Status::where('name', 'analysis_completed')->first();
+        // Mark sample as analysis completed using repository
+        $statusId = $this->statusRepository->getAnalysisCompletedStatusId();
+        $this->sampleRepository->markAsAnalysisCompleted($this->sample, $statusId);
 
-        $this->sample->update([
-            'status_id' => $analysisCompletedStatus ? $analysisCompletedStatus->id : null,
-            'status' => 'analysis_completed', // Keep for backward compatibility
-            'analysis_completed_at' => Carbon::now('Asia/Jakarta')
-        ]);
 
         session()->flash('message', 'Analysis marked as completed!');
         return redirect()->route('sample-rawmat-submissions');
