@@ -4,10 +4,12 @@ namespace App\Livewire;
 
 
 use App\Actions\Analysis\SaveAnalysisResultsAction;
+use App\Actions\Analysis\ValidateAnalysisResultsAction;
 use App\Repositories\SampleRepository;
 use App\Repositories\StatusRepository;
 use App\Services\AnalysisCalculationService;
 use App\Services\SpecificationEvaluationService;
+use App\Services\SpecificationTextFormatter;
 use Livewire\Component;
 
 class AnalysisPage extends Component
@@ -21,12 +23,16 @@ class AnalysisPage extends Component
     public $activeReadings = []; // Track which readings are active per parameter
     public $isSaving = false; // Track auto-save state
     public $lastSavedAt = null; // Track last save time
+    private const READING_TYPES = ['initial', 'middle', 'final'];
+    private const READING_NUMBERS = ['initial' => 1, 'middle' => 2, 'final' => 3];
 
     protected SpecificationEvaluationService $evaluationService;
     protected AnalysisCalculationService $calculationService;
     protected SaveAnalysisResultsAction $saveAnalysisAction;
+    protected ValidateAnalysisResultsAction $validateAnalysisAction;
     protected SampleRepository $sampleRepository;
     protected StatusRepository $statusRepository;
+    protected SpecificationTextFormatter $textFormatter;
 
     private function evaluateReading(array $result, $readingValue): bool
     {
@@ -63,6 +69,24 @@ class AnalysisPage extends Component
         }
     }
 
+    private function dispatchError(string $message)
+    {
+        $this->dispatch('save-error', $message);
+        session()->flash('error', $message);
+    }
+
+    private function dispatchSuccess(string $message): void
+    {
+        $this->dispatch('save-success', $message);
+        session()->flash('message', $message);
+    }
+
+    private function generateSpecKey(string $name): string
+    {
+        return strtolower(str_replace([' ', '-', '(', ')'], '_', $name));
+    }
+
+
     public function initializeAnalysisResults()
     {
         if ($this->reference) {
@@ -70,24 +94,10 @@ class AnalysisPage extends Component
             $specifications = $this->reference->specificationsManytoMany;
 
             foreach ($specifications as $spec) {
-                $specKey = strtolower(str_replace([' ', '-', '(', ')'], '_', $spec->name));
+                $specKey = $this->generateSpecKey($spec->name);
 
                 // Build specification display text
-                $specText = '';
-                if ($spec->pivot->operator) {
-                    if ($spec->pivot->operator === '-' && $spec->pivot->value !== null) {
-                        // Range operator: display as "min - max"
-                        $specText = $spec->pivot->value . ' - ' . $spec->pivot->max_value;
-                    } elseif ($spec->pivot->operator === 'should_be' && $spec->pivot->text_value !== null) {
-                        // Should_be operator: display as "= text_value"
-                        $specText = '= ' . $spec->pivot->text_value;
-                    } elseif ($spec->pivot->value !== null) {
-                        // Other operators: display as "operator value"
-                        // Replace == with = for display
-                        $displayOperator = $spec->pivot->operator === '==' ? '=' : $spec->pivot->operator;
-                        $specText = $displayOperator . ' ' . $spec->pivot->value;
-                    }
-                }
+                $specText = $this->textFormatter->format($spec->pivot);
 
                 // Determine target value based on operator
                 $targetValue = $spec->pivot->operator === 'should_be'
@@ -100,7 +110,7 @@ class AnalysisPage extends Component
                         'middle' => ['value' => '', 'timestamp' => null],
                         'final' => ['value' => '', 'timestamp' => null]
                     ],
-                    'reading_config' => ['initial', 'middle', 'final'],
+                    'reading_config' => self::READING_TYPES,
                     'average_value' => null,
                     'final_value' => null,
                     'spec' => $specText ?: 'As per reference',
@@ -248,10 +258,9 @@ class AnalysisPage extends Component
         }
 
         $currentActive = $this->activeReadings[$parameter];
-        $readingOrder = ['initial', 'middle', 'final'];
 
         // Find next reading to add
-        foreach ($readingOrder as $reading) {
+        foreach (self::READING_TYPES as $reading) {
             if (!in_array($reading, $currentActive)) {
                 $this->activeReadings[$parameter][] = $reading;
                 break;
@@ -290,82 +299,8 @@ class AnalysisPage extends Component
         return count($this->activeReadings[$parameter]) < 3;
     }
 
-    public function saveResults()
+    private function buildSuccessMessage(int $totalTestResults, int $passedSpecs, int $failedSpecs): string
     {
-        // First validate that ALL specifications have been filled (no pending status)
-        $pendingSpecs = [];
-        foreach ($this->analysisResults as $parameter => $result) {
-            // Recalculate to ensure average_value is up to date
-            $this->calculateParameterValues($parameter);
-
-            if ($result['average_value'] === null) {
-                $pendingSpecs[] = $result['spec_name'];
-            }
-        }
-
-        if (!empty($pendingSpecs)) {
-            $message = 'Please complete all analysis readings before saving. Pending parameters: ' . implode(', ', $pendingSpecs);
-            $this->dispatch('save-error', $message);
-            session()->flash('error', $message);
-            return;
-        }
-
-        // Validate that some results have been entered and evaluate specifications
-        $hasResults = false;
-        $passedSpecs = 0;
-        $failedSpecs = 0;
-        $totalTestResults = 0;
-
-        foreach ($this->analysisResults as $parameter => $result) {
-            // Check if any reading has been entered
-            $hasReadings = false;
-            foreach ($result['readings'] as $reading) {
-                if (!empty($reading['value'])) {
-                    $hasReadings = true;
-                    break;
-                }
-            }
-
-            if ($hasReadings) {
-                $hasResults = true;
-
-                // Use average value for specification evaluation
-                $testValue = $result['average_value'];
-
-                // Check if result meets specification
-                if (isset($result['spec_id']) && $result['target_value'] !== null && $result['operator'] && $testValue !== null) {
-                    $passes = $this->evaluateReading($result, $testValue);
-
-                    if ($passes) {
-                        $passedSpecs++;
-                    } else {
-                        $failedSpecs++;
-                    }
-                }
-            }
-        }
-
-        if (!$hasResults) {
-            $this->dispatch('save-error', 'Please enter at least one analysis reading.');
-            session()->flash('error', 'Please enter at least one analysis reading.');
-            return;
-        }
-
-        $totalTestResults = $this->saveAnalysisAction->execute(
-            $this->sample,
-            $this->analysisResults,
-            $this->notes,
-            fn($result, $value) => $this->evaluateReading($result, $value)
-        );
-
-        // Check if sample has pending handover - cannot complete if handover is pending
-        if ($this->sampleRepository->hasActiveHandover($this->sample)) {
-            $this->dispatch('save-error', 'Cannot complete analysis. This sample has a pending handover. Please wait for the handover to be accepted or cancelled first.');
-            session()->flash('error', 'Cannot complete analysis. This sample has a pending handover.');
-            return;
-        }
-
-
         $message = "Analysis results saved successfully! $totalTestResults test readings recorded.";
 
         if ($failedSpecs > 0) {
@@ -373,28 +308,67 @@ class AnalysisPage extends Component
         } elseif ($passedSpecs > 0) {
             $message .= " All $passedSpecs parameters passed.";
         }
+        return $message;
+    }
 
-        // Get analysis_completed status ID and update sample
+    public function saveResults()
+    {
+        // Recalculate all parameter values first
+        foreach ($this->analysisResults as $parameter => $result) {
+            // Recalculate to ensure average_value is up to date
+            $this->calculateParameterValues($parameter);
+        }
+
+        // Validate using action
+        $validation = $this->validateAnalysisAction->execute(
+            $this->analysisResults,
+            fn($result, $value) => $this->evaluateReading($result, $value)
+        );
+
+        if (!$validation->isValid) {
+            return $this->dispatchError($validation->errorMessage);
+        }
+
+        // Save analysis results
+        $totalTestResults = $this->saveAnalysisAction->execute(
+            $this->sample,
+            $this->analysisResults,
+            $this->notes,
+            fn($result, $value) => $this->evaluateReading($result, $value)
+        );
+
+        // Check handover
+        if ($this->sampleRepository->hasActiveHandover($this->sample)) {
+            return $this->dispatchError('Cannot complete analysis. This sample has a pending handover.');
+        }
+
+        // Build success message
+        $message = $this->buildSuccessMessage($totalTestResults, $validation->passedSpecs, $validation->failedSpecs);
+
+        // Update sample status;
         $statusId = $this->statusRepository->getAnalysisCompletedStatusId();
         $this->sampleRepository->markAsAnalysisCompleted($this->sample, $statusId);
 
         $this->isCompleted = true;
-        $this->dispatch('save-success', $message);
-        session()->flash('message', $message);
+        $this->dispatchSuccess($message);
     }
 
     public function boot(
         SpecificationEvaluationService $evaluationService,
         AnalysisCalculationService $calculationService,
         SaveAnalysisResultsAction $saveAnalysisAction,
+        ValidateAnalysisResultsAction $validateAnalysisAction,
+        SampleRepository $sampleRepository,
         StatusRepository $statusRepository,
-        SampleRepository $sampleRepository
+        SpecificationTextFormatter $textFormatter
     ) {
         $this->evaluationService = $evaluationService;
         $this->calculationService = $calculationService;
         $this->saveAnalysisAction = $saveAnalysisAction;
-        $this->statusRepository = $statusRepository;
+        $this->validateAnalysisAction = $validateAnalysisAction;
         $this->sampleRepository = $sampleRepository;
+        $this->statusRepository = $statusRepository;
+        $this->textFormatter = $textFormatter;
     }
 
     public function completeAnalysis()

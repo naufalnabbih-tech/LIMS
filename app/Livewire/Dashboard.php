@@ -14,9 +14,10 @@ use Carbon\Carbon;
 class Dashboard extends Component
 {
     public $submissionsInProgress = 0;
-    public $totalCategories = 0;
+    public $reviewedTests = 0;
     public $pendingTests = 0;
     public $completedTests = 0;
+    public $analysisComplete = 0;
     public $recentActivities = [];
 
     // Chart data
@@ -52,18 +53,23 @@ class Dashboard extends Component
         $inProgressStatus = Status::where('name', 'in_progress')->first();
         $pendingStatus = Status::where('name', 'pending')->first();
         $completedStatus = Status::where('name', 'approved')->first();
+        $reviewedStatus = Status::where('name', 'reviewed')->first();
 
         // Count submissions in progress
         $this->submissionsInProgress = Sample::where('status_id', $inProgressStatus?->id)->count();
 
         // Count total categories
-        $this->totalCategories = Category::count();
+        $this->reviewedTests = Sample::where('status_id', $reviewedStatus?->id)->count();
 
         // Count pending tests
         $this->pendingTests = Sample::where('status_id', $pendingStatus?->id)->count();
 
         // Count completed tests (approved)
         $this->completedTests = Sample::where('status_id', $completedStatus?->id)->count();
+
+        // Count analysis complete (ready for review)
+        $analysisCompletedStatus = Status::where('name', 'analysis_completed')->first();
+        $this->analysisComplete = Sample::where('status_id', $analysisCompletedStatus?->id)->count();
     }
 
     public function loadRecentActivities()
