@@ -151,7 +151,7 @@
     <livewire:sample-chemical-submission.components.edit-sample-form />
     <livewire:sample-chemical-submission.components.hand-over-form />
     <livewire:sample-chemical-submission.components.take-over-form />
-    <livewire:components.coa-form />
+    <livewire:components.co-a-form />
 
 </div>
 

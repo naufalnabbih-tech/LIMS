@@ -156,7 +156,7 @@
     <livewire:sample-solder-submission.components.edit-sample-form />
     <livewire:sample-solder-submission.components.hand-over-form />
     <livewire:sample-solder-submission.components.take-over-form />
-    <livewire:components.coa-form />
+    <livewire:components.co-a-form />
 
 </div>
 

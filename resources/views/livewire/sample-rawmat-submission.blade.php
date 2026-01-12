@@ -88,7 +88,7 @@
     <livewire:sample-rawmat-submission.components.edit-sample-form />
     <livewire:sample-rawmat-submission.components.hand-over-form />
     <livewire:sample-rawmat-submission.components.take-over-form />
-    <livewire:components.coa-form />
+    <livewire:components.co-a-form />
 
 </div>
 
